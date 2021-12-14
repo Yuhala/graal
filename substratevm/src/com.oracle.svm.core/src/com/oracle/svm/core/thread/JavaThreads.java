@@ -1007,7 +1007,7 @@ public abstract class JavaThreads {
 
     @Uninterruptible(reason = "Called from uninterruptible code.")
     public static void setCurrentThreadLockHelper(Object root) {
-        if (JavaContinuations.isSupported()) {
+        if (VirtualThreads.get().isSupported()) {
             toTarget(Thread.currentThread()).lockHelper = root;
         } else {
             lockHelper.set(root);
@@ -1017,7 +1017,7 @@ public abstract class JavaThreads {
     @AlwaysInline("Locking fast path.")
     @Uninterruptible(reason = "Called from uninterruptible code.", mayBeInlined = true)
     public static Object getCurrentThreadLockHelper() {
-        if (JavaContinuations.isSupported()) {
+        if (VirtualThreads.get().isSupported()) {
             return toTarget(Thread.currentThread()).lockHelper;
         }
         return lockHelper.get();
