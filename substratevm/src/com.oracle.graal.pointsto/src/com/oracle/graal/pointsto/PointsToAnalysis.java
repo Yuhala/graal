@@ -183,16 +183,6 @@ public abstract class PointsToAnalysis implements BigBang {
     }
 
     @Override
-    public Timer getAnalysisTimer() {
-        return analysisTimer;
-    }
-
-    @Override
-    public Timer getProcessFeaturesTimer() {
-        return processFeaturesTimer;
-    }
-
-    @Override
     public void printTimers() {
         typeFlowTimer.print();
         checkObjectsTimer.print();
