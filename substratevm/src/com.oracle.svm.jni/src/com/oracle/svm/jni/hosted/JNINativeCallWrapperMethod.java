@@ -24,6 +24,7 @@
  */
 package com.oracle.svm.jni.hosted;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +46,7 @@ import org.graalvm.compiler.nodes.java.MonitorEnterNode;
 import org.graalvm.compiler.nodes.java.MonitorExitNode;
 import org.graalvm.compiler.nodes.java.MonitorIdNode;
 
+import com.oracle.graal.pointsto.PointsToAnalysis;
 import com.oracle.graal.pointsto.infrastructure.WrappedJavaMethod;
 import com.oracle.graal.pointsto.meta.HostedProviders;
 import com.oracle.svm.core.graal.nodes.CGlobalDataLoadAddressNode;
@@ -57,6 +59,7 @@ import com.oracle.svm.jni.access.JNIAccessFeature;
 import com.oracle.svm.jni.access.JNINativeLinkage;
 import com.oracle.svm.jni.nativeapi.JNIEnvironment;
 import com.oracle.svm.jni.nativeapi.JNIObjectHandle;
+import com.oracle.svm.util.ReflectionUtil;
 
 import jdk.vm.ci.meta.Constant;
 import jdk.vm.ci.meta.JavaConstant;
@@ -73,6 +76,7 @@ import jdk.vm.ci.meta.Signature;
  */
 class JNINativeCallWrapperMethod extends CustomSubstitutionMethod {
     private final JNINativeLinkage linkage;
+    private final Field linkageBuiltInAddressField = ReflectionUtil.lookupField(JNINativeLinkage.class, "builtInAddress");
 
     JNINativeCallWrapperMethod(ResolvedJavaMethod method) {
         super(method);
@@ -112,6 +116,10 @@ class JNINativeCallWrapperMethod extends CustomSubstitutionMethod {
         ValueNode callAddress;
         if (linkage.isBuiltInFunction()) {
             callAddress = kit.unique(new CGlobalDataLoadAddressNode(linkage.getBuiltInAddress()));
+            PointsToAnalysis bb = providers.getBigBang();
+            if (bb != null) {
+                bb.getUniverse().getHeapScanner().rescanField(linkage, linkageBuiltInAddressField);
+            }
         } else {
             callAddress = kit.nativeCallAddress(kit.createObject(linkage));
         }

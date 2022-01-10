@@ -24,6 +24,8 @@
  */
 package com.oracle.svm.hosted.thread;
 
+import static com.oracle.svm.hosted.thread.VMThreadLocalCollector.threadLocalInfosField;
+
 import java.util.List;
 
 import org.graalvm.compiler.api.replacements.SnippetReflectionProvider;
@@ -56,6 +58,7 @@ import com.oracle.svm.core.threadlocal.FastThreadLocalWord;
 import com.oracle.svm.core.threadlocal.VMThreadLocalInfo;
 import com.oracle.svm.core.threadlocal.VMThreadLocalInfos;
 import com.oracle.svm.core.threadlocal.VMThreadLocalSTSupport;
+import com.oracle.svm.hosted.FeatureImpl.DuringAnalysisAccessImpl;
 
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
@@ -205,13 +208,15 @@ public class VMThreadSTFeature implements GraalFeature {
     }
 
     @Override
-    public void duringAnalysis(DuringAnalysisAccess access) {
+    public void duringAnalysis(DuringAnalysisAccess a) {
         /*
          * Update during analysis so that the static analysis sees all infos. After analysis only
          * the order is going to change.
          */
         if (VMThreadLocalInfos.setInfos(threadLocalCollector.threadLocals.values())) {
+            DuringAnalysisAccessImpl access = (DuringAnalysisAccessImpl) a;
             access.requireAnalysisIteration();
+            access.rescanField(ImageSingletons.lookup(VMThreadLocalInfos.class), threadLocalInfosField);
         }
     }
 

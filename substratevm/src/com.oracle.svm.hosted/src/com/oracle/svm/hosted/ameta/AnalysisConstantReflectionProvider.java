@@ -126,7 +126,7 @@ public class AnalysisConstantReflectionProvider extends SharedConstantReflection
      * pretty likely (although not guaranteed) that we are not returning an unintended value for a
      * class that is re-initialized at run time.
      */
-    private static JavaConstant readUninitializedStaticValue(AnalysisField field) {
+    public static JavaConstant readUninitializedStaticValue(AnalysisField field) {
         JavaKind kind = field.getJavaKind();
 
         boolean canHaveConstantValueAttribute = kind.isPrimitive() || field.getType().getName().equals("Ljava/lang/String;");
@@ -177,7 +177,7 @@ public class AnalysisConstantReflectionProvider extends SharedConstantReflection
                 assert value == null || value instanceof String : "String is currently the only specified object type for the ConstantValue class file attribute";
                 return SubstrateObjectConstant.forObject(value);
             default:
-                throw VMError.shouldNotReachHere();
+                throw AnalysisError.shouldNotReachHere();
         }
     }
 
@@ -269,7 +269,8 @@ public class AnalysisConstantReflectionProvider extends SharedConstantReflection
             if (obj instanceof DynamicHub) {
                 return getHostVM().lookupType((DynamicHub) obj);
             } else if (obj instanceof Class) {
-                throw VMError.shouldNotReachHere("Must not have java.lang.Class object: " + obj);
+                // TODO do we need to make sure the hub is scanned?
+                return metaAccess.lookupJavaType((Class<?>) obj);
             }
         }
         return null;
