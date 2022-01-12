@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.oracle.graal.pointsto.ObjectScanner.OtherReason;
 import com.oracle.graal.pointsto.constraints.UnsupportedFeatureException;
 import com.oracle.graal.pointsto.constraints.UnsupportedFeatures;
 import com.oracle.graal.pointsto.heap.ImageHeapScanner;
@@ -196,6 +197,7 @@ public class DynamicHubInitializer {
                 heapScanner.rescanField(hub, dynamicHubAnnotationsEnumConstantsReferenceField);
             }
         }
+        heapScanner.rescanObject(hub, OtherReason.HUB);
     }
 
     static class GenericInterfacesEncodingKey {

@@ -847,7 +847,12 @@ public class NativeImageGenerator {
                 aUniverse.setHeapVerifier(heapVerifier);
 
                 /* Register already created types as assignable. */
-                aUniverse.getTypes().forEach(t -> t.registerAsAssignable(bb));
+                aUniverse.getTypes().forEach(t -> {
+                    t.registerAsAssignable(bb);
+                    if (t.isReachable()) {
+                        bb.onTypeInitialized(t);
+                    }
+                });
 
                 boolean withoutCompilerInvoker = CAnnotationProcessorCache.Options.ExitAfterQueryCodeGeneration.getValue() ||
                                 (NativeImageOptions.ExitAfterRelocatableImageWrite.getValue() && CAnnotationProcessorCache.Options.UseCAPCache.getValue());

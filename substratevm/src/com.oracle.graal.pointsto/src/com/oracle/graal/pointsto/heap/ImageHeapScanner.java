@@ -36,10 +36,7 @@ import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.MapCursor;
 import org.graalvm.compiler.api.replacements.SnippetReflectionProvider;
 import org.graalvm.compiler.debug.GraalError;
-import org.graalvm.compiler.options.Option;
-import org.graalvm.compiler.options.OptionKey;
 
-import com.oracle.graal.pointsto.ObjectScanner;
 import com.oracle.graal.pointsto.ObjectScanner.ArrayScan;
 import com.oracle.graal.pointsto.ObjectScanner.EmbeddedRootScan;
 import com.oracle.graal.pointsto.ObjectScanner.FieldScan;
@@ -81,11 +78,6 @@ public abstract class ImageHeapScanner {
 
     private static final JavaConstant[] emptyConstantArray = new JavaConstant[0];
 
-    public static class Options {
-        @Option(help = "Enable manual rescanning of image heap objects.")//
-        public static final OptionKey<Boolean> EnableManualRescan = new OptionKey<>(true);
-    }
-
     protected final ImageHeap imageHeap;
     protected final AnalysisMetaAccess metaAccess;
     protected final AnalysisUniverse universe;
@@ -97,7 +89,6 @@ public abstract class ImageHeapScanner {
     protected final SnippetReflectionProvider hostedSnippetReflection;
 
     protected ObjectScanningObserver scanningObserver;
-    private final boolean enableManualRescan;
 
     public ImageHeapScanner(ImageHeap heap, AnalysisMetaAccess aMetaAccess, SnippetReflectionProvider aSnippetReflection,
                     ConstantReflectionProvider aConstantReflection, ObjectScanningObserver aScanningObserver) {
@@ -110,7 +101,6 @@ public abstract class ImageHeapScanner {
         scanningObserver = aScanningObserver;
         hostedConstantReflection = GraalAccess.getOriginalProviders().getConstantReflection();
         hostedSnippetReflection = GraalAccess.getOriginalProviders().getSnippetReflection();
-        enableManualRescan = Options.EnableManualRescan.getValue(hostVM.options());
     }
 
     public void scanEmbeddedRoot(JavaConstant root, BytecodePosition position) {
@@ -201,13 +191,6 @@ public abstract class ImageHeapScanner {
         ScanReason nonNullReason = Objects.requireNonNull(reason);
         AnalysisFuture<ImageHeapObject> existingTask = imageHeap.getTask(javaConstant);
         if (existingTask == null) {
-            /*
-             * TODO - this still true? is it ok to seal the heap?
-             *
-             * The constants can be generated at any stage, not only before/during analysis. For
-             * example `com.oracle.svm.core.graal.snippets.SubstrateAllocationSnippets.Templates.
-             * getProfilingData()` generates `AllocationProfilingData` during lowering.
-             */
             if (universe.sealed()) {
                 throw AnalysisError.shouldNotReachHere("Universe is sealed. New constant reachable: " + javaConstant.toValueString());
             }
@@ -344,7 +327,6 @@ public abstract class ImageHeapScanner {
          */
         AnalysisError.guarantee(rawValue.isAvailable(), "Value not yet available for " + field.format("%H.%n"));
 
-        // TODO the transformer here and markConstantReachable both run the object replacers
         JavaConstant transformedValue = transformFieldValue(field, receiver, rawValue.get());
         /* Add the transformed value to the image heap. */
         JavaConstant fieldValue = markConstantReachable(transformedValue, reason, onAnalysisModified);
@@ -441,9 +423,6 @@ public abstract class ImageHeapScanner {
     }
 
     public Object rescanRoot(Field reflectionField) {
-        if (!enableManualRescan) {
-            return null;
-        }
         if (skipScanning()) {
             return null;
         }
@@ -463,9 +442,6 @@ public abstract class ImageHeapScanner {
     }
 
     public void rescanField(Object receiver, Field reflectionField) {
-        if (!enableManualRescan) {
-            return;
-        }
         if (skipScanning()) {
             return;
         }
@@ -502,19 +478,21 @@ public abstract class ImageHeapScanner {
         return task;
     }
 
-    /** Trigger rescanning of constants. */
+    /** Add the object to the image heap and, if the object is a collection, rescan its elements. */
     public void rescanObject(Object object) {
-        if (!enableManualRescan) {
-            return;
-        }
+        rescanObject(object, OtherReason.RESCAN);
+        rescanCollectionElements(object);
+    }
+
+    /** Add the object to the image heap. */
+    public void rescanObject(Object object, ScanReason reason) {
         if (skipScanning()) {
             return;
         }
         if (object == null) {
             return;
         }
-        doScan(asConstant(object));
-        rescanCollectionElements(object);
+        doScan(asConstant(object), reason);
     }
 
     private void rescanCollectionElements(Object object) {
@@ -546,17 +524,13 @@ public abstract class ImageHeapScanner {
     }
 
     void doScan(JavaConstant constant) {
-        if (constant.getJavaKind() == JavaKind.Object && constant.isNonNull()) {
-            getOrCreateConstantReachableTask(constant, OtherReason.RESCAN, null);
-        }
+        doScan(constant, OtherReason.RESCAN);
     }
 
-    public void scanHub(AnalysisType type) {
-        /* Initialize dynamic hub metadata before scanning it. */
-        universe.onTypeScanned(type);
-        metaAccess.lookupJavaType(java.lang.Class.class).registerAsReachable();
-        /* We scan the original class here, the scanner does the replacement to DynamicHub. */
-        getOrCreateConstantReachableTask(asConstant(type.getJavaClass()), ObjectScanner.OtherReason.HUB, null);
+    void doScan(JavaConstant constant, ScanReason reason) {
+        if (constant.getJavaKind() == JavaKind.Object && constant.isNonNull()) {
+            getOrCreateConstantReachableTask(constant, reason, null);
+        }
     }
 
     protected AnalysisType analysisType(Object constant) {

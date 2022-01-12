@@ -37,6 +37,7 @@ import com.oracle.graal.pointsto.util.CompletionExecutor;
 import com.oracle.svm.core.hub.DynamicHub;
 import com.oracle.svm.core.meta.SubstrateObjectConstant;
 import com.oracle.svm.hosted.SVMHost;
+import com.oracle.svm.hosted.analysis.NativeImagePointsToAnalysis;
 
 import jdk.vm.ci.meta.JavaConstant;
 
@@ -70,12 +71,13 @@ public class SVMImageHeapVerifier extends HeapSnapshotVerifier {
     @Override
     protected void scanTypes(ObjectScanner objectScanner) {
         SVMHost svmHost = (SVMHost) bb.getHostVM();
-        bb.getUniverse().getTypes().stream().filter(AnalysisType::isReachable).forEach(bb::onTypeScanned);
-
-        bb.getUniverse().getTypes().stream().filter(AnalysisType::isReachable).forEach(t -> scanHub(svmHost, objectScanner, t));
+        /* First make sure that all DynamicHub fields are initialized and scanned. */
+        bb.getUniverse().getTypes().stream().filter(AnalysisType::isReachable).forEach(((NativeImagePointsToAnalysis) bb)::initializeMetaData);
+        /* Then verify the snapshots of reachable types, i.e., compare them with hosted values. */
+        bb.getUniverse().getTypes().stream().filter(AnalysisType::isReachable).forEach(t -> verifyHub(svmHost, objectScanner, t));
     }
 
-    private static void scanHub(SVMHost svmHost, ObjectScanner objectScanner, AnalysisType type) {
+    private static void verifyHub(SVMHost svmHost, ObjectScanner objectScanner, AnalysisType type) {
         JavaConstant hubConstant = SubstrateObjectConstant.forObject(svmHost.dynamicHub(type));
         objectScanner.scanConstant(hubConstant, ObjectScanner.OtherReason.HUB);
     }

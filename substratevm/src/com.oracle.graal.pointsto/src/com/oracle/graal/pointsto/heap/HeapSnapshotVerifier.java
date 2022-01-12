@@ -29,7 +29,6 @@ import static com.oracle.graal.pointsto.ObjectScanner.asString;
 import static com.oracle.graal.pointsto.ObjectScanner.constantAsObject;
 
 import java.util.Objects;
-import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import org.graalvm.compiler.options.Option;
@@ -52,12 +51,9 @@ import com.oracle.graal.pointsto.util.CompletionExecutor;
 import jdk.vm.ci.meta.JavaConstant;
 
 public class HeapSnapshotVerifier {
-    private static final int QUIET = 0;
-    private static final int MOST = 1;
-    private static final int ALL = 2;
 
     static class Options {
-        @Option(help = "Control heap verifier verbosity level: 0 - quiet, 1 - print most, 2 - print all.", type = OptionType.Expert)//
+        @Option(help = "Control heap verifier verbosity level: 0 - quiet, 1 - info, 2 - warning, 3 - all.", type = OptionType.Expert)//
         public static final OptionKey<Integer> HeapVerifierVerbosity = new OptionKey<>(2);
     }
 
@@ -66,6 +62,7 @@ public class HeapSnapshotVerifier {
     protected final ImageHeap imageHeap;
 
     private ReusableSet scannedObjects;
+    private boolean heapPatched;
     private boolean analysisModified;
 
     private final int verbosity;
@@ -79,7 +76,9 @@ public class HeapSnapshotVerifier {
     }
 
     public boolean requireAnalysisIteration(CompletionExecutor executor) throws InterruptedException {
+        info("Verifying the heap snapshot...");
         analysisModified = false;
+        heapPatched = false;
         scannedObjects.reset();
         ObjectScanner objectScanner = new ObjectScanner(bb, executor, scannedObjects, new ScanningObserver());
         executor.start();
@@ -87,6 +86,16 @@ public class HeapSnapshotVerifier {
         objectScanner.scanBootImageHeapRoots();
         executor.complete();
         executor.shutdown();
+        if (heapPatched) {
+            info("Heap verification patched the heap snapshot.");
+        } else {
+            info("Heap verification didn't find any heap snapshot modifications.");
+        }
+        if (analysisModified) {
+            info("Heap verification modified the analysis state. Executing an additional analysis iteration.");
+        } else {
+            info("Heap verification didn't modify the analysis state. Exiting analysis.");
+        }
         return analysisModified;
     }
 
@@ -127,10 +136,12 @@ public class HeapSnapshotVerifier {
                     if (!Objects.equals(fieldSnapshot, fieldValue)) {
                         Consumer<ScanReason> onAnalysisModified = (deepReason) -> onStaticFieldMismatch(field, fieldSnapshot, fieldValue, deepReason);
                         scanner.patchStaticField(typeData, field, fieldValue, reason, onAnalysisModified).ensureDone();
+                        heapPatched = true;
                     }
                 } else {
                     Consumer<ScanReason> onAnalysisModified = (deepReason) -> onStaticFieldNotComputed(field, fieldValue, deepReason);
                     scanner.patchStaticField(typeData, field, fieldValue, reason, onAnalysisModified).ensureDone();
+                    heapPatched = true;
                 }
             } else {
                 ImageHeapInstance receiverObject = (ImageHeapInstance) getReceiverObject(receiver, reason);
@@ -138,12 +149,14 @@ public class HeapSnapshotVerifier {
                 if (fieldValueTask.isDone()) {
                     JavaConstant fieldSnapshot = fieldValueTask.guardedGet();
                     if (!Objects.equals(fieldSnapshot, fieldValue)) {
-                        Consumer<ScanReason> onAnalysisModified = (deepReason) -> onInstanceFieldMismatch(field, fieldSnapshot, fieldValue, deepReason);
+                        Consumer<ScanReason> onAnalysisModified = (deepReason) -> onInstanceFieldMismatch(receiverObject, field, fieldSnapshot, fieldValue, deepReason);
                         scanner.patchInstanceField(receiverObject, field, fieldValue, reason, onAnalysisModified).ensureDone();
+                        heapPatched = true;
                     }
                 } else {
-                    Consumer<ScanReason> onAnalysisModified = (deepReason) -> onInstanceFieldNotComputed(field, fieldValue, deepReason);
+                    Consumer<ScanReason> onAnalysisModified = (deepReason) -> onInstanceFieldNotComputed(receiverObject, field, fieldValue, deepReason);
                     scanner.patchInstanceField(receiverObject, field, fieldValue, reason, onAnalysisModified).ensureDone();
+                    heapPatched = true;
                 }
             }
             return false;
@@ -165,6 +178,7 @@ public class HeapSnapshotVerifier {
             if (!Objects.equals(elementSnapshot, elementValue)) {
                 Consumer<ScanReason> onAnalysisModified = (deepReason) -> onArrayElementMismatch(elementSnapshot, elementValue, deepReason);
                 arrayObject.setElement(index, scanner.onArrayElementReachable(array, arrayType, elementValue, index, reason, onAnalysisModified));
+                heapPatched = true;
             }
             return false;
         }
@@ -205,12 +219,13 @@ public class HeapSnapshotVerifier {
                      * processed it yet. Allow ClassInitializationFeature to build the
                      * DynamicHub.classInitializationInfo.
                      */
-                    analysisModified = true;
+                    onNoInitInfoForHub(value, reason);
                 }
                 /* Make sure the DynamicHub value is scanned. */
                 if (task == null) {
                     onNoTaskForHub(value, reason);
                     scanner.toImageHeapObject(value, reason, null);
+                    heapPatched = true;
                 } else {
                     if (task.isDone()) {
                         JavaConstant snapshot = task.guardedGet().getObject();
@@ -228,6 +243,13 @@ public class HeapSnapshotVerifier {
 
     protected boolean initializationInfoComputed(@SuppressWarnings("unused") AnalysisType type) {
         return true;
+    }
+
+    private void onNoInitInfoForHub(JavaConstant value, ScanReason reason) {
+        analysisModified = true;
+        if (printAll()) {
+            warning(reason, "No initialization info computed for hub %s %n", value);
+        }
     }
 
     private void onNoTaskForHub(JavaConstant value, ScanReason reason) {
@@ -258,44 +280,50 @@ public class HeapSnapshotVerifier {
         }
     }
 
-    private void onInstanceFieldMismatch(AnalysisField field, JavaConstant fieldSnapshot, JavaConstant fieldValue, ScanReason reason) {
+    private void onInstanceFieldMismatch(ImageHeapInstance receiver, AnalysisField field, JavaConstant fieldSnapshot, JavaConstant fieldValue, ScanReason reason) {
         analysisModified = true;
         if (printWarning()) {
-            analysisWarning(reason, "Value mismatch for instance field %s %n snapshot: %s %n new value: %s %n", field, fieldSnapshot, fieldValue);
+            analysisWarning(reason, "Value mismatch for instance field %s of %s %n snapshot: %s %n new value: %s %n",
+                            field, receiver.getObject(), fieldSnapshot, fieldValue);
         }
     }
 
-    private void onInstanceFieldNotComputed(AnalysisField field, JavaConstant fieldValue, ScanReason reason) {
+    private void onInstanceFieldNotComputed(ImageHeapInstance receiver, AnalysisField field, JavaConstant fieldValue, ScanReason reason) {
         analysisModified = true;
         if (printWarning()) {
-            analysisWarning(reason, "Snapshot not yet computed for instance field %s %n new value: %s %n", field, fieldValue);
+            analysisWarning(reason, "Snapshot not yet computed for instance field %s of %s %n new value: %s %n",
+                            field, receiver.getObject(), fieldValue);
         }
     }
 
-    private boolean printAll() {
-        return verbosity == ALL;
+    private static final int INFO = 1;
+    private static final int WARNING = 2;
+    private static final int ALL = 3;
+
+    private boolean printInfo() {
+        return verbosity >= INFO;
     }
 
     private boolean printWarning() {
-        return printWarning(() -> false);
+        return verbosity >= WARNING;
     }
 
-    private boolean printWarning(BooleanSupplier skip) {
-        if (verbosity == QUIET) {
-            return false;
-        } else if (verbosity == MOST) {
-            return !skip.getAsBoolean();
+    private boolean printAll() {
+        return verbosity >= ALL;
+    }
+
+    private void info(String info) {
+        if (printInfo()) {
+            System.out.println("INFO: " + info);
         }
-        assert verbosity == ALL;
-        return true;
     }
 
     private void warning(ScanReason reason, String format, Object... args) {
-        System.out.println("\nWARNING: " + message(reason, format, "Object was reached by", args));
+        System.out.println("WARNING: " + message(reason, format, "Object was reached by", args));
     }
 
     private void analysisWarning(ScanReason reason, String format, Object... args) {
-        System.out.println("\nWARNING: " + message(reason, format, "This leads to an analysis state change when", args));
+        System.out.println("WARNING: " + message(reason, format, "This leads to an analysis state change when", args));
     }
 
     private RuntimeException error(ScanReason reason, String format, Object... args) {

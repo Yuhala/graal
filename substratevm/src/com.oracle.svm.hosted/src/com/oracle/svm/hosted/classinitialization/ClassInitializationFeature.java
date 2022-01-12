@@ -329,8 +329,6 @@ public class ClassInitializationFeature implements GraalFeature {
             info = type.getClassInitializer() == null ? ClassInitializationInfo.NO_INITIALIZER_INFO_SINGLETON : ClassInitializationInfo.INITIALIZED_INFO_SINGLETON;
         }
         hub.setClassInitializationInfo(info);
-        // TODO rescanning the hub here should not be necessary
-        universe.getHeapScanner().scanHub(type);
         universe.getHeapScanner().rescanField(hub, dynamicHubClassInitializationInfoField);
     }
 

@@ -731,7 +731,6 @@ public abstract class PointsToAnalysis implements BigBang {
         boolean analysisModified;
         try (StopTimer ignored = verifyHeapTimer.start()) {
             analysisModified = universe.getHeapVerifier().requireAnalysisIteration(executor);
-            System.out.println("\nHeap verification " + (analysisModified ? "modified" : "didn't modify") + " analysis state.");
         }
         /* Initialize for the next iteration. */
         executor.init(timing);
