@@ -28,7 +28,7 @@
 import os
 import re
 from os.path import basename, dirname, getsize, join
-from traceback import print_tb
+from traceback import print_tb,print_stack
 import inspect
 import subprocess
 
@@ -188,6 +188,7 @@ class NativeImageVM(GraalVm):
         self.gc = None
         self.native_architecture = False
         self.graalvm_edition = None
+        self.config = None
         self._configure_from_name(config_name)
 
     def _configure_from_name(self, config_name):
@@ -527,7 +528,7 @@ class NativeImageVM(GraalVm):
             phase = measured_phases[i]
             value_name = phase + "_time"
             rules.append(
-                mx_benchmark.JsonStdOutFileRule(r'^# Printing image build statistics to: (?P<path>\S+?)$', 'path', {
+                mx_benchmark.JsonFixedFileRule(self.config.image_build_report_path, {
                     "benchmark": benchmark,
                     "metric.name": "compile-time",
                     "metric.type": "numeric",
@@ -540,7 +541,7 @@ class NativeImageVM(GraalVm):
                 }, [value_name]))
             value_name = phase + "_memory"
             rules.append(
-                mx_benchmark.JsonStdOutFileRule(r'^# Printing image build statistics to: (?P<path>\S+?)$', 'path', {
+                mx_benchmark.JsonFixedFileRule(self.config.image_build_report_path, {
                     "benchmark": benchmark,
                     "metric.name": "analysis-stats",
                     "metric.type": "numeric",
@@ -762,6 +763,7 @@ class NativeImageVM(GraalVm):
 
         # never fatal, we handle it ourselves
         config = NativeImageVM.BenchmarkConfig(self, self.bmSuite, args)
+        self.config = config
         stages = NativeImageVM.Stages(config, out, err, self.is_gate, True if self.is_gate else nonZeroIsFatal, os.path.abspath(cwd if cwd else os.getcwd()))
         instrumented_iterations = self.pgo_instrumented_iterations if config.pgo_iteration_num is None else int(config.pgo_iteration_num)
 
