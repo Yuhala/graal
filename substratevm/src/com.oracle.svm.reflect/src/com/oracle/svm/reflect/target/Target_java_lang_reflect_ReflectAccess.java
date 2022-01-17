@@ -53,6 +53,7 @@ public final class Target_java_lang_reflect_ReflectAccess {
     public Target_java_lang_reflect_Field copyField(Target_java_lang_reflect_Field field) {
         Target_java_lang_reflect_Field copy = field.copy();
         copy.genericInfo = field.genericInfo;
+        copy.typeAnnotations = field.typeAnnotations;
         return copy;
     }
 
@@ -74,11 +75,6 @@ class Util_java_lang_reflect_ReflectAccess {
             copy.parameters = executable.parameters;
         }
         copy.declaredAnnotations = executable.declaredAnnotations;
-        copy.parameterAnnotations = executable.parameterAnnotations;
         copy.typeAnnotations = executable.typeAnnotations;
-        copy.annotatedReceiverType = executable.annotatedReceiverType;
-        copy.annotatedReturnType = executable.annotatedReturnType;
-        copy.annotatedParameterTypes = executable.annotatedParameterTypes;
-        copy.annotatedExceptionTypes = executable.annotatedExceptionTypes;
     }
 }

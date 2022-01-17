@@ -24,11 +24,14 @@
  */
 package com.oracle.svm.reflect.target;
 
+import static com.oracle.svm.core.annotate.TargetElement.CONSTRUCTOR_NAME;
+
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import com.oracle.svm.core.jdk.JDK11OrEarlier;
+import com.oracle.svm.core.jdk.JDK17OrLater;
 import org.graalvm.util.GuardedAnnotationAccess;
 
 import com.oracle.svm.core.SubstrateUtil;
@@ -40,6 +43,7 @@ import com.oracle.svm.core.annotate.RecomputeFieldValue.CustomFieldValueComputer
 import com.oracle.svm.core.annotate.RecomputeFieldValue.Kind;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
+import com.oracle.svm.core.annotate.TargetElement;
 import com.oracle.svm.core.util.VMError;
 import com.oracle.svm.reflect.hosted.FieldOffsetComputer;
 import com.oracle.svm.reflect.hosted.ReflectionObjectReplacer;
@@ -67,17 +71,20 @@ public final class Target_java_lang_reflect_Field {
      * The declaredAnnotations field doesn't need a value recomputation. Its value is pre-loaded in
      * the {@link ReflectionObjectReplacer}.
      */
-    @Alias //
+    @Alias @RecomputeFieldValue(kind = Kind.Reset)//
     Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
+
+    @Alias @RecomputeFieldValue(kind = Kind.Reset) //
+    byte[] annotations;
+
+    @Inject @RecomputeFieldValue(kind = Kind.Reset) //
+    byte[] typeAnnotations;
 
     @Alias //
     Target_java_lang_reflect_Field root;
 
     @Inject @RecomputeFieldValue(kind = Kind.Custom, declClass = FieldOffsetComputer.class) //
     public int offset;
-
-    @Inject @RecomputeFieldValue(kind = Kind.Custom, declClass = AnnotatedTypeComputer.class) //
-    AnnotatedType annotatedType;
 
     /** If non-null, the field was deleted via substitution and this string provides the reason. */
     @Inject @RecomputeFieldValue(kind = Kind.Custom, declClass = FieldDeletionReasonComputer.class) //
@@ -88,6 +95,14 @@ public final class Target_java_lang_reflect_Field {
 
     @Alias
     native Target_jdk_internal_reflect_FieldAccessor acquireFieldAccessor(boolean overrideFinalCheck);
+
+    @Alias
+    @TargetElement(name = CONSTRUCTOR_NAME, onlyWith = JDK17OrLater.class)
+    native void constructorJDK17OrLater(Class<?> declaringClass, String name, Class<?> type, int modifiers, boolean trustedFinal, int slot, String signature, byte[] annotations);
+
+    @Alias
+    @TargetElement(name = CONSTRUCTOR_NAME, onlyWith = JDK11OrEarlier.class)
+    native void constructorJDK11OrEarlier(Class<?> declaringClass, String name, Class<?> type, int modifiers, int slot, String signature, byte[] annotations);
 
     /** @see com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor#deleteErrorMessage */
     @Substitute
@@ -106,28 +121,8 @@ public final class Target_java_lang_reflect_Field {
     }
 
     @Substitute
-    Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
-        Target_java_lang_reflect_Field holder = ReflectionHelper.getHolder(this);
-        return ReflectionHelper.requireNonNull(holder.declaredAnnotations, "Declared annotations must be computed during native image generation.");
-    }
-
-    @Substitute
-    public AnnotatedType getAnnotatedType() {
-        Target_java_lang_reflect_Field holder = ReflectionHelper.getHolder(this);
-        return ReflectionHelper.requireNonNull(holder.annotatedType, "Annotated type must be computed during native image generation.");
-    }
-
-    public static final class AnnotatedTypeComputer implements CustomFieldValueComputer {
-        @Override
-        public RecomputeFieldValue.ValueAvailability valueAvailability() {
-            return RecomputeFieldValue.ValueAvailability.BeforeAnalysis;
-        }
-
-        @Override
-        public Object compute(MetaAccessProvider metaAccess, ResolvedJavaField original, ResolvedJavaField annotated, Object receiver) {
-            Field field = (Field) receiver;
-            return field.getAnnotatedType();
-        }
+    private byte[] getTypeAnnotationBytes0() {
+        return typeAnnotations;
     }
 
     public static final class FieldDeletionReasonComputer implements CustomFieldValueComputer {

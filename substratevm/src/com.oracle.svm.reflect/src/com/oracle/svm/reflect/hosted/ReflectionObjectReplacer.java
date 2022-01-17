@@ -125,6 +125,7 @@ public class ReflectionObjectReplacer implements Function<Object, Object> {
          * required.
          */
 
+        // TODO check which are necessary
         if (original instanceof Method) {
             Method method = (Method) original;
             method.getGenericReturnType();
@@ -176,8 +177,10 @@ public class ReflectionObjectReplacer implements Function<Object, Object> {
 
         if (original instanceof ClassRepository) {
             ClassRepository classRepository = (ClassRepository) original;
-            classRepository.getSuperclass();
-            classRepository.getSuperInterfaces();
+            if (classRepository != ClassRepository.NONE) {
+                classRepository.getSuperclass();
+                classRepository.getSuperInterfaces();
+            }
         }
     }
 }

@@ -26,14 +26,10 @@ package com.oracle.svm.reflect.target;
 
 import static com.oracle.svm.core.annotate.TargetElement.CONSTRUCTOR_NAME;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-import com.oracle.svm.core.SubstrateUtil;
 import com.oracle.svm.core.annotate.Alias;
-import com.oracle.svm.core.annotate.Inject;
 import com.oracle.svm.core.annotate.RecomputeFieldValue;
-import com.oracle.svm.core.annotate.RecomputeFieldValue.CustomFieldValueComputer;
 import com.oracle.svm.core.annotate.RecomputeFieldValue.Kind;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
@@ -41,16 +37,12 @@ import com.oracle.svm.core.annotate.TargetElement;
 import com.oracle.svm.core.util.VMError;
 import com.oracle.svm.reflect.hosted.ExecutableAccessorComputer;
 
-import jdk.vm.ci.meta.MetaAccessProvider;
-import jdk.vm.ci.meta.ResolvedJavaField;
 import sun.reflect.generics.repository.MethodRepository;
 
 @TargetClass(value = Method.class)
 public final class Target_java_lang_reflect_Method {
 
     @Alias MethodRepository genericInfo;
-
-    @Alias private Class<?>[] parameterTypes;
 
     @Alias @RecomputeFieldValue(kind = Kind.Reset)//
     private byte[] annotations;
@@ -61,9 +53,6 @@ public final class Target_java_lang_reflect_Method {
     @Alias //
     @RecomputeFieldValue(kind = Kind.Custom, declClass = ExecutableAccessorComputer.class) //
     Target_jdk_internal_reflect_MethodAccessor methodAccessor;
-
-    @Inject @RecomputeFieldValue(kind = Kind.Custom, declClass = DefaultValueComputer.class) //
-    Object defaultValue;
 
     @Alias
     @TargetElement(name = CONSTRUCTOR_NAME)
@@ -89,35 +78,6 @@ public final class Target_java_lang_reflect_Method {
             throw VMError.unsupportedFeature("Runtime reflection is not supported for " + this);
         }
         return methodAccessor;
-    }
-
-    @Substitute
-    public Annotation[][] getParameterAnnotations() {
-        Target_java_lang_reflect_Executable self = SubstrateUtil.cast(this, Target_java_lang_reflect_Executable.class);
-        Target_java_lang_reflect_Executable holder = ReflectionHelper.getHolder(self);
-        if (holder.parameterAnnotations != null) {
-            return holder.parameterAnnotations;
-        }
-        return self.sharedGetParameterAnnotations(parameterTypes, parameterAnnotations);
-    }
-
-    @Substitute
-    public Object getDefaultValue() {
-        Target_java_lang_reflect_Method holder = ReflectionHelper.getHolder(this);
-        return holder.defaultValue;
-    }
-
-    public static final class DefaultValueComputer implements CustomFieldValueComputer {
-        @Override
-        public RecomputeFieldValue.ValueAvailability valueAvailability() {
-            return RecomputeFieldValue.ValueAvailability.BeforeAnalysis;
-        }
-
-        @Override
-        public Object compute(MetaAccessProvider metaAccess, ResolvedJavaField original, ResolvedJavaField annotated, Object receiver) {
-            Method method = (Method) receiver;
-            return method.getDefaultValue();
-        }
     }
 
 }

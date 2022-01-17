@@ -39,6 +39,7 @@ import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 import com.oracle.svm.core.annotate.TargetElement;
 import com.oracle.svm.core.config.ConfigurationValues;
+import com.oracle.svm.core.reflect.Target_jdk_internal_reflect_ConstantPool;
 import com.oracle.svm.core.util.VMError;
 import com.oracle.svm.reflect.hosted.MethodMetadataEncoderImpl;
 

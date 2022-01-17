@@ -24,6 +24,8 @@
  */
 package com.oracle.svm.reflect.hosted;
 
+import static com.oracle.svm.reflect.target.MethodMetadataDecoderImpl.NULL_OBJECT;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -39,30 +41,35 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.graalvm.compiler.core.common.util.TypeConversion;
 import org.graalvm.compiler.core.common.util.UnsafeArrayTypeWriter;
 import org.graalvm.compiler.debug.GraalError;
-import org.graalvm.nativeimage.ImageSingletons;
+import org.graalvm.compiler.serviceprovider.JavaVersionUtil;
 import org.graalvm.util.GuardedAnnotationAccess;
 
-import com.oracle.svm.core.SubstrateOptions;
 import com.oracle.svm.core.code.CodeInfoEncoder;
-import com.oracle.svm.core.hub.DynamicHubSupport;
+import com.oracle.svm.core.hub.DynamicHub;
+import com.oracle.svm.core.meta.SubstrateObjectConstant;
+import com.oracle.svm.core.reflect.Target_jdk_internal_reflect_ConstantPool;
 import com.oracle.svm.core.util.ByteArrayReader;
+import com.oracle.svm.hosted.ProgressReporter;
 import com.oracle.svm.hosted.image.NativeImageCodeCache.MethodMetadataEncoder;
 import com.oracle.svm.hosted.image.NativeImageCodeCache.MethodMetadataEncoderFactory;
+import com.oracle.svm.hosted.meta.HostedField;
 import com.oracle.svm.hosted.meta.HostedMethod;
 import com.oracle.svm.hosted.meta.HostedType;
-import com.oracle.svm.reflect.hosted.MethodMetadata.ReflectionMethodMetadata;
+import com.oracle.svm.reflect.hosted.ReflectionMetadata.ConstructorMetadata;
+import com.oracle.svm.reflect.hosted.ReflectionMetadata.FieldMetadata;
+import com.oracle.svm.reflect.hosted.ReflectionMetadata.MethodMetadata;
 import com.oracle.svm.reflect.target.MethodMetadataDecoderImpl;
 import com.oracle.svm.reflect.target.MethodMetadataDecoderImpl.ReflectParameterDescriptor;
-import com.oracle.svm.reflect.target.MethodMetadataEncoding;
-import com.oracle.svm.reflect.target.Target_jdk_internal_reflect_ConstantPool;
 import com.oracle.svm.reflect.target.Target_sun_reflect_annotation_AnnotationParser;
 import com.oracle.svm.util.ReflectionUtil;
 
+import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.MetaAccessProvider;
 import sun.invoke.util.Wrapper;
 import sun.reflect.annotation.AnnotationType;
@@ -84,7 +91,7 @@ import sun.reflect.annotation.TypeAnnotationParser;
  *
  * Emitting the metadata happens in two phases. In the first phase, the string and class encoders
  * are filled with the necessary values (in the {@code add*MethodMetadata} functions). In a second
- * phase, the values are encoded as byte arrays and stored in {@link MethodMetadataEncoding} (see
+ * phase, the values are encoded as byte arrays and stored in {@link DynamicHub} arrays (see
  * {@link #encodeAllAndInstall()}).
  */
 public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
@@ -98,32 +105,64 @@ public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
 
     private final CodeInfoEncoder.Encoders encoders;
     private final TreeSet<HostedType> sortedTypes;
-    private Map<HostedType, Set<ReflectionMethodMetadata>> queriedMethodData;
-    private Map<HostedType, Set<MethodMetadata>> reachableMethodData;
-    private Map<HostedType, Set<MethodMetadata>> hidingMethodData;
-
-    private byte[] methodDataEncoding;
-    private byte[] methodDataIndexEncoding;
+    private Map<HostedType, Set<FieldMetadata>> fieldData;
+    private Map<HostedType, Set<MethodMetadata>> methodData;
+    private Map<HostedType, Set<ConstructorMetadata>> constructorData;
+// private Map<HostedType, Set<RecordComponentMetadata>> recordComponentData;
 
     public MethodMetadataEncoderImpl(CodeInfoEncoder.Encoders encoders) {
         this.encoders = encoders;
         this.sortedTypes = new TreeSet<>(Comparator.comparingLong(t -> t.getHub().getTypeID()));
-        if (SubstrateOptions.ConfigureReflectionMetadata.getValue()) {
-            this.queriedMethodData = new HashMap<>();
-            this.hidingMethodData = new HashMap<>();
-        }
-        if (SubstrateOptions.IncludeMethodData.getValue()) {
-            this.reachableMethodData = new HashMap<>();
-        }
+        this.fieldData = new HashMap<>();
+        this.methodData = new HashMap<>();
+        this.constructorData = new HashMap<>();
     }
 
+    private static final Method isFieldTrustedFinal = ReflectionUtil.lookupMethod(true, Field.class, "isTrustedFinal");
     private static final Method parseAllTypeAnnotations = ReflectionUtil.lookupMethod(TypeAnnotationParser.class, "parseAllTypeAnnotations", AnnotatedElement.class);
     private static final Method hasRealParameterData = ReflectionUtil.lookupMethod(Executable.class, "hasRealParameterData");
 
     @Override
-    public void addReflectionMethodMetadata(MetaAccessProvider metaAccess, HostedMethod hostedMethod, Executable reflectMethod) {
+    public void addReflectionFieldMetadata(MetaAccessProvider metaAccess, HostedField hostedField, Field reflectField) {
+        HostedType declaringType = hostedField.getDeclaringClass();
+        String name = hostedField.getName();
+        HostedType type = hostedField.getType();
+        /* Reflect method because substitution of Object.hashCode() is private */
+        int modifiers = reflectField.getModifiers();
+        boolean trustedFinal = false;
+        if (JavaVersionUtil.JAVA_SPEC >= 17) {
+            try {
+                trustedFinal = (boolean) isFieldTrustedFinal.invoke(reflectField);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw GraalError.shouldNotReachHere();
+            }
+        }
+        String signature = getSignature(reflectField);
+        Annotation[] annotations = GuardedAnnotationAccess.getDeclaredAnnotations(hostedField);
+        TypeAnnotation[] typeAnnotations;
+        try {
+            typeAnnotations = (TypeAnnotation[]) parseAllTypeAnnotations.invoke(null, reflectField);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw GraalError.shouldNotReachHere();
+        }
+
+        /* Fill encoders with the necessary values. */
+        encoders.sourceMethodNames.addObject(name);
+        encoders.sourceClasses.addObject(type.getJavaClass());
+        encoders.sourceMethodNames.addObject(signature);
+        /* Register string and class values in annotations */
+        registerAnnotationValues(annotations);
+
+        sortedTypes.add(declaringType);
+        fieldData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new FieldMetadata(declaringType, name, type, modifiers, trustedFinal, signature,
+                        annotations, typeAnnotations));
+    }
+
+    @Override
+    public void addReflectionExecutableMetadata(MetaAccessProvider metaAccess, HostedMethod hostedMethod, Executable reflectMethod, Object accessor) {
+        boolean isConstructor = hostedMethod.isConstructor();
         HostedType declaringType = hostedMethod.getDeclaringClass();
-        String name = hostedMethod.isConstructor() ? "<init>" : hostedMethod.getName();
+        String name = isConstructor ? null : hostedMethod.getName();
         HostedType[] parameterTypes = getParameterTypes(hostedMethod);
         /* Reflect method because substitution of Object.hashCode() is private */
         int modifiers = reflectMethod.getModifiers();
@@ -143,11 +182,15 @@ public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
         ReflectParameterDescriptor[] reflectParameterDescriptors = reflectParameterDataPresent ? getReflectParameters(reflectMethod) : new ReflectParameterDescriptor[0];
 
         /* Fill encoders with the necessary values. */
-        encoders.sourceMethodNames.addObject(name);
+        if (!isConstructor) {
+            encoders.sourceMethodNames.addObject(name);
+        }
         for (HostedType parameterType : parameterTypes) {
             encoders.sourceClasses.addObject(parameterType.getJavaClass());
         }
-        encoders.sourceClasses.addObject(returnType.getJavaClass());
+        if (!isConstructor) {
+            encoders.sourceClasses.addObject(returnType.getJavaClass());
+        }
         for (HostedType exceptionType : exceptionTypes) {
             encoders.sourceClasses.addObject(exceptionType.getJavaClass());
         }
@@ -165,10 +208,20 @@ public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
         for (ReflectParameterDescriptor parameter : reflectParameterDescriptors) {
             encoders.sourceMethodNames.addObject(parameter.getName());
         }
+        JavaConstant accessorConstant = null;
+        if (accessor != null) {
+            accessorConstant = SubstrateObjectConstant.forObject(accessor);
+            encoders.objectConstants.addObject(accessorConstant);
+        }
 
         sortedTypes.add(declaringType);
-        queriedMethodData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new ReflectionMethodMetadata(declaringType, name, parameterTypes, modifiers, returnType, exceptionTypes, signature,
-                        annotations, parameterAnnotations, typeAnnotations, reflectParameterDataPresent, reflectParameterDescriptors));
+        if (isConstructor) {
+            constructorData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new ConstructorMetadata(declaringType, parameterTypes, modifiers, exceptionTypes, signature, annotations,
+                            parameterAnnotations, typeAnnotations, reflectParameterDataPresent, reflectParameterDescriptors, accessorConstant));
+        } else {
+            methodData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new MethodMetadata(declaringType, name, parameterTypes, modifiers, returnType, exceptionTypes, signature,
+                            annotations, parameterAnnotations, typeAnnotations, reflectParameterDataPresent, reflectParameterDescriptors, accessorConstant));
+        }
     }
 
     private void registerAnnotationValues(Annotation... annotations) {
@@ -224,27 +277,30 @@ public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
         }
 
         sortedTypes.add(declaringType);
-        hidingMethodData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new MethodMetadata(declaringType, name, parameterTypes));
+        methodData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new MethodMetadata(declaringType, name, parameterTypes));
     }
 
     @Override
     public void addReachableMethodMetadata(HostedMethod method) {
+        boolean isConstructor = method.isConstructor();
         HostedType declaringType = method.getDeclaringClass();
-        String name = method.getName();
+        String name = isConstructor ? null : method.getName();
         HostedType[] parameterTypes = getParameterTypes(method);
 
         /* Fill encoders with the necessary values. */
-        encoders.sourceMethodNames.addObject(method.getName());
+        if (!isConstructor) {
+            encoders.sourceMethodNames.addObject(method.getName());
+        }
         for (HostedType parameterType : parameterTypes) {
             encoders.sourceClasses.addObject(parameterType.getJavaClass());
         }
 
         sortedTypes.add(declaringType);
-        reachableMethodData.computeIfAbsent(declaringType, t -> {
-            /* The declaring class is encoded once for all methods */
-            encoders.sourceClasses.addObject(declaringType.getJavaClass());
-            return new HashSet<>();
-        }).add(new MethodMetadata(declaringType, name, parameterTypes));
+        if (isConstructor) {
+            constructorData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new ConstructorMetadata(declaringType, parameterTypes));
+        } else {
+            methodData.computeIfAbsent(declaringType, t -> new HashSet<>()).add(new MethodMetadata(declaringType, name, parameterTypes));
+        }
     }
 
     private static HostedType[] getParameterTypes(HostedMethod method) {
@@ -273,85 +329,81 @@ public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
         return reflectParameterDescriptors;
     }
 
-    @Override
-    public void encodeAllAndInstall() {
-        encodeMethodMetadata();
-        ImageSingletons.lookup(MethodMetadataEncoding.class).setMethodsEncoding(methodDataEncoding);
-        ImageSingletons.lookup(MethodMetadataEncoding.class).setIndexEncoding(methodDataIndexEncoding);
-    }
-
     /**
      * See {@link MethodMetadataDecoderImpl} for the encoding format description.
      */
-    private void encodeMethodMetadata() {
-        UnsafeArrayTypeWriter dataEncodingBuffer = UnsafeArrayTypeWriter.create(ByteArrayReader.supportsUnalignedMemoryAccess());
-        UnsafeArrayTypeWriter indexEncodingBuffer = UnsafeArrayTypeWriter.create(ByteArrayReader.supportsUnalignedMemoryAccess());
-
-        long nextTypeId = 0;
+    @Override
+    public void encodeAllAndInstall() {
+        int metadataByteLength = 0;
         for (HostedType declaringType : sortedTypes) {
-            long typeID = declaringType.getHub().getTypeID();
-            assert typeID >= nextTypeId;
-            for (; nextTypeId < typeID; nextTypeId++) {
-                indexEncodingBuffer.putS4(MethodMetadataDecoderImpl.NO_METHOD_METADATA);
-            }
-            assert nextTypeId == typeID;
-
-            long index = dataEncodingBuffer.getBytesWritten();
-            indexEncodingBuffer.putS4(index);
-            nextTypeId++;
-
-            if (SubstrateOptions.ConfigureReflectionMetadata.getValue()) {
-                Set<ReflectionMethodMetadata> queriedMethods = queriedMethodData.getOrDefault(declaringType, Collections.emptySet());
-                encodeArray(dataEncodingBuffer, queriedMethods.toArray(new ReflectionMethodMetadata[0]), method -> {
-                    assert method.declaringType.equals(declaringType);
-                    encodeReflectionMethod(dataEncodingBuffer, method);
-                });
-
-                Set<MethodMetadata> hidingMethods = hidingMethodData.getOrDefault(declaringType, Collections.emptySet());
-                encodeArray(dataEncodingBuffer, hidingMethods.toArray(new MethodMetadata[0]), hidingMethod -> encodeSimpleMethod(dataEncodingBuffer, hidingMethod));
-            }
-
-            if (SubstrateOptions.IncludeMethodData.getValue()) {
-                Set<MethodMetadata> reachableMethods = reachableMethodData.get(declaringType);
-                if (reachableMethods != null) {
-                    encodeType(dataEncodingBuffer, declaringType);
-                    encodeArray(dataEncodingBuffer, reachableMethods.toArray(new MethodMetadata[0]), reachableMethod -> encodeSimpleMethod(dataEncodingBuffer, reachableMethod));
-                } else {
-                    dataEncodingBuffer.putSV(MethodMetadataDecoderImpl.NO_METHOD_METADATA);
-                }
-            }
+            metadataByteLength += encodeAndInstall(declaringType, fieldData, this::encodeField, DynamicHub::setFieldsEncoding);
+            metadataByteLength += encodeAndInstall(declaringType, methodData, this::encodeMethod, DynamicHub::setMethodsEncoding);
+            metadataByteLength += encodeAndInstall(declaringType, constructorData, this::encodeConstructor, DynamicHub::setConstructorsEncoding);
         }
-        for (; nextTypeId <= ImageSingletons.lookup(DynamicHubSupport.class).getMaxTypeId(); nextTypeId++) {
-            indexEncodingBuffer.putS4(MethodMetadataDecoderImpl.NO_METHOD_METADATA);
-        }
-
-        methodDataEncoding = new byte[TypeConversion.asS4(dataEncodingBuffer.getBytesWritten())];
-        dataEncodingBuffer.toArray(methodDataEncoding);
-        methodDataIndexEncoding = new byte[TypeConversion.asS4(indexEncodingBuffer.getBytesWritten())];
-        indexEncodingBuffer.toArray(methodDataIndexEncoding);
+        ProgressReporter.singleton().setMetadataByteLength(metadataByteLength);
     }
 
-    private void encodeReflectionMethod(UnsafeArrayTypeWriter buf, ReflectionMethodMetadata method) {
-        encodeSimpleMethod(buf, method);
-        buf.putUV(method.modifiers);
-        encodeType(buf, method.returnType);
-        encodeArray(buf, method.exceptionTypes, exceptionType -> encodeType(buf, exceptionType));
-        encodeName(buf, method.signature);
-        encodeByteArray(buf, encodeAnnotations(method.annotations));
-        encodeByteArray(buf, encodeParameterAnnotations(method.parameterAnnotations));
-        encodeByteArray(buf, encodeTypeAnnotations(method.typeAnnotations));
-        buf.putU1(method.hasRealParameterData ? 1 : 0);
-        if (method.hasRealParameterData) {
-            encodeArray(buf, method.reflectParameters, reflectParameter -> {
-                encodeName(buf, reflectParameter.getName());
-                buf.putS4(reflectParameter.getModifiers());
-            });
-        }
+    @SuppressWarnings("unchecked")
+    private <T> int encodeAndInstall(HostedType declaringType, Map<HostedType, Set<T>> data, BiConsumer<UnsafeArrayTypeWriter, T> encodeCallback, BiConsumer<DynamicHub, byte[]> saveCallback) {
+        UnsafeArrayTypeWriter encodingBuffer = UnsafeArrayTypeWriter.create(ByteArrayReader.supportsUnalignedMemoryAccess());
+        Set<T> elements = data.getOrDefault(declaringType, Collections.emptySet());
+        encodeArray(encodingBuffer, elements.toArray(), element -> encodeCallback.accept(encodingBuffer, (T) element));
+        int encodingSize = TypeConversion.asS4(encodingBuffer.getBytesWritten());
+        byte[] dataEncoding = new byte[encodingSize];
+        saveCallback.accept(declaringType.getHub(), encodingBuffer.toArray(dataEncoding));
+        return encodingSize;
     }
 
-    private void encodeSimpleMethod(UnsafeArrayTypeWriter buf, MethodMetadata method) {
+    private void encodeField(UnsafeArrayTypeWriter buf, FieldMetadata field) {
+        buf.putUV(field.modifiers);
+        encodeName(buf, field.name);
+        encodeType(buf, field.type);
+        buf.putU1(field.trustedFinal ? 1 : 0);
+        encodeName(buf, field.signature);
+        encodeByteArray(buf, encodeAnnotations(field.annotations));
+        encodeByteArray(buf, encodeTypeAnnotations(field.typeAnnotations));
+    }
+
+    private void encodeMethod(UnsafeArrayTypeWriter buf, MethodMetadata method) {
+        buf.putUV(method.modifiers | ((method.complete ? 1 : 0) << 31));
         encodeName(buf, method.name);
         encodeArray(buf, method.parameterTypes, parameterType -> encodeType(buf, parameterType));
+        if (method.complete) {
+            encodeType(buf, method.returnType);
+            encodeArray(buf, method.exceptionTypes, exceptionType -> encodeType(buf, exceptionType));
+            encodeName(buf, method.signature);
+            encodeByteArray(buf, encodeAnnotations(method.annotations));
+            encodeByteArray(buf, encodeParameterAnnotations(method.parameterAnnotations));
+            encodeByteArray(buf, encodeTypeAnnotations(method.typeAnnotations));
+            buf.putU1(method.hasRealParameterData ? 1 : 0);
+            if (method.hasRealParameterData) {
+                encodeArray(buf, method.reflectParameters, reflectParameter -> {
+                    encodeName(buf, reflectParameter.getName());
+                    buf.putS4(reflectParameter.getModifiers());
+                });
+            }
+            encodeObject(buf, method.accessor);
+        }
+    }
+
+    private void encodeConstructor(UnsafeArrayTypeWriter buf, ConstructorMetadata constructor) {
+        buf.putUV(constructor.modifiers);
+        encodeArray(buf, constructor.parameterTypes, parameterType -> encodeType(buf, parameterType));
+        if (constructor.complete) {
+            encodeArray(buf, constructor.exceptionTypes, exceptionType -> encodeType(buf, exceptionType));
+            encodeName(buf, constructor.signature);
+            encodeByteArray(buf, encodeAnnotations(constructor.annotations));
+            encodeByteArray(buf, encodeParameterAnnotations(constructor.parameterAnnotations));
+            encodeByteArray(buf, encodeTypeAnnotations(constructor.typeAnnotations));
+            buf.putU1(constructor.hasRealParameterData ? 1 : 0);
+            if (constructor.hasRealParameterData) {
+                encodeArray(buf, constructor.reflectParameters, reflectParameter -> {
+                    encodeName(buf, reflectParameter.getName());
+                    buf.putS4(reflectParameter.getModifiers());
+                });
+            }
+            encodeObject(buf, constructor.accessor);
+        }
     }
 
     private void encodeType(UnsafeArrayTypeWriter buf, HostedType type) {
@@ -360,6 +412,14 @@ public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
 
     private void encodeName(UnsafeArrayTypeWriter buf, String name) {
         buf.putSV(encoders.sourceMethodNames.getIndex(name));
+    }
+
+    private void encodeObject(UnsafeArrayTypeWriter buf, JavaConstant object) {
+        if (object == null) {
+            buf.putSV(NULL_OBJECT);
+        } else {
+            buf.putSV(encoders.objectConstants.getIndex(object));
+        }
     }
 
     private static <T> void encodeArray(UnsafeArrayTypeWriter buf, T[] array, Consumer<T> elementEncoder) {
@@ -376,8 +436,17 @@ public class MethodMetadataEncoderImpl implements MethodMetadataEncoder {
         }
     }
 
+    private static final Method getFieldSignature = ReflectionUtil.lookupMethod(Field.class, "getGenericSignature");
     private static final Method getMethodSignature = ReflectionUtil.lookupMethod(Method.class, "getGenericSignature");
     private static final Method getConstructorSignature = ReflectionUtil.lookupMethod(Constructor.class, "getSignature");
+
+    private static String getSignature(Field field) {
+        try {
+            return (String) getFieldSignature.invoke(field);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw GraalError.shouldNotReachHere();
+        }
+    }
 
     private static String getSignature(Executable method) {
         try {
