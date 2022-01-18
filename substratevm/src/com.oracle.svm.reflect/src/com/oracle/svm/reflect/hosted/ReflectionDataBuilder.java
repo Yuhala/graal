@@ -52,7 +52,6 @@ import java.util.stream.Collectors;
 import org.graalvm.compiler.debug.GraalError;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.nativeimage.hosted.Feature.DuringAnalysisAccess;
-import org.graalvm.nativeimage.hosted.Feature.DuringSetupAccess;
 import org.graalvm.nativeimage.impl.ConfigurationCondition;
 import org.graalvm.nativeimage.impl.RuntimeReflectionSupport;
 import org.graalvm.util.GuardedAnnotationAccess;
@@ -200,8 +199,7 @@ public class ReflectionDataBuilder extends ConditionalConfigurationRegistry impl
         }
     }
 
-    protected void duringSetup(DuringSetupAccess a) {
-        DuringSetupAccessImpl access = (DuringSetupAccessImpl) a;
+    protected void duringSetup(DuringSetupAccessImpl access) {
         dynamicHubReflectionDataField = access.findField(DynamicHub.class, "rd");
     }
 
@@ -418,7 +416,6 @@ public class ReflectionDataBuilder extends ConditionalConfigurationRegistry impl
                 access.requireAnalysisIteration();
             }
             ClassForNameSupport.registerClass(clazz);
-            // access.rescanObject(annotationTypeSupport.getAnnotationTypeMap());
         } else if (type instanceof TypeVariable<?>) {
             for (Type bound : ((TypeVariable<?>) type).getBounds()) {
                 makeTypeReachable(access, bound);
@@ -515,7 +512,6 @@ public class ReflectionDataBuilder extends ConditionalConfigurationRegistry impl
 
         if (reflectionClasses.contains(clazz)) {
             ClassForNameSupport.registerClass(clazz);
-            // access.rescanObject(ImageSingletons.lookup(ClassForNameSupport.class).registeredClasses);
         }
 
         /*

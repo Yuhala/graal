@@ -88,7 +88,6 @@ public class ImageHeap {
 
         @Override
         public boolean equals(Object o) {
-            // TODO ==
             if (o instanceof ImageHeapObject) {
                 ImageHeapObject other = (ImageHeapObject) o;
                 return this.object.equals(other.object);

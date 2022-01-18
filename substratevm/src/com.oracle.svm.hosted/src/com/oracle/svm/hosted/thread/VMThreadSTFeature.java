@@ -24,8 +24,6 @@
  */
 package com.oracle.svm.hosted.thread;
 
-import static com.oracle.svm.hosted.thread.VMThreadLocalCollector.threadLocalInfosField;
-
 import java.util.List;
 
 import org.graalvm.compiler.api.replacements.SnippetReflectionProvider;
@@ -216,7 +214,7 @@ public class VMThreadSTFeature implements GraalFeature {
         if (VMThreadLocalInfos.setInfos(threadLocalCollector.threadLocals.values())) {
             DuringAnalysisAccessImpl access = (DuringAnalysisAccessImpl) a;
             access.requireAnalysisIteration();
-            access.rescanField(ImageSingletons.lookup(VMThreadLocalInfos.class), threadLocalInfosField);
+            access.rescanField(ImageSingletons.lookup(VMThreadLocalInfos.class), VMThreadLocalCollector.threadLocalInfosField);
         }
     }
 

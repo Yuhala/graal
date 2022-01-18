@@ -68,7 +68,7 @@ import jdk.vm.ci.meta.ResolvedJavaField;
  * Scanning is triggered when:
  * <ul>
  * <li>a static final field is marked as accessed, or</li>s
- * <li>a method that is parsed and embedded roots are discovered</li>
+ * <li>a method is parsed and embedded roots are discovered</li>
  * </ul>
  * <p>
  * When an instance field is marked as accessed the objects of its declaring type (and all the
