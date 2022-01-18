@@ -541,8 +541,8 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
                 Value paramValue = gen.emitMove(inputValue);
 
                 /*
-                 * In the native ABI on both Linux and Darwin, some parameters are not extended
-                 * to the equivalent Java stack kinds
+                 * In the native ABI on both Linux and Darwin, some parameters are not extended to
+                 * the equivalent Java stack kinds
                  */
                 if (inputValue.getPlatformKind().getSizeInBytes() < Integer.BYTES) {
                     assert ((SubstrateCallingConventionType) convention.getType()).nativeABI();
