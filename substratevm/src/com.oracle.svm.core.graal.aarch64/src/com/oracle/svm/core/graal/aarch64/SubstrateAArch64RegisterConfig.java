@@ -70,6 +70,7 @@ import static jdk.vm.ci.aarch64.AArch64.zr;
 import java.util.ArrayList;
 
 import org.graalvm.compiler.core.common.NumUtil;
+import org.graalvm.nativeimage.Platform;
 
 import com.oracle.svm.core.OS;
 import com.oracle.svm.core.ReservedRegisters;
@@ -242,21 +243,30 @@ public class SubstrateAArch64RegisterConfig implements SubstrateRegisterConfig {
     }
 
     /**
-     * The Darwin calling convention expects arguments to be aligned to the argument kind.
+     * The Linux calling convention expects stack arguments to be aligned to at least 8 bytes, but
+     * any unused padding bits have unspecified values.
+     *
+     * For more details, see <a
+     * href=https://github.com/ARM-software/abi-aa/blob/d6e9abbc5e9cdcaa0467d8187eec0049b44044c4/aapcs64/aapcs64.rst#parameter-passing-rules>the
+     * AArch64 procedure call standard</a>.
+     */
+    private int linuxNativeStackParameterAssignment(ValueKindFactory<?> valueKindFactory, AllocatableValue[] locations, int index, JavaKind kind, int currentStackOffset, boolean isOutgoing) {
+        int alignment = Math.max(kind.getByteCount(), target.wordSize);
+        locations[index] = StackSlot.get(valueKindFactory.getValueKind(kind), currentStackOffset, !isOutgoing);
+        return currentStackOffset + alignment;
+    }
+
+    /**
+     * The Darwin calling convention expects stack arguments to be aligned to the argument kind.
      *
      * For more details, see <a
      * href=https://developer.apple.com/documentation/xcode/writing-arm64-code-for-apple-platforms>https://developer.apple.com/documentation/xcode/writing-arm64-code-for-apple-platforms</a>.
      */
     private int darwinNativeStackParameterAssignment(ValueKindFactory<?> valueKindFactory, AllocatableValue[] locations, int index, JavaKind kind, int currentStackOffset, boolean isOutgoing) {
-        if (isOutgoing) {
-            int paramByteSize = kind.getByteCount();
-            int alignedStackOffset = NumUtil.roundUp(currentStackOffset, paramByteSize);
-            locations[index] = StackSlot.get(valueKindFactory.getValueKind(kind), alignedStackOffset, false);
-            return alignedStackOffset + paramByteSize;
-        } else {
-            /* Native-to-Java calls follow the normal Java convention. */
-            return javaStackParameterAssignment(valueKindFactory, locations, index, kind, currentStackOffset, isOutgoing);
-        }
+        int paramByteSize = kind.getByteCount();
+        int alignedStackOffset = NumUtil.roundUp(currentStackOffset, paramByteSize);
+        locations[index] = StackSlot.get(valueKindFactory.getValueKind(kind), alignedStackOffset, !isOutgoing);
+        return alignedStackOffset + paramByteSize;
     }
 
     @Override
@@ -309,10 +319,21 @@ public class SubstrateAArch64RegisterConfig implements SubstrateRegisterConfig {
 
             }
             if (register != null) {
-                locations[i] = register.asValue(valueKindFactory.getValueKind(kind.getStackKind()));
+                /*
+                 * The AArch64 procedure call standard does not extend subword (i.e., boolean, byte,
+                 * char, short) values to 32 bits.
+                 */
+                JavaKind parameterKind = type.nativeABI() && Platform.includedIn(Platform.LINUX.class) ? kind : kind.getStackKind();
+                locations[i] = register.asValue(valueKindFactory.getValueKind(parameterKind));
             } else {
-                if (type.nativeABI() && OS.DARWIN.isCurrent()) {
-                    currentStackOffset = darwinNativeStackParameterAssignment(valueKindFactory, locations, i, kind, currentStackOffset, type.outgoing);
+                if (type.nativeABI()) {
+                    if (Platform.includedIn(Platform.LINUX.class)) {
+                        currentStackOffset = linuxNativeStackParameterAssignment(valueKindFactory, locations, i, kind, currentStackOffset, type.outgoing);
+                    } else if (Platform.includedIn(Platform.DARWIN.class)) {
+                        currentStackOffset = darwinNativeStackParameterAssignment(valueKindFactory, locations, i, kind, currentStackOffset, type.outgoing);
+                    } else {
+                        throw VMError.shouldNotReachHere();
+                    }
                 } else {
                     currentStackOffset = javaStackParameterAssignment(valueKindFactory, locations, i, kind, currentStackOffset, type.outgoing);
                 }

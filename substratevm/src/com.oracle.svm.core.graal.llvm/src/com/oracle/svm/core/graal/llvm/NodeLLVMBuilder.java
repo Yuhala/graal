@@ -190,6 +190,7 @@ public class NodeLLVMBuilder implements NodeLIRBuilderTool, SubstrateNodeLIRBuil
             for (ParameterNode param : graph.getNodes(ParameterNode.TYPE)) {
                 int offset = (gen.isEntryPoint() ? 0 : SpecialRegister.count());
                 LLVMValueRef paramValue = builder.getFunctionParam(param.index() + offset);
+                // FIXME probably have to add something here as well
                 setResult(param, paramValue);
             }
 
