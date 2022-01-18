@@ -36,6 +36,7 @@ import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.MapCursor;
 import org.graalvm.compiler.api.replacements.SnippetReflectionProvider;
 import org.graalvm.compiler.debug.GraalError;
+import org.graalvm.nativeimage.ImageSingletons;
 
 import com.oracle.graal.pointsto.ObjectScanner.ArrayScan;
 import com.oracle.graal.pointsto.ObjectScanner.EmbeddedRootScan;
@@ -101,6 +102,11 @@ public abstract class ImageHeapScanner {
         scanningObserver = aScanningObserver;
         hostedConstantReflection = GraalAccess.getOriginalProviders().getConstantReflection();
         hostedSnippetReflection = GraalAccess.getOriginalProviders().getSnippetReflection();
+        ImageSingletons.add(ImageHeapScanner.class, this);
+    }
+
+    public static ImageHeapScanner instance() {
+        return ImageSingletons.lookup(ImageHeapScanner.class);
     }
 
     public void scanEmbeddedRoot(JavaConstant root, BytecodePosition position) {
@@ -220,10 +226,6 @@ public abstract class ImageHeapScanner {
              * constant.
              */
             return toImageHeapObject(replaced.get(), reason, onAnalysisModified);
-        }
-
-        if (!hostVM.platformSupported(asObject(constant).getClass())) {
-            return null;
         }
 
         /*

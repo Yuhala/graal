@@ -46,7 +46,7 @@ import org.graalvm.compiler.nodes.java.MonitorEnterNode;
 import org.graalvm.compiler.nodes.java.MonitorExitNode;
 import org.graalvm.compiler.nodes.java.MonitorIdNode;
 
-import com.oracle.graal.pointsto.PointsToAnalysis;
+import com.oracle.graal.pointsto.heap.ImageHeapScanner;
 import com.oracle.graal.pointsto.infrastructure.WrappedJavaMethod;
 import com.oracle.graal.pointsto.meta.HostedProviders;
 import com.oracle.svm.core.graal.nodes.CGlobalDataLoadAddressNode;
@@ -116,10 +116,7 @@ class JNINativeCallWrapperMethod extends CustomSubstitutionMethod {
         ValueNode callAddress;
         if (linkage.isBuiltInFunction()) {
             callAddress = kit.unique(new CGlobalDataLoadAddressNode(linkage.getBuiltInAddress()));
-            PointsToAnalysis bb = providers.getBigBang();
-            if (bb != null) {
-                bb.getUniverse().getHeapScanner().rescanField(linkage, linkageBuiltInAddressField);
-            }
+            ImageHeapScanner.instance().rescanField(linkage, linkageBuiltInAddressField);
         } else {
             callAddress = kit.nativeCallAddress(kit.createObject(linkage));
         }

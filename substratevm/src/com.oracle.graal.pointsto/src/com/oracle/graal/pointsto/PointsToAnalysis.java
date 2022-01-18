@@ -151,7 +151,6 @@ public abstract class PointsToAnalysis implements BigBang {
         this.unsupportedFeatures = unsupportedFeatures;
         this.providers = providers;
         this.strengthenGraalGraphs = strengthenGraalGraphs;
-        providers.setBigBang(this);
 
         this.objectType = metaAccess.lookupJavaType(Object.class);
         /*
