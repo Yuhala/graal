@@ -136,9 +136,7 @@ public class HeapSnapshotVerifier {
                         heapPatched = true;
                     }
                 } else {
-                    Consumer<ScanReason> onAnalysisModified = (deepReason) -> onStaticFieldNotComputed(field, fieldValue, deepReason);
-                    scanner.patchStaticField(typeData, field, fieldValue, reason, onAnalysisModified).ensureDone();
-                    heapPatched = true;
+                    onStaticFieldNotComputed(field, fieldValue, reason);
                 }
             } else {
                 ImageHeapInstance receiverObject = (ImageHeapInstance) getReceiverObject(receiver, reason);
@@ -151,6 +149,12 @@ public class HeapSnapshotVerifier {
                         heapPatched = true;
                     }
                 } else {
+                    /*
+                     * There may be some instance fields not yet computed because the verifier can
+                     * insert new objects for annotation proxy implementations when scanning types.
+                     * The annotations are set lazily, based on reachability, since we only want
+                     * annotations in the heap that are otherwise marked as used.
+                     */
                     Consumer<ScanReason> onAnalysisModified = (deepReason) -> onInstanceFieldNotComputed(receiverObject, field, fieldValue, deepReason);
                     scanner.patchInstanceField(receiverObject, field, fieldValue, reason, onAnalysisModified).ensureDone();
                     heapPatched = true;
@@ -271,10 +275,7 @@ public class HeapSnapshotVerifier {
     }
 
     private void onStaticFieldNotComputed(AnalysisField field, JavaConstant fieldValue, ScanReason reason) {
-        analysisModified = true;
-        if (printWarning()) {
-            analysisWarning(reason, "Snapshot not yet computed for static field %s %n new value: %s %n", field, fieldValue);
-        }
+        error(reason, "Snapshot not yet computed for static field %s %n new value: %s %n", field, fieldValue);
     }
 
     private void onInstanceFieldMismatch(ImageHeapInstance receiver, AnalysisField field, JavaConstant fieldSnapshot, JavaConstant fieldValue, ScanReason reason) {
