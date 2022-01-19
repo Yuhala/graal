@@ -46,7 +46,6 @@ import org.graalvm.compiler.nodes.java.MonitorEnterNode;
 import org.graalvm.compiler.nodes.java.MonitorExitNode;
 import org.graalvm.compiler.nodes.java.MonitorIdNode;
 
-import com.oracle.graal.pointsto.heap.ImageHeapScanner;
 import com.oracle.graal.pointsto.infrastructure.WrappedJavaMethod;
 import com.oracle.graal.pointsto.meta.HostedProviders;
 import com.oracle.svm.core.graal.nodes.CGlobalDataLoadAddressNode;
@@ -55,6 +54,7 @@ import com.oracle.svm.core.meta.SubstrateObjectConstant;
 import com.oracle.svm.core.thread.VMThreads.StatusSupport;
 import com.oracle.svm.hosted.annotation.CustomSubstitutionMethod;
 import com.oracle.svm.hosted.code.SimpleSignature;
+import com.oracle.svm.hosted.heap.SVMImageHeapScanner;
 import com.oracle.svm.jni.access.JNIAccessFeature;
 import com.oracle.svm.jni.access.JNINativeLinkage;
 import com.oracle.svm.jni.nativeapi.JNIEnvironment;
@@ -116,7 +116,7 @@ class JNINativeCallWrapperMethod extends CustomSubstitutionMethod {
         ValueNode callAddress;
         if (linkage.isBuiltInFunction()) {
             callAddress = kit.unique(new CGlobalDataLoadAddressNode(linkage.getBuiltInAddress()));
-            ImageHeapScanner.instance().rescanField(linkage, linkageBuiltInAddressField);
+            SVMImageHeapScanner.instance().rescanField(linkage, linkageBuiltInAddressField);
         } else {
             callAddress = kit.nativeCallAddress(kit.createObject(linkage));
         }

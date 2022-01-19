@@ -51,7 +51,7 @@ public class HeapSnapshotVerifier {
 
     static class Options {
         @Option(help = "Control heap verifier verbosity level: 0 - quiet, 1 - info, 2 - warning, 3 - all.", type = OptionType.Expert)//
-        public static final OptionKey<Integer> HeapVerifierVerbosity = new OptionKey<>(2);
+        public static final OptionKey<Integer> HeapVerifierVerbosity = new OptionKey<>(0);
     }
 
     protected final BigBang bb;
