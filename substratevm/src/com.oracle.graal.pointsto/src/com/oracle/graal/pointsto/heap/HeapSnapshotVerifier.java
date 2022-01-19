@@ -39,9 +39,6 @@ import com.oracle.graal.pointsto.BigBang;
 import com.oracle.graal.pointsto.ObjectScanner;
 import com.oracle.graal.pointsto.ObjectScanner.ReusableSet;
 import com.oracle.graal.pointsto.ObjectScanningObserver;
-import com.oracle.graal.pointsto.heap.ImageHeap.ImageHeapArray;
-import com.oracle.graal.pointsto.heap.ImageHeap.ImageHeapInstance;
-import com.oracle.graal.pointsto.heap.ImageHeap.ImageHeapObject;
 import com.oracle.graal.pointsto.meta.AnalysisField;
 import com.oracle.graal.pointsto.meta.AnalysisType;
 import com.oracle.graal.pointsto.util.AnalysisError;
@@ -193,7 +190,7 @@ public class HeapSnapshotVerifier {
 
         @Override
         public void forEmbeddedRoot(JavaConstant root, ScanReason reason) {
-            AnalysisFuture<ImageHeap.ImageHeapObject> rootTask = imageHeap.getTask(root);
+            AnalysisFuture<ImageHeapObject> rootTask = imageHeap.getTask(root);
             if (rootTask == null) {
                 throw error(reason, "No snapshot task found for embedded root %s %n", root);
             } else if (rootTask.isDone()) {

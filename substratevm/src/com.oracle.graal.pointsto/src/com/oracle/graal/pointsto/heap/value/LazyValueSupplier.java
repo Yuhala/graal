@@ -24,6 +24,7 @@
  */
 package com.oracle.graal.pointsto.heap.value;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import com.oracle.graal.pointsto.util.AnalysisError;
@@ -31,16 +32,16 @@ import com.oracle.graal.pointsto.util.AnalysisError;
 public final class LazyValueSupplier<V> implements ValueSupplier<V> {
 
     private final Supplier<V> valueSupplier;
-    private final Supplier<Boolean> isAvailable;
+    private final BooleanSupplier isAvailable;
 
-    LazyValueSupplier(Supplier<V> valueSupplier, Supplier<Boolean> isAvailable) {
+    LazyValueSupplier(Supplier<V> valueSupplier, BooleanSupplier isAvailable) {
         this.valueSupplier = valueSupplier;
         this.isAvailable = isAvailable;
     }
 
     @Override
     public boolean isAvailable() {
-        return isAvailable.get();
+        return isAvailable.getAsBoolean();
     }
 
     @Override

@@ -41,10 +41,6 @@ import jdk.vm.ci.meta.ResolvedJavaField;
  */
 public final class TypeData {
     /**
-     * The class initialization state: initialize the class at build time or at run time.
-     */
-    final boolean shouldInitializeAtRunTime;
-    /**
      * The raw values of all static fields, regardless of field reachability status. Evaluating the
      * {@link AnalysisFuture} runs
      * {@link ImageHeapScanner#onFieldValueReachable(AnalysisField, ValueSupplier, ObjectScanner.ScanReason)}
@@ -52,13 +48,8 @@ public final class TypeData {
      */
     final Map<ResolvedJavaField, AnalysisFuture<JavaConstant>> staticFieldValues;
 
-    public TypeData(boolean shouldInitializeAtRunTime, Map<ResolvedJavaField, AnalysisFuture<JavaConstant>> staticFieldValues) {
-        this.shouldInitializeAtRunTime = shouldInitializeAtRunTime;
+    public TypeData(Map<ResolvedJavaField, AnalysisFuture<JavaConstant>> staticFieldValues) {
         this.staticFieldValues = staticFieldValues;
-    }
-
-    public boolean shouldInitializeAtRunTime() {
-        return shouldInitializeAtRunTime;
     }
 
     /**

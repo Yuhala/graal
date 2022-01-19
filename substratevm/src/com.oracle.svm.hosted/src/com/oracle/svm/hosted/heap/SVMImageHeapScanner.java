@@ -33,6 +33,7 @@ import org.graalvm.compiler.api.replacements.SnippetReflectionProvider;
 import com.oracle.graal.pointsto.ObjectScanner.ScanReason;
 import com.oracle.graal.pointsto.ObjectScanningObserver;
 import com.oracle.graal.pointsto.heap.ImageHeap;
+import com.oracle.graal.pointsto.heap.ImageHeapObject;
 import com.oracle.graal.pointsto.heap.ImageHeapScanner;
 import com.oracle.graal.pointsto.heap.value.ValueSupplier;
 import com.oracle.graal.pointsto.meta.AnalysisField;
@@ -78,13 +79,12 @@ public class SVMImageHeapScanner extends ImageHeapScanner {
         return loader.findClassOrFail(className);
     }
 
-    @Override
     protected boolean shouldInitializeAtRunTime(AnalysisType type) {
         return ((SVMHost) hostVM).getClassInitializationSupport().shouldInitializeAtRuntime(type);
     }
 
     @Override
-    protected AnalysisFuture<ImageHeap.ImageHeapObject> getOrCreateConstantReachableTask(JavaConstant javaConstant, ScanReason reason, Consumer<ScanReason> onAnalysisModified) {
+    protected AnalysisFuture<ImageHeapObject> getOrCreateConstantReachableTask(JavaConstant javaConstant, ScanReason reason, Consumer<ScanReason> onAnalysisModified) {
         VMError.guarantee(javaConstant instanceof SubstrateObjectConstant, "Not a substrate constant " + javaConstant);
         return super.getOrCreateConstantReachableTask(javaConstant, reason, onAnalysisModified);
     }
@@ -113,6 +113,11 @@ public class SVMImageHeapScanner extends ImageHeapScanner {
     @Override
     protected ValueSupplier<JavaConstant> readHostedFieldValue(AnalysisField field, JavaConstant receiver) {
         if (field.isStatic() && shouldInitializeAtRunTime(field.getDeclaringClass())) {
+            /*
+             * Read the uninitialized field value. When all constant reads will be routed through
+             * the heap snapshot this can be moved to AnalysisConstantReflectionProvider, however
+             * currently we want to read raw values directly from HotSpot.
+             */
             return ValueSupplier.eagerValue(AnalysisConstantReflectionProvider.readUninitializedStaticValue(field));
         }
 

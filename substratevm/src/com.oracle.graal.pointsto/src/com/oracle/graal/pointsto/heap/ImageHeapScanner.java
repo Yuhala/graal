@@ -46,9 +46,6 @@ import com.oracle.graal.pointsto.ObjectScanner.ScanReason;
 import com.oracle.graal.pointsto.ObjectScanningObserver;
 import com.oracle.graal.pointsto.PointsToAnalysis;
 import com.oracle.graal.pointsto.api.HostVM;
-import com.oracle.graal.pointsto.heap.ImageHeap.ImageHeapArray;
-import com.oracle.graal.pointsto.heap.ImageHeap.ImageHeapInstance;
-import com.oracle.graal.pointsto.heap.ImageHeap.ImageHeapObject;
 import com.oracle.graal.pointsto.heap.value.ValueSupplier;
 import com.oracle.graal.pointsto.meta.AnalysisField;
 import com.oracle.graal.pointsto.meta.AnalysisMetaAccess;
@@ -148,9 +145,6 @@ public abstract class ImageHeapScanner {
     public TypeData computeTypeData(AnalysisType type) {
         GraalError.guarantee(type.isReachable(), "TypeData is only available for reachable types");
 
-        /* Decide if the type should be initialized at build time or at run time: */
-        boolean initializeAtRunTime = shouldInitializeAtRunTime(type);
-
         /*
          * Snapshot all static fields. This reads the raw field value of all fields regardless of
          * reachability status. The field value is processed when a field is marked as reachable, in
@@ -162,11 +156,7 @@ public abstract class ImageHeapScanner {
             rawStaticFieldValues.put(field, new AnalysisFuture<>(() -> onFieldValueReachable(field, rawFieldValue, new FieldScan(field))));
         }
 
-        return new TypeData(initializeAtRunTime, rawStaticFieldValues);
-    }
-
-    protected boolean shouldInitializeAtRunTime(@SuppressWarnings("unused") AnalysisType type) {
-        return false;
+        return new TypeData(rawStaticFieldValues);
     }
 
     void markTypeInstantiated(AnalysisType type) {
@@ -414,7 +404,6 @@ public abstract class ImageHeapScanner {
     }
 
     protected ValueSupplier<JavaConstant> readHostedFieldValue(AnalysisField field, JavaConstant receiver) {
-        assert !field.isStatic() || !shouldInitializeAtRunTime(field.getDeclaringClass());
         // Wrap the hosted constant into a substrate constant
         JavaConstant value = universe.lookup(hostedConstantReflection.readFieldValue(field.wrapped, receiver));
         return ValueSupplier.eagerValue(value);

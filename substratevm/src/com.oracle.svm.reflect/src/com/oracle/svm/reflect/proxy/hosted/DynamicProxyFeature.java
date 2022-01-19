@@ -24,8 +24,6 @@
  */
 package com.oracle.svm.reflect.proxy.hosted;
 
-// Checkstyle: allow reflection
-
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;

@@ -90,7 +90,7 @@ import com.oracle.svm.util.ReflectionUtil;
  * Holds data that is pre-computed during native image generation and accessed at run time during a
  * Graal compilation.
  */
-public class GraalSupport {
+public class    GraalSupport {
 
     private RuntimeConfiguration runtimeConfig;
     private Suites suites;
