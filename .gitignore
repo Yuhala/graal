@@ -53,3 +53,10 @@ jmh_result.json
 /vm/src/installer/dist/
 /tools/generators/node_modules/
 /tools/generators/out/
+
+#
+# Peterson Yuhala: my additions
+#
+sgx/app
+sgx/*.so
+sgx/**/*.o
