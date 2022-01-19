@@ -1,0 +1,424 @@
+[enclave_create sgx_enclave_common.cpp:357] 
+ secs->attibutes.flags = 6, secs->attributes.xfrm = 7 
+Apr 16, 2021 8:01:16 AM edu.cmu.graphchi.apps.BenchMain main
+INFO: Found shards -- no need to preprocess
+8:01:16 AM vertex-data <init> - t:1 INFO:   Sparse vertex data was allowed but sparse degree file did not exist  using dense
+8:01:16 AM vertex-data <init> - t:1 INFO:   Vertex file [/home/petman/projects/graal-tee/substratevm/graphchi/data/data.txt.4Bj.vout] length: 16819488, nvertices=4204872, expected size: 16819488
+Apr 16, 2021 8:01:16 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: 0.017s: iteration: 0, interval: 0 -- 525608
+Apr 16, 2021 8:01:16 AM edu.cmu.graphchi.engine.GraphChiEngine determineNextWindow
+INFO: Memory budget: 1602080760
+Apr 16, 2021 8:01:16 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: Subinterval:: 0 -- 525608 (iteration 0)
+Apr 16, 2021 8:01:17 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: Init vertices...
+Apr 16, 2021 8:01:17 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: Loading...
+Apr 16, 2021 8:01:17 AM edu.cmu.graphchi.engine.GraphChiEngine loadBeforeUpdates
+INFO: Memshard: 0 -- 525608
+Apr 16, 2021 8:01:17 AM edu.cmu.graphchi.engine.GraphChiEngine loadBeforeUpdates
+INFO: Loading memory-shard finished.main
+Apr 16, 2021 8:01:17 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: Load took: 70ms
+Apr 16, 2021 8:01:18 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: Update exec: 991 ms.
+Apr 16, 2021 8:01:18 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: 2.711s: iteration: 0, interval: 525609 -- 1051217
+Apr 16, 2021 8:01:19 AM edu.cmu.graphchi.engine.GraphChiEngine determineNextWindow
+INFO: Memory budget: 1602080760
+Apr 16, 2021 8:01:19 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: Subinterval:: 525609 -- 1051217 (iteration 0)
+Apr 16, 2021 8:01:19 AM edu.cmu.graphchi.engine.GraphChiEngine run
+INFO: Init vertices...
+Fatal error: Unexpected exception in MonitorSupport.monitorEnter: java.lang.NullPointerException: null
+    at java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:285)
+    at com.oracle.svm.core.monitor.MultiThreadedMonitorSupport.monitorEnter(MultiThreadedMonitorSupport.java:232)
+    at com.oracle.svm.core.monitor.MultiThreadedMonitorSupport.slowPathMonitorEnter(MultiThreadedMonitorSupport.java:198)
+    at java.util.logging.Logger.findResourceBundle(Logger.java:1849)
+    at java.util.logging.Logger.getResourceBundle(Logger.java:664)
+    at java.util.logging.Logger.getEffectiveLoggerBundle(Logger.java:2152)
+    at java.util.logging.Logger.doLog(Logger.java:758)
+    at java.util.logging.Logger.log(Logger.java:788)
+    at java.util.logging.Logger.info(Logger.java:1490)
+    at edu.cmu.graphchi.engine.GraphChiEngine.run(GraphChiEngine.java:356)
+    at edu.cmu.graphchi.apps.BenchMain.main(BenchMain.java:127)
+
+JavaFrameAnchor dump:
+
+  No anchors
+  
+TopFrame info:
+
+  TotalFrameSize in CodeInfoTable 48
+  
+VMThreads info:
+
+  VMThread 00007fc4007f6940  STATUS_IN_JAVA (safepoints disabled)  java.lang.Thread@0x7fc494223b10
+  
+VM Thread State for current thread 00007fc4007f6940:
+
+  0 (8 bytes): com.oracle.svm.jni.JNIThreadLocalEnvironment.jniFunctions = (bytes) 
+    00007fc4007f6940: 00007fc49413f010
+  
+  8 (8 bytes): com.oracle.svm.core.graal.snippets.StackOverflowCheckImpl.stackBoundaryTL = (Word) 1  0000000000000001
+  16 (4 bytes): com.oracle.svm.core.thread.Safepoint.safepointRequested = (int) 2106933619  7d954173
+  20 (4 bytes): com.oracle.svm.core.thread.VMThreads$StatusSupport.statusTL = (int) 1  00000001
+  24 (32 bytes): com.oracle.svm.core.genscavenge.ThreadLocalAllocation.regularTLAB = (bytes) 
+    00007fc4007f6958: 00007fc49a500000 00007fc49a600000
+    00007fc4007f6968: 00007fc49a531320 0000000000000000
+    
+  
+  56 (8 bytes): com.oracle.svm.core.thread.JavaThreads.currentThread = (Object) java.lang.Thread  00007fc494223b10
+  64 (8 bytes): com.oracle.svm.core.stack.JavaFrameAnchors.lastAnchor = (Word) 0  0000000000000000
+  72 (8 bytes): com.oracle.svm.core.heap.NoAllocationVerifier.openVerifiers = (Object) null
+  80 (8 bytes): com.oracle.svm.core.identityhashcode.IdentityHashCodeSupport.hashCodeGeneratorTL = (Object) null
+  88 (8 bytes): com.oracle.svm.core.snippets.ExceptionUnwind.currentException = (Object) null
+  96 (8 bytes): com.oracle.svm.core.thread.ThreadingSupportImpl.activeTimer = (Object) null
+  104 (8 bytes): com.oracle.svm.graal.isolated.IsolatedCompileClient.currentClient = (Object) null
+  112 (8 bytes): com.oracle.svm.graal.isolated.IsolatedCompileContext.currentContext = (Object) null
+  120 (8 bytes): com.oracle.svm.jni.JNIObjectHandles.handles = (Object) com.oracle.svm.core.handles.ThreadLocalHandles  00007fc4b2f01190
+  128 (8 bytes): com.oracle.svm.jni.JNIThreadLocalPendingException.pendingException = (Object) null
+  136 (8 bytes): com.oracle.svm.jni.JNIThreadLocalPinnedObjects.pinnedObjectsListHead = (Object) null
+  144 (8 bytes): com.oracle.svm.jni.JNIThreadOwnedMonitors.ownedMonitors = (Object) null
+  152 (8 bytes): com.oracle.svm.core.thread.VMThreads.IsolateTL = (Word) 140482273239040  00007fc493fe6000
+  160 (8 bytes): com.oracle.svm.core.thread.VMThreads.OSThreadHandleTL = (Word) 140485688354624  00007fc55f8ce740
+  168 (8 bytes): com.oracle.svm.core.thread.VMThreads.OSThreadIdTL = (Word) 140485688354624  00007fc55f8ce740
+  176 (8 bytes): com.oracle.svm.core.thread.VMThreads.nextTL = (Word) 0  0000000000000000
+  184 (8 bytes): com.oracle.svm.core.thread.VMThreads.unalignedIsolateThreadMemoryTL = (Word) 140479798667536  00007fc4007f6910
+  192 (4 bytes): com.oracle.svm.core.graal.snippets.StackOverflowCheckImpl.yellowZoneStateTL = (int) -16843010  fefefefe
+  196 (4 bytes): com.oracle.svm.core.snippets.ImplicitExceptions.implicitExceptionsAreFatal = (int) 0  00000000
+  200 (4 bytes): com.oracle.svm.core.thread.ThreadingSupportImpl.currentPauseDepth = (int) 1  00000001
+  204 (4 bytes): com.oracle.svm.core.thread.VMThreads$ActionOnTransitionToJavaSupport.actionTL = (int) 0  00000000
+  208 (4 bytes): com.oracle.svm.core.thread.VMThreads$StatusSupport.safepointsDisabledTL = (int) 1  00000001
+  
+VMOperation dump:
+
+  No VMOperation in progress
+  
+Dump Counters:
+
+  
+Raw Stacktrace:
+
+  00007fc48a9a9650: 00007fc49a600000 0000000000000078
+  00007fc48a9a9660: 00007fc4940f0948 00007fc49a530260
+  00007fc48a9a9670: 00007fc40007ca85 00007fc40009d46a
+  00007fc48a9a9680: 000000018a9cd000 00007fc40007ca85
+  00007fc48a9a9690: 00007fc48a9a9d50 00007fc4942a7948
+  00007fc48a9a96a0: 00007fc494228860 00007fc40029f3f4
+  00007fc48a9a96b0: 0000005003d1d51e 000000100006c1c9
+  00007fc48a9a96c0: 00007fc48a9a9758 00007fc48a9a9728
+  
+Stacktrace Stage 0:
+
+  SP 00007fc48a9a9650 IP 00007fc400078500  FrameSize 48
+  SP 00007fc48a9a9680 IP 00007fc40009d46a  FrameSize 16
+  SP 00007fc48a9a9690 IP 00007fc40007ca85  FrameSize 32
+  SP 00007fc48a9a96b0 IP 00007fc40029f3f4  FrameSize 96
+  SP 00007fc48a9a9710 IP 00007fc4002a05ae  FrameSize 16
+  SP 00007fc48a9a9720 IP 00007fc4002a0153  FrameSize 48
+  SP 00007fc48a9a9750 IP 00007fc40029eaa1  FrameSize 32
+  SP 00007fc48a9a9770 IP 00007fc4002a0903  FrameSize 48
+  SP 00007fc48a9a97a0 IP 00007fc400127baf  FrameSize 272
+  SP 00007fc48a9a98b0 IP 00007fc40011b9eb  FrameSize 160
+  SP 00007fc48a9a9950 IP 00007fc40004f0f8  FrameSize 96
+  
+Stacktrace Stage 1:
+
+  SP 00007fc48a9a9650 IP 00007fc400078500  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a9680 IP 00007fc40009d46a  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a9690 IP 00007fc40007ca85  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a96b0 IP 00007fc40029f3f4  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a9710 IP 00007fc4002a05ae  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a9720 IP 00007fc4002a0153  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a9750 IP 00007fc40029eaa1  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a9770 IP 00007fc4002a0903  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a97a0 IP 00007fc400127baf  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a98b0 IP 00007fc40011b9eb  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  SP 00007fc48a9a9950 IP 00007fc40004f0f8  com.oracle.svm.core.code.CodeInfo@0x7fc4941f0770 name = image code
+  
+Stacktrace Stage 2:
+
+  SP 00007fc48a9a9650 IP 00007fc400078500  [image code] com.oracle.svm.core.jdk.VMErrorSubstitutions.shutdown(VMErrorSubstitutions.java:111)
+  SP 00007fc48a9a9650 IP 00007fc400078500  [image code] com.oracle.svm.core.jdk.VMErrorSubstitutions.shouldNotReachHere(VMErrorSubstitutions.java:104)
+  SP 00007fc48a9a9680 IP 00007fc40009d46a  [image code] com.oracle.svm.core.util.VMError.shouldNotReachHere(VMError.java:77)
+  SP 00007fc48a9a9690 IP 00007fc40007ca85  [image code] com.oracle.svm.core.monitor.MultiThreadedMonitorSupport.slowPathMonitorEnter(MultiThreadedMonitorSupport.java:219)
+  SP 00007fc48a9a96b0 IP 00007fc40029f3f4  [image code] java.util.logging.Logger.findResourceBundle(Logger.java:1849)
+  SP 00007fc48a9a9710 IP 00007fc4002a05ae  [image code] java.util.logging.Logger.getResourceBundle(Logger.java:664)
+  SP 00007fc48a9a9720 IP 00007fc4002a0153  [image code] java.util.logging.Logger.getEffectiveLoggerBundle(Logger.java:2152)
+  SP 00007fc48a9a9750 IP 00007fc40029eaa1  [image code] java.util.logging.Logger.doLog(Logger.java:758)
+  SP 00007fc48a9a9770 IP 00007fc4002a0903  [image code] java.util.logging.Logger.log(Logger.java:788)
+  SP 00007fc48a9a97a0 IP 00007fc400127baf  [image code] java.util.logging.Logger.info(Logger.java:1490)
+  SP 00007fc48a9a97a0 IP 00007fc400127baf  [image code] edu.cmu.graphchi.engine.GraphChiEngine.run(GraphChiEngine.java:356)
+  SP 00007fc48a9a98b0 IP 00007fc40011b9eb  [image code] edu.cmu.graphchi.apps.BenchMain.main(BenchMain.java:127)
+  SP 00007fc48a9a9950 IP 00007fc40004f0f8  [image code] com.oracle.svm.core.JavaMainWrapper.runCore(JavaMainWrapper.java:146)
+  SP 00007fc48a9a9950 IP 00007fc40004f0f8  [image code] com.oracle.svm.core.JavaMainWrapper.run(JavaMainWrapper.java:182)
+  SP 00007fc48a9a9950 IP 00007fc40004f0f8  [image code] com.oracle.svm.core.code.IsolateEnterStub.JavaMainWrapper_run_5087f5482cc9a6abc971913ece43acb471d2631b(IsolateEnterStub.java:0)
+  
+[Native image heap boundaries: 
+  ReadOnly Primitives: 0x7fc493fe7028 .. 0x7fc4940b73b8
+  ReadOnly References: 0x7fc4940b73d0 .. 0x7fc49413e390
+  ReadOnly Relocatables: 0x7fc49413f000 .. 0x7fc4941860a8
+  Writable Primitives: 0x7fc494187000 .. 0x7fc4941fe220
+  Writable References: 0x7fc4941fe230 .. 0x7fc4942b0040
+  Writable Huge: 0x0 .. 0x0
+  ReadOnly Huge: 0x7fc4942e6030 .. 0x7fc494358ab8]
+
+
+[Heap:
+  [Young generation: 
+    [Eden: 
+      [edenSpace:
+        aligned: 0/0 unaligned: 0/0]]
+    [Survivors: 
+      ]]
+  [Old generation: 
+    [oldFromSpace:
+      aligned: 33422080/32 unaligned: 18638136/13
+      aligned chunks:
+        0x7fc4b2f00000 (0x7fc4b2f01028-0x7fc4b3000000)
+        0x7fc4b3100000 (0x7fc4b3101028-0x7fc4b31fffd8)
+        0x7fc4b3300000 (0x7fc4b3301028-0x7fc4b33fffd8)
+        0x7fc4b3500000 (0x7fc4b3501028-0x7fc4b35fffd8)
+        0x7fc4b3700000 (0x7fc4b3701028-0x7fc4b37fffd8)
+        0x7fc4b3900000 (0x7fc4b3901028-0x7fc4b39fffd8)
+        0x7fc4b3b00000 (0x7fc4b3b01028-0x7fc4b3bfffd8)
+        0x7fc4b3d00000 (0x7fc4b3d01028-0x7fc4b3dfffd8)
+        0x7fc4b3f00000 (0x7fc4b3f01028-0x7fc4b3ffffd8)
+        0x7fc4b4100000 (0x7fc4b4101028-0x7fc4b41fffd8)
+        0x7fc4b4300000 (0x7fc4b4301028-0x7fc4b43fffd8)
+        0x7fc4b4500000 (0x7fc4b4501028-0x7fc4b45fffd8)
+        0x7fc4b4700000 (0x7fc4b4701028-0x7fc4b47fffd8)
+        0x7fc4b4900000 (0x7fc4b4901028-0x7fc4b49fffd8)
+        0x7fc4b4b00000 (0x7fc4b4b01028-0x7fc4b4bfffe8)
+        0x7fc4b4d00000 (0x7fc4b4d01028-0x7fc4b4dffff8)
+        0x7fc4b4f00000 (0x7fc4b4f01028-0x7fc4b4ffffe8)
+        0x7fc4b5100000 (0x7fc4b5101028-0x7fc4b51ffff8)
+        0x7fc4b5300000 (0x7fc4b5301028-0x7fc4b53ffff8)
+        0x7fc4b5500000 (0x7fc4b5501028-0x7fc4b55ffff8)
+        0x7fc4b5700000 (0x7fc4b5701028-0x7fc4b57ffff8)
+        0x7fc4b5900000 (0x7fc4b5901028-0x7fc4b59ffff8)
+        0x7fc4b5b00000 (0x7fc4b5b01028-0x7fc4b5bffff8)
+        0x7fc4b5d00000 (0x7fc4b5d01028-0x7fc4b5e00000)
+        0x7fc4b5f00000 (0x7fc4b5f01028-0x7fc4b5fffff8)
+        0x7fc4b6100000 (0x7fc4b6101028-0x7fc4b61fffe8)
+        0x7fc4b6300000 (0x7fc4b6301028-0x7fc4b63ffff8)
+        0x7fc4b6500000 (0x7fc4b6501028-0x7fc4b65ffff8)
+        0x7fc4b6700000 (0x7fc4b6701028-0x7fc4b67ffff8)
+        0x7fc4b6900000 (0x7fc4b6901028-0x7fc4b69fffe8)
+        0x7fc4b6b00000 (0x7fc4b6b01028-0x7fc4b6bfffe8)
+        0x7fc4b6d00000 (0x7fc4b6d01028-0x7fc4b6da69c8)
+      unaligned chunks:
+        0x7fc4acb00000 (0x7fc4acb00030-0x7fc4acf02988)
+        0x7fc4a8e00000 (0x7fc4a8e00030-0x7fc4a9202988)
+        0x7fc4acf03000 (0x7fc4acf03030-0x7fc4ad1044e8)
+        0x7fc493ba2000 (0x7fc493ba2030-0x7fc493be1d70)
+        0x7fc494600000 (0x7fc494600030-0x7fc494640040)
+        0x7fc494641000 (0x7fc494641030-0x7fc494681040)
+        0x7fc4a3c00000 (0x7fc4a3c00030-0x7fc4a3d00040)
+        0x7fc4a3d01000 (0x7fc4a3d01030-0x7fc4a3e01040)
+        0x7fc4a3e02000 (0x7fc4a3e02030-0x7fc4a3f02040)
+        0x7fc4a3f03000 (0x7fc4a3f03030-0x7fc4a4003040)
+        0x7fc4a4004000 (0x7fc4a4004030-0x7fc4a4104040)
+        0x7fc4a4105000 (0x7fc4a4105030-0x7fc4a4205040)
+        0x7fc4a4206000 (0x7fc4a4206030-0x7fc4a4306040)]
+    [oldToSpace:
+      aligned: 0/0 unaligned: 0/0]
+    ]
+  [Unused:
+    aligned: 195035136/186
+    aligned chunks:
+      0x7fc49a700000 (0x7fc49a701028-0x7fc49a701028)
+      0x7fc49a900000 (0x7fc49a901028-0x7fc49a901028)
+      0x7fc49ab00000 (0x7fc49ab01028-0x7fc49ab01028)
+      0x7fc49ad00000 (0x7fc49ad01028-0x7fc49ad01028)
+      0x7fc49af00000 (0x7fc49af01028-0x7fc49af01028)
+      0x7fc49b100000 (0x7fc49b101028-0x7fc49b101028)
+      0x7fc49b300000 (0x7fc49b301028-0x7fc49b301028)
+      0x7fc49b500000 (0x7fc49b501028-0x7fc49b501028)
+      0x7fc49b700000 (0x7fc49b701028-0x7fc49b701028)
+      0x7fc49b900000 (0x7fc49b901028-0x7fc49b901028)
+      0x7fc49bb00000 (0x7fc49bb01028-0x7fc49bb01028)
+      0x7fc49bd00000 (0x7fc49bd01028-0x7fc49bd01028)
+      0x7fc49bf00000 (0x7fc49bf01028-0x7fc49bf01028)
+      0x7fc49c100000 (0x7fc49c101028-0x7fc49c101028)
+      0x7fc49c300000 (0x7fc49c301028-0x7fc49c301028)
+      0x7fc49c500000 (0x7fc49c501028-0x7fc49c501028)
+      0x7fc49c700000 (0x7fc49c701028-0x7fc49c701028)
+      0x7fc49c900000 (0x7fc49c901028-0x7fc49c901028)
+      0x7fc49cb00000 (0x7fc49cb01028-0x7fc49cb01028)
+      0x7fc49cd00000 (0x7fc49cd01028-0x7fc49cd01028)
+      0x7fc49cf00000 (0x7fc49cf01028-0x7fc49cf01028)
+      0x7fc49d100000 (0x7fc49d101028-0x7fc49d101028)
+      0x7fc49d300000 (0x7fc49d301028-0x7fc49d301028)
+      0x7fc49d500000 (0x7fc49d501028-0x7fc49d501028)
+      0x7fc49d700000 (0x7fc49d701028-0x7fc49d701028)
+      0x7fc49d900000 (0x7fc49d901028-0x7fc49d901028)
+      0x7fc49db00000 (0x7fc49db01028-0x7fc49db01028)
+      0x7fc49dd00000 (0x7fc49dd01028-0x7fc49dd01028)
+      0x7fc49df00000 (0x7fc49df01028-0x7fc49df01028)
+      0x7fc49e100000 (0x7fc49e101028-0x7fc49e101028)
+      0x7fc49e300000 (0x7fc49e301028-0x7fc49e301028)
+      0x7fc49e500000 (0x7fc49e501028-0x7fc49e501028)
+      0x7fc49e700000 (0x7fc49e701028-0x7fc49e701028)
+      0x7fc49e900000 (0x7fc49e901028-0x7fc49e901028)
+      0x7fc49eb00000 (0x7fc49eb01028-0x7fc49eb01028)
+      0x7fc49ed00000 (0x7fc49ed01028-0x7fc49ed01028)
+      0x7fc49ef00000 (0x7fc49ef01028-0x7fc49ef01028)
+      0x7fc49f100000 (0x7fc49f101028-0x7fc49f101028)
+      0x7fc49f300000 (0x7fc49f301028-0x7fc49f301028)
+      0x7fc49f500000 (0x7fc49f501028-0x7fc49f501028)
+      0x7fc49f700000 (0x7fc49f701028-0x7fc49f701028)
+      0x7fc49f900000 (0x7fc49f901028-0x7fc49f901028)
+      0x7fc49fb00000 (0x7fc49fb01028-0x7fc49fb01028)
+      0x7fc49fd00000 (0x7fc49fd01028-0x7fc49fd01028)
+      0x7fc49ff00000 (0x7fc49ff01028-0x7fc49ff01028)
+      0x7fc4a0100000 (0x7fc4a0101028-0x7fc4a0101028)
+      0x7fc4a0300000 (0x7fc4a0301028-0x7fc4a0301028)
+      0x7fc4a0500000 (0x7fc4a0501028-0x7fc4a0501028)
+      0x7fc4a0700000 (0x7fc4a0701028-0x7fc4a0701028)
+      0x7fc4a0900000 (0x7fc4a0901028-0x7fc4a0901028)
+      0x7fc4a0b00000 (0x7fc4a0b01028-0x7fc4a0b01028)
+      0x7fc4a0d00000 (0x7fc4a0d01028-0x7fc4a0d01028)
+      0x7fc4a0f00000 (0x7fc4a0f01028-0x7fc4a0f01028)
+      0x7fc4a1100000 (0x7fc4a1101028-0x7fc4a1101028)
+      0x7fc4a1300000 (0x7fc4a1301028-0x7fc4a1301028)
+      0x7fc4a1500000 (0x7fc4a1501028-0x7fc4a1501028)
+      0x7fc4a1700000 (0x7fc4a1701028-0x7fc4a1701028)
+      0x7fc4a1900000 (0x7fc4a1901028-0x7fc4a1901028)
+      0x7fc4a1b00000 (0x7fc4a1b01028-0x7fc4a1b01028)
+      0x7fc4a1d00000 (0x7fc4a1d01028-0x7fc4a1d01028)
+      0x7fc4a1f00000 (0x7fc4a1f01028-0x7fc4a1f01028)
+      0x7fc4a2100000 (0x7fc4a2101028-0x7fc4a2101028)
+      0x7fc4a2300000 (0x7fc4a2301028-0x7fc4a2301028)
+      0x7fc4a2500000 (0x7fc4a2501028-0x7fc4a2501028)
+      0x7fc4a2700000 (0x7fc4a2701028-0x7fc4a2701028)
+      0x7fc4a2900000 (0x7fc4a2901028-0x7fc4a2901028)
+      0x7fc4a2b00000 (0x7fc4a2b01028-0x7fc4a2b01028)
+      0x7fc4a2d00000 (0x7fc4a2d01028-0x7fc4a2d01028)
+      0x7fc4a2f00000 (0x7fc4a2f01028-0x7fc4a2f01028)
+      0x7fc4a3100000 (0x7fc4a3101028-0x7fc4a3101028)
+      0x7fc4a3300000 (0x7fc4a3301028-0x7fc4a3301028)
+      0x7fc4a3500000 (0x7fc4a3501028-0x7fc4a3501028)
+      0x7fc4a3700000 (0x7fc4a3701028-0x7fc4a3701028)
+      0x7fc4a3900000 (0x7fc4a3901028-0x7fc4a3901028)
+      0x7fc4a3b00000 (0x7fc4a3b01028-0x7fc4a3b01028)
+      0x7fc4a4500000 (0x7fc4a4501028-0x7fc4a4501028)
+      0x7fc4a4700000 (0x7fc4a4701028-0x7fc4a4701028)
+      0x7fc4a4900000 (0x7fc4a4901028-0x7fc4a4901028)
+      0x7fc4a4b00000 (0x7fc4a4b01028-0x7fc4a4b01028)
+      0x7fc4a4d00000 (0x7fc4a4d01028-0x7fc4a4d01028)
+      0x7fc4a4f00000 (0x7fc4a4f01028-0x7fc4a4f01028)
+      0x7fc4a5100000 (0x7fc4a5101028-0x7fc4a5101028)
+      0x7fc4a5300000 (0x7fc4a5301028-0x7fc4a5301028)
+      0x7fc4a5500000 (0x7fc4a5501028-0x7fc4a5501028)
+      0x7fc4a5700000 (0x7fc4a5701028-0x7fc4a5701028)
+      0x7fc4a5900000 (0x7fc4a5901028-0x7fc4a5901028)
+      0x7fc4a5b00000 (0x7fc4a5b01028-0x7fc4a5b01028)
+      0x7fc4a5d00000 (0x7fc4a5d01028-0x7fc4a5d01028)
+      0x7fc4a5f00000 (0x7fc4a5f01028-0x7fc4a5f01028)
+      0x7fc4a6100000 (0x7fc4a6101028-0x7fc4a6101028)
+      0x7fc4a6300000 (0x7fc4a6301028-0x7fc4a6301028)
+      0x7fc4a6500000 (0x7fc4a6501028-0x7fc4a6501028)
+      0x7fc4a6700000 (0x7fc4a6701028-0x7fc4a6701028)
+      0x7fc4a6900000 (0x7fc4a6901028-0x7fc4a6901028)
+      0x7fc4a6b00000 (0x7fc4a6b01028-0x7fc4a6b01028)
+      0x7fc4a6d00000 (0x7fc4a6d01028-0x7fc4a6d01028)
+      0x7fc4a6f00000 (0x7fc4a6f01028-0x7fc4a6f01028)
+      0x7fc4a7100000 (0x7fc4a7101028-0x7fc4a7101028)
+      0x7fc4a7300000 (0x7fc4a7301028-0x7fc4a7301028)
+      0x7fc4a7500000 (0x7fc4a7501028-0x7fc4a7501028)
+      0x7fc4a7700000 (0x7fc4a7701028-0x7fc4a7701028)
+      0x7fc4a7900000 (0x7fc4a7901028-0x7fc4a7901028)
+      0x7fc4a7b00000 (0x7fc4a7b01028-0x7fc4a7b01028)
+      0x7fc4a7d00000 (0x7fc4a7d01028-0x7fc4a7d01028)
+      0x7fc4a7f00000 (0x7fc4a7f01028-0x7fc4a7f01028)
+      0x7fc4a8100000 (0x7fc4a8101028-0x7fc4a8101028)
+      0x7fc4a8300000 (0x7fc4a8301028-0x7fc4a8301028)
+      0x7fc4a8500000 (0x7fc4a8501028-0x7fc4a8501028)
+      0x7fc4a8700000 (0x7fc4a8701028-0x7fc4a8701028)
+      0x7fc4a8900000 (0x7fc4a8901028-0x7fc4a8901028)
+      0x7fc4a8b00000 (0x7fc4a8b01028-0x7fc4a8b01028)
+      0x7fc4a8d00000 (0x7fc4a8d01028-0x7fc4a8d01028)
+      0x7fc4a9400000 (0x7fc4a9401028-0x7fc4a9401028)
+      0x7fc4a9600000 (0x7fc4a9601028-0x7fc4a9601028)
+      0x7fc4a9800000 (0x7fc4a9801028-0x7fc4a9801028)
+      0x7fc4a9a00000 (0x7fc4a9a01028-0x7fc4a9a01028)
+      0x7fc4a9c00000 (0x7fc4a9c01028-0x7fc4a9c01028)
+      0x7fc4a9e00000 (0x7fc4a9e01028-0x7fc4a9e01028)
+      0x7fc4aa000000 (0x7fc4aa001028-0x7fc4aa001028)
+      0x7fc4aa200000 (0x7fc4aa201028-0x7fc4aa201028)
+      0x7fc4aa400000 (0x7fc4aa401028-0x7fc4aa401028)
+      0x7fc4aa600000 (0x7fc4aa601028-0x7fc4aa601028)
+      0x7fc4aa800000 (0x7fc4aa801028-0x7fc4aa801028)
+      0x7fc4aaa00000 (0x7fc4aaa01028-0x7fc4aaa01028)
+      0x7fc4aac00000 (0x7fc4aac01028-0x7fc4aac01028)
+      0x7fc4aae00000 (0x7fc4aae01028-0x7fc4aae01028)
+      0x7fc4ab000000 (0x7fc4ab001028-0x7fc4ab001028)
+      0x7fc4ab200000 (0x7fc4ab201028-0x7fc4ab201028)
+      0x7fc4ab400000 (0x7fc4ab401028-0x7fc4ab401028)
+      0x7fc4ab600000 (0x7fc4ab601028-0x7fc4ab601028)
+      0x7fc4ab800000 (0x7fc4ab801028-0x7fc4ab801028)
+      0x7fc4aba00000 (0x7fc4aba01028-0x7fc4aba01028)
+      0x7fc4abc00000 (0x7fc4abc01028-0x7fc4abc01028)
+      0x7fc4abe00000 (0x7fc4abe01028-0x7fc4abe01028)
+      0x7fc4ac000000 (0x7fc4ac001028-0x7fc4ac001028)
+      0x7fc4ac200000 (0x7fc4ac201028-0x7fc4ac201028)
+      0x7fc4ac400000 (0x7fc4ac401028-0x7fc4ac401028)
+      0x7fc4ac600000 (0x7fc4ac601028-0x7fc4ac601028)
+      0x7fc4ac800000 (0x7fc4ac801028-0x7fc4ac801028)
+      0x7fc4aca00000 (0x7fc4aca01028-0x7fc4aca01028)
+      0x7fc4ad300000 (0x7fc4ad301028-0x7fc4ad301028)
+      0x7fc4ad500000 (0x7fc4ad501028-0x7fc4ad501028)
+      0x7fc4ad700000 (0x7fc4ad701028-0x7fc4ad701028)
+      0x7fc4ad900000 (0x7fc4ad901028-0x7fc4ad901028)
+      0x7fc4adb00000 (0x7fc4adb01028-0x7fc4adb01028)
+      0x7fc4add00000 (0x7fc4add01028-0x7fc4add01028)
+      0x7fc4adf00000 (0x7fc4adf01028-0x7fc4adf01028)
+      0x7fc4ae100000 (0x7fc4ae101028-0x7fc4ae101028)
+      0x7fc4ae300000 (0x7fc4ae301028-0x7fc4ae301028)
+      0x7fc4ae500000 (0x7fc4ae501028-0x7fc4ae501028)
+      0x7fc4ae700000 (0x7fc4ae701028-0x7fc4ae701028)
+      0x7fc4ae900000 (0x7fc4ae901028-0x7fc4ae901028)
+      0x7fc4aeb00000 (0x7fc4aeb01028-0x7fc4aeb01028)
+      0x7fc4aed00000 (0x7fc4aed01028-0x7fc4aed01028)
+      0x7fc4aef00000 (0x7fc4aef01028-0x7fc4aef01028)
+      0x7fc4af100000 (0x7fc4af101028-0x7fc4af101028)
+      0x7fc4af300000 (0x7fc4af301028-0x7fc4af301028)
+      0x7fc4af500000 (0x7fc4af501028-0x7fc4af501028)
+      0x7fc4af700000 (0x7fc4af701028-0x7fc4af701028)
+      0x7fc4af900000 (0x7fc4af901028-0x7fc4af901028)
+      0x7fc4afb00000 (0x7fc4afb01028-0x7fc4afb01028)
+      0x7fc4afd00000 (0x7fc4afd01028-0x7fc4afd01028)
+      0x7fc4aff00000 (0x7fc4aff01028-0x7fc4aff01028)
+      0x7fc4b0100000 (0x7fc4b0101028-0x7fc4b0101028)
+      0x7fc4b0300000 (0x7fc4b0301028-0x7fc4b0301028)
+      0x7fc4b0500000 (0x7fc4b0501028-0x7fc4b0501028)
+      0x7fc4b0700000 (0x7fc4b0701028-0x7fc4b0701028)
+      0x7fc4b0900000 (0x7fc4b0901028-0x7fc4b0901028)
+      0x7fc4b0b00000 (0x7fc4b0b01028-0x7fc4b0b01028)
+      0x7fc4b0d00000 (0x7fc4b0d01028-0x7fc4b0d01028)
+      0x7fc4b0f00000 (0x7fc4b0f01028-0x7fc4b0f01028)
+      0x7fc4b1100000 (0x7fc4b1101028-0x7fc4b1101028)
+      0x7fc4b1300000 (0x7fc4b1301028-0x7fc4b1301028)
+      0x7fc4b1500000 (0x7fc4b1501028-0x7fc4b1501028)
+      0x7fc4b1700000 (0x7fc4b1701028-0x7fc4b1701028)
+      0x7fc4b1900000 (0x7fc4b1901028-0x7fc4b1901028)
+      0x7fc4b1b00000 (0x7fc4b1b01028-0x7fc4b1b01028)
+      0x7fc4b1d00000 (0x7fc4b1d01028-0x7fc4b1d01028)
+      0x7fc4b1f00000 (0x7fc4b1f01028-0x7fc4b1f01028)
+      0x7fc4b2100000 (0x7fc4b2101028-0x7fc4b2101028)
+      0x7fc4b2300000 (0x7fc4b2301028-0x7fc4b2301028)
+      0x7fc4b2500000 (0x7fc4b2501028-0x7fc4b2501028)
+      0x7fc4b2700000 (0x7fc4b2701028-0x7fc4b2701028)
+      0x7fc4b2900000 (0x7fc4b2901028-0x7fc4b2901028)
+      0x7fc4b2b00000 (0x7fc4b2b01028-0x7fc4b2b01028)
+      0x7fc4b2d00000 (0x7fc4b2d01028-0x7fc4b2d01028)]]
+
+Fatal error: Unexpected exception in MonitorSupport.monitorEnter: java.lang.NullPointerException: null
+Enclave initialized[ENCLAVE] pthread_getattr_np(tid: 140485688354624, attr: 0x7fc48a9a98b0)
+>>>>>>>>>> SGX thread id: 140482115850240
+>>>>>>>>>> POSIX thread id: 140485688354624
+Resource limit set: res: 7 cur = 1048576, max = 1048576
+Symbol: inet_pton
+GraalSGX: getenv(TZ): workaround

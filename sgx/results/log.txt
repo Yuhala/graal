@@ -1,0 +1,2 @@
+[enclave_create sgx_enclave_common.cpp:357] 
+ secs->attibutes.flags = 6, secs->attributes.xfrm = 7 

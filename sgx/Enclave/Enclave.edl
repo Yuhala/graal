@@ -1,0 +1,44 @@
+/*
+ * Created on Fri Jul 17 2020
+ *
+ * Copyright (c) 2020 Peterson Yuhala, IIUN
+ */
+
+
+/* Enclave.edl - Top EDL file. */
+
+enclave {
+
+    include "user_types.h" /* buffer_t */
+
+    /* Import all libc ocalls */
+    from "graalsgx/io/io.edl" import *;
+    from "graalsgx/net/net.edl" import *;
+    from "graalsgx/sys/sys.edl" import *;
+    from "graalsgx/thread/thread.edl" import *;
+    
+    //from "graalsgx/edl/graalsgx_ecalls.edl" import *;
+    //from "graalsgx/edl/graalsgx_ocalls.edl" import *;
+
+  
+
+   trusted {
+       public void ecall_graal_main_args(int id, int arg1);
+       public void ecall_graal_main(int id);
+
+       public void ecall_set_environ([user_check]void **env_ptr);
+       //public void ecall_create_enclave_isolate(); 
+       //public void ecall_destroy_enclave_isolate();
+
+   };
+
+    /* 
+     * ocall_print_string - invokes OCALL to display string buffer inside the enclave.
+     *  [in]: copy the string buffer to App outside.
+     *  [string]: specifies 'str' is a NULL terminated buffer.
+     */
+    untrusted {
+        void ocall_print_string([in, string] const char *str);
+    };
+
+};

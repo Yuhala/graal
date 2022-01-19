@@ -1,0 +1,121 @@
+/*
+ * Created on Fri Jul 17 2020
+ *
+ * Copyright (c) 2020 Peterson Yuhala, IIUN
+ */
+
+/* io.edl - EDL file for io related ocalls. */
+
+enclave {    
+
+    include "sgx/sys/types.h"
+    include "struct/sgx_stdio_struct.h"
+    
+
+    untrusted {
+        
+        //include "sgx/sys/stat.h"
+        //include "struct/sgx_sysstat_struct.h"
+       
+        //include "struct/sgx_time_struct.h"     
+    
+    };
+
+     trusted {
+        include "sgx/sys/types.h"
+        include "sgx/sys/stat.h"
+        //include "struct/sgx_sysstat_struct.h"
+        include "sgx/dirent.h"
+       
+        include "struct/sgx_time_struct.h"     
+        include "struct/sgx_pwd_struct.h"
+        include "struct/sgx_sysresource_struct.h"
+        include "struct/sgx_utsname_struct.h"
+    };
+
+
+    untrusted {
+       int ocall_fsync(int fd);
+       int ocall_dup2(int oldfd, int newfd);
+       int ocall_open([in, string]const char *path, int oflag, int arg);
+       int ocall_open64([in, string]const char *path, int oflag, int arg);
+       int ocall_xclose(int fd);
+       off_t ocall_lseek(int fd, off_t offset, int whence);
+       off64_t ocall_lseek64(int fd, off64_t offset, int whence);
+       int ocall_fflush([user_check]SGX_FILE *stream);
+       ssize_t ocall_pread(int fd, [out,size=count]void *buf, size_t count, off_t offset);
+       ssize_t ocall_pread64(int fd, [out,size=count]void *buf, size_t count, off64_t offset);
+       ssize_t ocall_pwrite(int fd, [in,size=count]const void *buf, size_t count, off_t offset);
+
+
+       SGX_FILE ocall_fopen([in,string]const char* filename, [in,string]const char* mode);
+       SGX_FILE ocall_fdopen(int fd, [in, string]const char *mode);
+       int ocall_fclose(SGX_FILE stream);
+       size_t ocall_fwrite([in,size=size, count=nmemb]const void *ptr, size_t size, size_t nmemb, SGX_FILE stream);
+       ssize_t ocall_read(int fd, [out, size=count]void *buf, size_t count);
+       ssize_t ocall_write(int fd, [in, size=count]const void *buf, size_t count);
+       int ocall_fscanf(SGX_FILE stream, [in, string]const char *format);
+       int ocall_fprintf(SGX_FILE stream, [in,string]const char *str);
+       void ocall_fgets([out,size=n]char *str, int n, SGX_FILE stream);
+       SGX_FILE ocall_stderr();
+       int ocall_puts([in, string]const char *str);
+
+        int ocall_mkdir([in,string]const char *pathname, mode_t mode); 
+        int ocall_truncate([in,string]const char *path, off_t length); 
+        int ocall_ftruncate64(int fd, off_t length);
+        void *ocall_mmap64([user_check]void *addr, size_t len, int prot, int flags, int fildes, off_t off);
+        ssize_t ocall_pwrite64(int fd,[in,size=nbyte]const void *buf, size_t nbyte, off_t offset);   
+        int ocall_fdatasync(int fd);
+        int ocall_rename([in,string]const char *oldpath, [in,string]const char *newpath); 
+        int ocall_unlink([in,string]const char *pathname);                    
+        int ocall_rmdir([in,string]const char *pathname);                     
+        clock_t ocall_times(void);                  
+
+        int ocall_chown([in,string]const char *pathname, uid_t owner, gid_t group);
+        int ocall_fchown(int fd, uid_t owner, gid_t group);
+        int ocall_lchown([in,string]const char *pathname, uid_t owner, gid_t group); 
+        int ocall_chmod([in,string]const char *pathname, mode_t mode);            
+
+        int ocall_fchmod(int fd, mode_t mode);
+        int ocall_lxstat64(int ver,[in,string]const char *path, [out]struct stat *stat_buf);
+        
+
+        int ocall_fcntl(int fildes, int cmd, int arg) propagate_errno;
+        int ocall_ioctl(int fd, unsigned long request, int arg);
+        int ocall_xstat64(int ver, [in,string]const char *path, [in,out]struct stat *stat_buf);
+
+         //stat
+        int ocall_fstat64(int fd, [out]struct stat *buf);
+        int ocall_fxstat64(int ver, int fildes, [out]struct stat *stat_buf);
+
+        int ocall_fxstat(int ver, int fd, [in,out]struct stat *stat_buf);
+        int ocall_lxstat(int ver, [in,string]const char *path, [in,out]struct stat *stat_buf);
+        int ocall_xstat(int ver, [in,string]const char *path, [in,out]struct stat *stat_buf);
+        long ocall_pathconf([in,string]const char *path, int name);
+        ssize_t ocall_readlink([in,string]const char *pathname, [out,size=bufsiz]char *buf, size_t bufsiz);
+        int ocall_readdir64_r([user_check]void *dirp, [user_check]void *entry, [user_check]struct dirent **result);
+        void *ocall_opendir([in,string]const char *name);
+        int ocall_chdir([in,string]const char *path);
+        int ocall_closedir([user_check]void *dirp);
+      
+        
+
+
+        int ocall_xmknod(int vers,[in,string]const char *path, mode_t mode, [user_check]dev_t *dev);
+        int ocall_symlink([in,string]const char *target, [in,string]const char *linkpath); 
+        int ocall_deflateEnd(z_streamp stream);
+        int ocall_deflateParams(z_streamp stream, int level, int strategy);
+        int ocall_deflate(z_streamp stream, int flush);
+        int ocall_deflateInit2(z_streamp stream, int level, int method, int windowBits, int memLevel, int strategy);
+        int ocall_inflateReset(z_streamp stream);
+
+        ssize_t ocall_sendfile64(int out_fd, int in_fd,[user_check]off_t *offset, size_t count);
+        ulong ocall_adler32(ulong adler,[in,size=len] const Bytef *buf, size_t len);
+        int ocall_getenv([in,size=envlen]const char *env, int envlen, [out,size=ret_len]char *ret_str,int ret_len);
+        
+        int ocall_fileno([in]SGX_FILE *stream); 
+        int ocall_isatty(int fd);
+        mode_t ocall_umask(mode_t mask);
+
+    };
+};

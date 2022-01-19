@@ -1,0 +1,37 @@
+/*
+ * Created on Fri Jul 17 2020
+ *
+ * Copyright (c) 2020 Peterson Yuhala, IIUN
+ */
+
+/* thread.edl - EDL file for thread related ocalls. */
+
+enclave {    
+
+    /* Import useful sgx sdk ocalls */
+
+    from "sgx_tstdc.edl" import *;
+    from "sgx_pthread.edl" import *;
+    include "struct/sgx_pthread_struct.h"
+
+    trusted {
+        public void ecall_execute_job(pthread_t pthread_self_id, unsigned long int job_id);
+
+    };
+    untrusted {
+        int ocall_pthread_attr_init();
+        int ocall_pthread_create([out]pthread_t *new_thread, unsigned long int job_id, sgx_enclave_id_t eid) allow (ecall_execute_job);
+        pthread_t ocall_pthread_self(void);
+        int ocall_pthread_join(pthread_t pt, [user_check] void **res);
+        int ocall_pthread_attr_getguardsize([out]size_t *guardsize);
+        int ocall_pthread_attr_getguardsize__bypass([out,size=attr_len] void* attr, size_t attr_len,[out]size_t *guardsize);
+        int ocall_pthread_attr_destroy();
+        int ocall_pthread_condattr_setclock([out,size=attr_len]void* attr, clockid_t clock_id,size_t attr_len);
+        int ocall_pthread_attr_destroy__bypass([out,size=attr_len] void* attr, size_t attr_len);
+        //int ocall_pthread_attr_getstack([out,size=len]void **stk_addr,size_t len,[out]size_t *stack_size);
+        int ocall_pthread_attr_getstack([user_check]void **stk_addr,[out]size_t *stack_size);
+        int ocall_pthread_attr_getstack__bypass([out,size=attr_len] void* attr, size_t attr_len, [out,size=len]void **stk_addr,size_t len,[out]size_t *stack_size);
+        int ocall_pthread_getattr_np(pthread_t tid);
+        int ocall_pthread_getattr_np__bypass(pthread_t tid, [out,size=len] void *attr, size_t len);
+    };
+};

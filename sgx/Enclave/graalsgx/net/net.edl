@@ -1,0 +1,67 @@
+/*
+ * Created on Fri Jul 17 2020
+ *
+ * Copyright (c) 2020 Peterson Yuhala, IIUN
+ */
+
+/* net.edl - EDL file for net related ocalls. */
+
+enclave {    
+
+    include "sgx/sys/types.h"
+    include "struct/sgx_syssocket_struct.h"
+    include "struct/sgx_arpainet_struct.h"
+    include "sgx/sys/epoll.h"
+    include "sgx/sys/poll.h"
+    
+    trusted{
+       include "sgx/netdb.h"
+    };
+
+    untrusted {
+
+      
+       int ocall_socket(int domain, int type, int protocol);
+       int ocall_getsockname(int sockfd, [user_check]struct sockaddr *addr, [user_check]socklen_t *addrlen);
+       int ocall_getaddrinfo([in, string] const char *node, [in, string] const char *service, [in] const struct addrinfo *hints, [out] struct addrinfo **res);
+       int ocall_getnameinfo([in, size=addrlen] const struct sockaddr *addr, socklen_t addrlen, [in, out, size=hostlen] char *host, socklen_t hostlen, [in, out, size=servlen] char *serv, socklen_t servlen, int flags);
+       void ocall_freeaddrinfo([user_check] struct addrinfo *res);
+       int ocall_gethostname([out, count=namelen] char *name, size_t namelen);
+       int ocall_sethostname([in,size=len]const char *name, size_t len);
+       int ocall_gettimeofday([in, out, size=tv_size]void *tv, int tv_size); 
+       int ocall_clock_gettime(clockid_t clk_id, [in,out,size=ts_size]void *tp, int ts_size);  
+
+
+       int ocall_inet_pton(int af, [in, string]const char *src, [out,size=4]void *dst);
+       pid_t ocall_getpid(void);
+       int ocall_remove([in,string]const char *pathname);
+       int ocall_shutdown(int sockfd, int how);
+       int ocall_getsockopt(int socket, int level, int option_name, [user_check] void *option_value, [user_check] socklen_t *option_len) propagate_errno;
+		   int ocall_setsockopt(int socket, int level, int option_name, [in, size=option_len] const void *option_value, socklen_t option_len) propagate_errno;
+    
+       int ocall_socketpair(int domain, int type, int protocol, [out,count=2]int *sv);
+   
+      int ocall_bind(int socket, [in, size=address_len] const void *address, socklen_t address_len) propagate_errno;
+
+       int ocall_epoll_wait(int epfd, [user_check]struct epoll_event *events,
+                   int maxevents, int timeout);
+
+       int ocall_epoll_ctl(int epfd, int op, int fd, [user_check]struct epoll_event *event);
+
+    
+       ssize_t ocall_readv(int fd, [user_check]const struct iovec *iov, int iovcnt);
+
+       ssize_t ocall_writev(int fd, [in]const struct iovec *iov, int iovcnt);
+    
+      int ocall_pipe([out,count=2]int* pipefd);
+      int ocall_connect(int sockfd,[user_check]const void *addr,socklen_t addrlen);
+
+      int ocall_listen(int socket, int backlog) propagate_errno;
+      int ocall_accept(int socket, [user_check] struct sockaddr *address, [in, out] socklen_t *address_len) propagate_errno;
+      int ocall_poll([in, out, count=nfds] struct pollfd *fds, nfds_t nfds, int timeout) propagate_errno;
+      int ocall_epoll_create(int size);
+
+      ssize_t ocall_recv(int sockfd, [out,size=len]void *buf, size_t len, int flags);
+      ssize_t ocall_send(int sockfd, [in,size=len]const void *buf, size_t len, int flags);
+    };
+};

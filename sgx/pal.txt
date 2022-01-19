@@ -1,0 +1,20 @@
+Read time: 20
+Num keys in index: 10000 Tput(Reads/s): 500000.0
+Read time: 42
+Num keys in index: 20000 Tput(Reads/s): 476000.0
+Read time: 62
+Num keys in index: 30000 Tput(Reads/s): 483000.0
+Read time: 85
+Num keys in index: 40000 Tput(Reads/s): 470000.0
+Read time: 117
+Num keys in index: 50000 Tput(Reads/s): 427000.0
+Read time: 142
+Num keys in index: 60000 Tput(Reads/s): 422000.0
+Read time: 214
+Num keys in index: 70000 Tput(Reads/s): 327000.0
+Read time: 165
+Num keys in index: 80000 Tput(Reads/s): 484000.0
+Read time: 185
+Num keys in index: 90000 Tput(Reads/s): 486000.0
+Resource limit set: res: 7 cur = 1048576, max = 1048576
+

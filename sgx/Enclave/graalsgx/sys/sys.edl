@@ -1,0 +1,66 @@
+/*
+ * Created on Fri Jul 17 2020
+ *
+ * Copyright (c) 2020 Peterson Yuhala, IIUN
+ */
+
+/* sys.edl - EDL file for sys related ocalls. */
+
+enclave {    
+    include "user_types.h"
+
+    trusted {
+        include "sgx/sys/types.h"
+        include "sgx/sys/stat.h"
+        include "struct/sgx_sysstat_struct.h"
+        
+        //include "struct/sgx_signal_struct.h"
+        include "struct/sgx_time_struct.h"     
+        include "struct/sgx_pwd_struct.h"
+        include "struct/sgx_sysresource_struct.h"
+        include "struct/sgx_utsname_struct.h"
+        include "struct/sgx_stdio_struct.h"
+    };
+
+    untrusted {
+
+        //dynamic loading
+        void ocall_dlsym([user_check]void *handle, [in,string]const char *symbol,[user_check]void *res);
+        void *ocall_dlopen([in,string]const char *symbol,int flag);       
+
+        long ocall_sysconf(int name);
+        int ocall_getuid();                   
+
+        void ocall_getcwd([out,size=1,count=len]char *buf, size_t len);
+        void ocall_getpwuid(uid_t uid, [out]struct passwd *ret);
+        void ocall_exit(int stat);
+
+        //resource
+        int ocall_getrlimit(int res, [out]struct rlimit *rlim);
+        int ocall_setrlimit(int resource, [in]struct rlimit *rlim);
+        int ocall_uname([out]struct utsname *buf);
+        unsigned int ocall_sleep(unsigned int secs);
+        void ocall_realpath([in, string]const char *path, [out]char *res_path);
+        void ocall_xpg_strerror_r(int errnum, [out,size=buflen,count=1]char *buf, size_t buflen);
+
+        //signals
+        //int ocall_sigemptyset([user_check]sigset_t *set);
+        //int ocall_sigaddset([user_check]sigset_t *set,int signum);
+        //int ocall_sigaction(int signum, [user_check]const struct sigaction *act, [user_check]struct sigaction *oldact);
+        //int ocall_sigprocmask(int how, [user_check]const sigset_t *set, [user_check]sigset_t *oldset);
+        __sighandler_t ocall_signal(int signum,__sighandler_t handler);
+
+       
+       
+        //cpuid: for libchelper.a
+        unsigned int ocall_get_cpuid_max(unsigned int ext, [out]unsigned int *sig);        
+        int ocall_get_cpuid_count(unsigned int leaf, unsigned int subleaf,[out]unsigned int *eax,[out]unsigned int *ebx,[out]unsigned int *ecx,[out]unsigned int *edx);
+
+        int ocall_dladdr([user_check]const void *addr, [user_check]void *info);
+        int ocall_kill(int pid, int sig);
+        int ocall_getgrgid_r(unsigned int gid, [user_check]void *grp, [out,size=buflen]char *buf, size_t buflen, [user_check]void **result);
+        int ocall_getpwuid_r(unsigned int uid, [user_check]void *pwd, [out,size=buflen]char *buf, size_t buflen, [user_check]void **result);
+        int ocall_deflateReset(Z_STREAMP stream);
+
+    };
+};
