@@ -60,3 +60,4 @@ jmh_result.json
 sgx/app
 sgx/*.so
 sgx/**/*.o
+!components/*.jar
