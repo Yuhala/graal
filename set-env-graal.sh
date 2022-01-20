@@ -12,7 +12,9 @@
 # way of adding the new directory to the path
 #
 
-for d in $PWD/vm/latest_graalvm
+latest_graalvm="$PWD/vm/latest_graalvm"
+
+for d in "$latest_graalvm"
     do
         export PATH="$d/bin:$PATH"
         export JAVA_HOME="$d"
