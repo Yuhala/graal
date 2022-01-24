@@ -10,17 +10,8 @@ public class HelloPolyglot {
             context.eval("js", "print('Hello JavaScript!');");
         }
 
-        innerContext();
+       
     }
 
-    static void innerContext() {
-        try (Context outer = Context.newBuilder()
-                .allowAllAccess(true)
-                .build()) {
-            outer.eval("js", "inner = Java.type('org.graalvm.polyglot.Context').create()");
-            outer.eval("js", "inner.eval('java', System.out.println('Hello inner Java!');");            
-            outer.eval("js", "inner.close()");
-           
-        }
-    }
+   
 }
