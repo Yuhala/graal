@@ -6,14 +6,15 @@ public class HelloPolyglot {
     public static void main(String[] args) {
         System.out.println("Hello Java!");
         // context without try block
-        Context polyglot = Context.create();
-        Value array = polyglot.eval("js", "[1,2,42,4]");
+        Context enclave = Context.create();
+        Value array = enclave.eval("js", "[1,2,42,4]");
         int result = array.getArrayElement(2).asInt();
         System.out.println("Result is: " + result);
 
-        int myInt = polyglot.eval("js", "2").asInt();
+        int myInt = enclave.eval("js", "2").asInt();
         System.out.println("MyInt is: " + myInt);
 
+        enclave.eval("js", "print('Hello enclave!');");
     }
 
     static void contextWithTry() {
