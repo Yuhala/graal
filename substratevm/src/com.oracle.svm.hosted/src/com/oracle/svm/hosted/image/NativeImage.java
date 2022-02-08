@@ -28,6 +28,7 @@ import static com.oracle.svm.core.SubstrateUtil.mangleName;
 import static com.oracle.svm.core.util.VMError.shouldNotReachHere;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.AnnotatedType;
@@ -37,6 +38,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
@@ -164,7 +166,7 @@ public abstract class NativeImage extends AbstractImage {
     @Override
     public abstract String[] makeLaunchCommand(NativeImageKind k, String imageName, Path binPath, Path workPath, java.lang.reflect.Method method);
 
-    protected final void write(DebugContext context, Path outputFile) {
+    protected final void write(DebugContext context, Path outputFile,boolean sgx) {
         try {
             Path outFileParent = outputFile.normalize().getParent();
             if (outFileParent != null) {
@@ -178,6 +180,28 @@ public abstract class NativeImage extends AbstractImage {
         } catch (Exception ex) {
             throw shouldNotReachHere(ex);
         }
+
+         /**
+         * pyuhala: copy main.o if it is an sgx enclave object
+         */
+        if(sgx){
+
+            try {
+                /**
+                 * Copy relocatable object file to a diff directory
+                 */
+                String file = "/tmp/main.o";
+                Path dest = Paths.get(file);
+                Files.copy(outputFile, dest);
+                System.out.println("Copied object file to /tmp directory");
+            
+    
+            } catch (IOException e) {
+                System.out.println("Error copying object file");
+                throw shouldNotReachHere(e);
+            }
+            }
+
         resultingImageSize = (int) outputFile.toFile().length();
         debugInfoSize = 0;
         for (Element e : objectFile.getElements()) {

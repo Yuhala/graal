@@ -181,6 +181,9 @@ int SGX_CDECL main(int argc, char *argv[])
 
     global_app_iso = isolate_generator();
 
+    printf("<<<<<<< Created untrusted app isolate >>>>>> \n");
+    getchar();//pyuhala: halt to verify message b4 the clumsy debug messages
+
     setMainAttribs();
 
     attr_map.insert(pair<pthread_t, pthread_attr_t *>(0, NULL));

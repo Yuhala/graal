@@ -1,0 +1,3 @@
+[EXECUTABLE]
+iiun.smartc.main
+

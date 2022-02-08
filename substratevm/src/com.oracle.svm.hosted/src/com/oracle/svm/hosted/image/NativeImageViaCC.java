@@ -76,6 +76,11 @@ public abstract class NativeImageViaCC extends NativeImage {
         super(k, universe, metaAccess, nativeLibs, heap, codeCache, entryPoints, imageClassLoader);
     }
 
+    public NativeImageKind getOutputKind() {
+        return imageKind;
+    }
+
+
     class BinutilsCCLinkerInvocation extends CCLinkerInvocation {
 
         private final boolean staticExecWithDynamicallyLinkLibC = SubstrateOptions.StaticExecutableWithDynamicLibC.getValue();
@@ -410,12 +415,28 @@ public abstract class NativeImageViaCC extends NativeImage {
     @Override
     @SuppressWarnings("try")
     public LinkerInvocation write(DebugContext debug, Path outputDirectory, Path tempDirectory, String imageName, BeforeImageWriteAccessImpl config) {
+
+        //pyuhala
+        boolean isSGXObject = getOutputKind().getSGXType();
         try (Indent indent = debug.logAndIndent("Writing native image")) {
             // 1. write the relocatable file
-            write(debug, tempDirectory.resolve(imageName + ObjectFile.getFilenameSuffix()));
+            write(debug, tempDirectory.resolve(imageName + ObjectFile.getFilenameSuffix()),isSGXObject);
             if (NativeImageOptions.ExitAfterRelocatableImageWrite.getValue()) {
                 return null;
             }
+
+             /**
+             * Bypass the linker for sgx objects: We added a NativeImageOption to test for
+             * SGX-builds. These do not require a linker invocation as the relocatable
+             * images can be transfered to the SGX module at this point. pyuhala
+             */
+            if (isSGXObject) {
+                System.out.println("Is SGX Object: returning null linker invocation");
+                System.out.println("Done building image object for sgx module");
+                return null;
+            } 
+
+
             // 2. run a command to make an executable of it
             /*
              * To support automated stub generation, we first search for a libsvm.a in the images

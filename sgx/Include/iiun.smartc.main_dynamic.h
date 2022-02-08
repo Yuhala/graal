@@ -1,5 +1,5 @@
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __IIUN_SMARTC_MAIN_H
+#define __IIUN_SMARTC_MAIN_H
 
 #include <graal_isolate_dynamic.h>
 

@@ -75,7 +75,9 @@ class LinuxImageHeapProviderFeature implements Feature {
     @Override
     public void duringSetup(DuringSetupAccess access) {
         if (!ImageSingletons.contains(ImageHeapProvider.class)) {
-            ImageSingletons.add(ImageHeapProvider.class, new LinuxImageHeapProvider());
+             //pyuhala
+             ImageSingletons.add(ImageHeapProvider.class, new CopyingImageHeapProvider());
+            //ImageSingletons.add(ImageHeapProvider.class, new LinuxImageHeapProvider());
         }
     }
 }
@@ -110,6 +112,10 @@ public class LinuxImageHeapProvider extends AbstractImageHeapProvider {
 
     private static final CopyingImageHeapProvider fallbackCopyingProvider = new CopyingImageHeapProvider();
 
+    /**Are we building an Intel SGX application ? TODO: do not hardcode this value here. */
+    private static final boolean isSgx = true;
+
+
     @Override
     public boolean guaranteesHeapPreferredAddressSpaceAlignment() {
         return true;
@@ -125,6 +131,11 @@ public class LinuxImageHeapProvider extends AbstractImageHeapProvider {
             SignedWord previous = ((Pointer) CACHED_IMAGE_FD.get()).compareAndSwapWord(0, FIRST_ISOLATE_FD, UNASSIGNED_FD, LocationIdentity.ANY_LOCATION);
             firstIsolate = previous.equal(FIRST_ISOLATE_FD);
             fd = firstIsolate ? UNASSIGNED_FD : previous;
+        }
+
+         /**Use copying image heap provider for Intel SGX enclaves. Cannot safely memory map image file in an sgx enclave.pyuhala */
+        if (isSgx) {
+            return fallbackCopyingProvider.initialize(reservedAddressSpace, reservedSize, basePointer, endPointer);
         }
 
         /*

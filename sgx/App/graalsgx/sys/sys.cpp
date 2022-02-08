@@ -194,6 +194,8 @@ int ocall_get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, uns
     //return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
 }
 
+
+
 /* Part 2: for untrusted side: app */
 //TODO: put these prototypes in a header file
 #if defined(__cplusplus)

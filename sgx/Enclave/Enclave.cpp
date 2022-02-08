@@ -144,7 +144,8 @@ void ecall_graal_main(int id)
 {
     global_eid = id;
     enclave_initiated = true;
-    //global_enc_iso = isolate_generator();
+    global_enc_iso = isolate_generator();
+    printf("<<<<<< Ecall graal main >>>>>>\n");
 
     char str[16];
     snprintf(str, 16, "%d", 1000); //good
