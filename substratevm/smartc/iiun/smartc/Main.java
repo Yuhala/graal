@@ -8,27 +8,42 @@
 
 package iiun.smartc;
 
-/*import org.graalvm.polyglot.*;
+
+import org.graalvm.polyglot.*;
 import org.graalvm.polyglot.proxy.*;
 
-public class Main {   
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello Java!");
+        // context without try block
+        Context ctx = Context.create();
 
-    public static void main(String[] args) throws Exception {
+        // run javascript code
+        //ctx.eval("js", "print('Hello javascript!');");
+        //Value array = ctx.eval("js", "[1,2,42,4]");
 
-        System.out.println("------- Hello Java!----------");
+        //int result = array.getArrayElement(2).asInt();
+        //System.out.println("Result is: " + result);
+
+        //int myInt = ctx.eval("js", "2").asInt();
+        //System.out.println("My int in JS is: " + myInt);
+
+
+
+        // run simple language code
+        ctx.eval("sl", "function main() { println(\"Hello simplelanguage!\");}");
+        ctx.eval("sl", "function main() { println(10/3);}");
+
+        int secureInt =   ctx.eval("sl", "function main() {return 66;}").asInt();
+        System.out.println("My int in SL is: " + secureInt);  
+    }
+
+    static void contextWithTry() {
         try (Context context = Context.create()) {
-            
-            context.eval("js", "print('--------- Hello JavaScript!----------');");
+            System.out.println("About to run js context");
+            context.eval("js", "print('Hello JavaScript!');");
+
         }
 
     }
-
 }
- */
-
-
- public class Main {
-     public static void main (String[] args){
-         System.out.println("<<<<<<<<<<<<<<<<<< Hello world! >>>>>>>>>>>>>>>>>>>>> ");
-     }
- }

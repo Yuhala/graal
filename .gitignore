@@ -61,3 +61,6 @@ sgx/app
 sgx/*.so
 sgx/**/*.o
 !components/*.jar
+!substratevm/components/*.jar
+!secureL/*.jar
+substratevm/iiun.smart.main

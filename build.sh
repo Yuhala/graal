@@ -1,8 +1,8 @@
 
 #!/bin/bash
 #
-# Copyright (c) 2020 Peterson Yuhala, IIUN
-# Test
+# Copyright (c) 2022 Peterson Yuhala, IIUN
+# 
 #
 
 
@@ -25,12 +25,18 @@ JAVAC="$JAVA_HOME/bin/javac"
 
 LIB_BASE="$APP_DIR/lib/*"
 
-GRAAL_HOME="$PWD/sdk/latest_graalvm_home/jre/lib/boot/graal-sdk.jar"
-GRAAL_HOME="$PWD/sdk/latest_graalvm_home/**/*.jar"
-POLYGLOT_LIBS="$PWD/sdk/latest_graalvm_home/lib/polyglot/polyglot-native-api.jar"
-TRUFFLE_LIBS="$PWD/sdk/latest_graalvm_home/lib/truffle/truffle-api.jar"
+GRAAL_HOME="$PWD"
+GRAAL_SDK="$PWD/sdk/mxbuild/dists/graal-sdk.jar"
+POLYGLOT_API="$PWD/sdk/latest_graalvm_home/lib/polyglot/polyglot-native-api.jar"
+TRUFFLE_API="$PWD/sdk/mxbuild/dists/truffle-api.jar"
 
-CP=$LIB_BASE:$GRAAL_HOME:$APP_DIR:$SVM_DIR:$TRUFFLE_LIBS
+JARS="$PWD/jars/*"
+
+#simple language ("secure language") jars
+SL_JAR="$PWD/secureL/simplelanguage.jar"
+SL_LAUNCHER="$PWD/secureL/launcher-22.0.0.2.jar"
+
+CP=$SL_LAUNCHER:$SL_JAR:$LIB_BASE:$JARS:$GRAAL_HOME:$GRAAL_SDK:$TRUFFLE_API:$POLYGLOT_API:$APP_DIR:$SVM_DIR
 
 MAIN="Main"
 
@@ -64,6 +70,13 @@ if [[ $1 -eq 1 ]]
         build_svm
 fi
 
+
+# TODO: rename the folder in vm/latest_graalvm to graalvm-dev
+function rename_graal_home {
+    echo "---- renaming graal home -----"
+}
+
+
 #exit 1
 #clean app classes
 echo "--------------- Cleaning $APP_NAME classes -----------"
@@ -72,22 +85,21 @@ find $APP_DIR -name "*.class" -type f -delete
 #compile app classes
 BUILD_OPTS="-Xlint:unchecked -Xlint:deprecation"
 
+TRUFFLE_OPTS="-Dtruffle.class.path.append=$SL_JAR"
+
 echo "--------------- Compiling $APP_NAME application -----------"
-$JAVAC -cp $CP $BUILD_OPTS $APP_DIR/$PKG_PATH/$MAIN.java $OTHERS
+$JAVAC -cp $CP $BUILD_OPTS $APP_DIR/$PKG_PATH/$MAIN.java
 
 #run application in jvm to generate any useful configuration files: reflection, serialization, dynamic class loading etc
 #echo "--------------- Running $APP_PKG on JVM to generate useful config files-----------"
 #mkdir -p META-INF/native-image
 #$JAVA_HOME/bin/java -agentlib:native-image-agent=config-output-dir=META-INF/native-image -cp $CP $APP_PKG.$MAIN 
 
-$JAVA_HOME/bin/java -cp $CP $APP_PKG.$MAIN 
+$JAVA_HOME/bin/java  -cp $CP $TRUFFLE_OPTS $APP_PKG.$MAIN 
 
-#$JAVA_HOME/bin/native-image $APP_PKG.Main
 
-#$JAVA_HOME/bin/jar cvf $APP_DIR/smartc.jar $APP_DIR/*
-#chmod 764 $APP_DIR/smartc.jar
 
-#exit 1
+# exit 1
 # compile and build new native image
 # echo $APP_DIR
 #$JAVAC -sourcepath . -cp $GRAAL_HOME:$SGX_ANNOTATIONS/graal-sgx.jar:$APP_DIR/smartc.jar Main.java
@@ -96,13 +108,18 @@ $JAVA_HOME/bin/java -cp $CP $APP_PKG.$MAIN
 echo "--------------- Building $APP_NAME native image -----------"
 NATIVE_IMG_OPTS="--shared --sgx --no-fallback --allow-incomplete-classpath"
 
-#NATIVE_IMG_OPTS="--shared --no-fallback --allow-incomplete-classpath"
+NATIVE_IMG_OPTS="--no-fallback"
 
 #-H:+TraceClassInitialization 
 #--allow-incomplete-classpath
 #--trace-class-initialization=org.springframework.util.ClassUtils
 
-mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
+# if your JAVA HOME points to dev build of GraalVM
+native-image -cp $CP $NATIVE_IMG_OPTS $TRUFFLE_OPTS $APP_PKG.$MAIN
+
+
+# if your JAVA HOME points to a JDK JVMCI 
+#mx native-image -cp $CP $NATIVE_IMG_OPTS $TRUFFLE_OPTS $APP_PKG.$MAIN
 
 #copy new created object file to sgx module
 cp /tmp/main.o $SGX_DIR/Enclave/graalsgx/

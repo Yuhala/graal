@@ -8,7 +8,7 @@
   <TCSPolicy>1</TCSPolicy>
   <!-- Recommend changing 'DisableDebug' to 1 to make the enclave undebuggable for enclave release -->
   <DisableDebug>0</DisableDebug>
-  <ReservedMemMaxSize>0x8000000</ReservedMemMaxSize> <!-- Graal Enclave Isolate Heaps will be mapped here: 0x1000000 == 16MB 0x40000000 == 1G -->
+  <ReservedMemMaxSize>0x4000000</ReservedMemMaxSize> <!-- Graal Enclave Isolate Heaps will be mapped here: 0x1000000 == 16MB 0x40000000 == 1G -->
   <ReservedMemExecutable>1</ReservedMemExecutable>
   <MiscSelect>0</MiscSelect>
   <MiscMask>0xFFFFFFFF</MiscMask>

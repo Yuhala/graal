@@ -152,6 +152,7 @@ void ecall_graal_main(int id)
     //creating GC arguments
     char *argv[16] = {str, "-XX:+PrintGC", "-XX:+VerboseGC"};   
 
+    run_main(1,NULL);
     run_main(3, argv);
 }
 
