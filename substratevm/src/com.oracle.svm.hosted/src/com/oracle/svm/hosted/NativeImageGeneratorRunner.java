@@ -302,6 +302,19 @@ public class NativeImageGeneratorRunner {
             if (imageName.length() == 0) {
                 throw UserError.abort("No output file name specified. Use '%s'.", SubstrateOptionsParser.commandArgument(SubstrateOptions.Name, "<output-file>"));
             }
+
+             /**
+             * pyuhala: Change the name of image to "main" if we are dealing with Intel SGX objects
+             * This name simplifies things at the level of the sgx-module. It always imports
+             * main.h
+             */
+
+            boolean isSGXObject = SubstrateOptions.SGXObject.getValue(parsedHostedOptions);
+
+              if(isSGXObject){
+                imageName = "main";           
+              }
+
             try {
                 reporter.printStart(imageName);
 
@@ -328,6 +341,12 @@ public class NativeImageGeneratorRunner {
                 } else {
                     imageKind = NativeImageKind.EXECUTABLE;
                 }
+
+                String sgxString = isSGXObject ? " SGX Object": "";
+
+                imageKind.setSGXType(isSGXObject);
+    
+                System.out.println("Image kind: " + imageKind + sgxString);
 
                 String className = SubstrateOptions.Class.getValue(parsedHostedOptions);
                 String moduleName = SubstrateOptions.Module.getValue(parsedHostedOptions);
@@ -413,7 +432,7 @@ public class NativeImageGeneratorRunner {
                 analysisExecutor = NativeImagePointsToAnalysis.createExecutor(debug, NativeImageOptions.getMaximumNumberOfAnalysisThreads(parsedHostedOptions));
                 compilationExecutor = NativeImagePointsToAnalysis.createExecutor(debug, maxConcurrentThreads);
                 generator = new NativeImageGenerator(classLoader, optionParser, mainEntryPointData, reporter);
-                generator.run(entryPoints, javaMainSupport, imageName, classlistTimer, imageKind, SubstitutionProcessor.IDENTITY,
+                generator.run(entryPoints, javaMainSupport, imageName, classlistTimer, imageKind,isSGXObject, SubstitutionProcessor.IDENTITY,
                                 compilationExecutor, analysisExecutor, optionParser.getRuntimeOptionNames());
                 wasSuccessfulBuild = true;
             } finally {

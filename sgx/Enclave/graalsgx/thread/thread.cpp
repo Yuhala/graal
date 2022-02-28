@@ -60,6 +60,30 @@ int pthread_join(pthread_t thread, void **retval)
     return ret;
 }*/
 
+int nanosleep(const struct timespec *__requested_time, struct timespec *__remaining)
+{
+    //TODO
+    return 0;
+}
+
+
+
+int sched_setaffinity(pid_t pid, size_t cpusetsize,const void *mask){
+        //TODO
+        return 0;
+}
+int sched_getaffinity(pid_t pid, size_t cpusetsize,void *mask){
+        //TODO
+        return 0;
+}
+
+int __sched_cpucount (size_t setsize, const void *setp){
+    //TODO
+    return 0;
+}
+
+
+
 int pthread_attr_setdetachstate(GRAAL_SGX_PTHREAD_ATTR attr, int detachstate)
 {
     GRAAL_SGX_INFO();

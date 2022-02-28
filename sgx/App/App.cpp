@@ -180,6 +180,11 @@ int SGX_CDECL main(int argc, char *argv[])
     //const char* arg1 = argv[1];
 
     global_app_iso = isolate_generator();
+    run_main(1,NULL);
+    return 0;
+
+    printf("<<<<<<< Created untrusted app isolate >>>>>> \n");
+    getchar();//pyuhala: halt to verify message b4 the clumsy debug messages
 
     setMainAttribs();
 

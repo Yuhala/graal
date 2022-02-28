@@ -74,13 +74,31 @@ public abstract class AbstractImage {
         STATIC_EXECUTABLE(true);
 
         public final boolean isExecutable;
+        public boolean isSGXObject;
         public final String mainEntryPointName;
 
         NativeImageKind(boolean executable) {
             isExecutable = executable;
             mainEntryPointName = executable ? "main" : "run_main";
+            
         }
 
+        /**
+         * pyuhala: overloading constructor + some methods to add test for sgx builds
+         */
+        NativeImageKind(boolean executable, boolean sgx) {
+            isExecutable = executable;
+            isSGXObject = sgx;
+            mainEntryPointName = executable ? "main" : "run_main";
+        }
+        
+        public void setSGXType(boolean sgx){
+            isSGXObject = sgx;
+        }
+
+        public boolean getSGXType(){
+            return isSGXObject;
+        }
         public String getFilenameSuffix() {
             return ObjectFile.getNativeFormat() == ObjectFile.Format.PECOFF ? ".exe" : "";
         }

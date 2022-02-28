@@ -24,7 +24,7 @@ typedef void (*__sighandler_t)(int);
 #define SIGABRT 6 /* Abort. */
 
 #define LOOPS_PER_THREAD 500
-//#define GRAAL_SGX_DEBUG 1
+#define GRAAL_SGX_DEBUG 1
 
 /* Enable/Disable debug messages */
 #ifdef GRAAL_SGX_DEBUG

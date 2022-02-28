@@ -1,100 +1,115 @@
-[![GraalVM](.github/assets/logo_320x64.svg)][website]
-
-[![GraalVM downloads][badge-dl]][downloads] [![GraalVM docs][badge-docs]][docs] [![GraalVM on Slack][badge-slack]][slack] [![GraalVM on Twitter][badge-twitter]][twitter] [![GraalVM on YouTube][badge-yt]][youtube]  [![GraalVM Gate][badge-gate]][gate] [![License][badge-license]](#license)
-
-GraalVM is a high-performance JDK distribution designed to accelerate the execution of applications written in Java and other JVM languages along with support for JavaScript, Ruby, Python, and a number of other popular languages.
-
-The project website at [https://www.graalvm.org/][website] describes how to [get started][getting-started], how to [stay connected][community], and how to [contribute][contributors].
-
-## Documentation
-
-Please refer to the [GraalVM website for documentation][docs]. You can find most of the documentation sources in the [`docs/`](docs/) directory in the same hierarchy as displayed on the website. Additional documentation including developer instructions for individual components can be found in corresponding `docs/` sub-directories. The documentation for the Truffle framework, for example, is in [`truffle/docs/`](truffle/docs/). This also applies to languages, tools, and other components maintained in [related repositories](#related-repositories).
-
-## Get Support
-
-* Open a [GitHub issue][issues] for bug reports, questions, or requests for enhancements.
-* Join the [GraalVM Slack][slack] to connect with the community and the GraalVM team.
-* Report a security vulnerability according to the [Reporting Vulnerabilities guide][reporting-vulnerabilities].
-
-## Repository Structure
-
-This source repository is the main repository for GraalVM and includes the following components:
-
-Directory | Description
------------- | -------------
-[`.github/`](.github/) | Configuration files for GitHub issues, workflows, ….
-[`compiler/`](compiler/) | [Graal compiler][reference-compiler], a modern, versatile compiler written in Java.
-[`espresso/`](espresso/) | [Espresso][java-on-truffle], a meta-circular Java bytecode interpreter for the GraalVM.
-[`java-benchmarks/`](java-benchmarks/) | Java benchmarks.
-[`regex/`](regex/) | TRegex, a regular expression engine for other GraalVM languages.
-[`sdk/`](sdk/) | [GraalVM SDK][graalvm-sdk], long-term supported APIs of GraalVM.
-[`substratevm/`](substratevm/) | Framework for ahead-of-time (AOT) compilation with [Native Image][native-image].
-[`sulong/`](sulong/) | [Sulong][reference-sulong], an engine for running LLVM bitcode on GraalVM.
-[`tools/`](tools/) | Tools for GraalVM languages implemented with the instrumentation framework.
-[`truffle/`](truffle/) | GraalVM's [language implementation framework][truffle] for creating languages and tools.
-[`vm/`](vm/) | Components for building GraalVM distributions.
-[`wasm/`](wasm/) | [GraalWasm][reference-graalwasm], an engine for running WebAssembly programs on GraalVM.
-
-## Related Repositories
-
-GraalVM provides additional languages, tools, and other components developed in related repositories. These are:
-
-Name         | Description
------------- | -------------
-[FastR] | Implementation of the R language.
-[GraalJS] | Implementation of JavaScript and Node.js.
-[GraalPython] | Implementation of the Python language.
-[GraalVM Demos][graalvm-demos] | Several example applications illustrating GraalVM capabilities.
-[Native Build Tools][native-build-tools] | Build tool plugins for GraalVM Native Image.
-[SimpleLanguage] | A simple example language built with the Truffle framework.
-[SimpleTool] | A simple example tool built with the Truffle framework. 
-[TruffleRuby] | Implementation of the Ruby language.
-[VS Code Extensions][vscode-extensions] | VS Code extensions for GraalVM.
-
-## License
-
-GraalVM Community Edition is open source and distributed under [version 2 of the GNU General Public License with the “Classpath” Exception](LICENSE), which are the same terms as for Java. The licenses of the individual GraalVM components are generally derivative of the license of a particular language (see the table below). GraalVM Community is free to use for any purpose - no strings attached.
-
-Component(s) | License
------------- | -------------
-[Espresso](espresso/LICENSE) | GPL 2
-[GraalVM Compiler](compiler/LICENSE.md), [SubstrateVM](substratevm/LICENSE), [Tools](tools/LICENSE), [VM](vm/LICENSE_GRAALVM_CE) | GPL 2 with Classpath Exception
-[GraalVM SDK](sdk/LICENSE.md), [GraalWasm](wasm/LICENSE), [Truffle Framework](truffle/LICENSE.md), [TRegex](regex/LICENSE.md) | Universal Permissive License
-[Sulong](sulong/LICENSE) | 3-clause BSD
+# Graal SGX Project
+- `Project progress`: ![70%](https://progress-bar.dev/70)
+- This branch represents a modification of graal vm CE to run full native images in Intel SGX enclaves.
 
 
-[badge-dl]: https://img.shields.io/badge/download-latest-blue
-[badge-docs]: https://img.shields.io/badge/docs-read-green
-[badge-gate]: https://github.com/oracle/graal/actions/workflows/main.yml/badge.svg
-[badge-license]: https://img.shields.io/badge/license-GPLv2+CE-green
-[badge-slack]: https://img.shields.io/badge/Slack-join-active?logo=slack
-[badge-twitter]: https://img.shields.io/badge/Twitter-@graalvm-active?logo=twitter
-[badge-yt]: https://img.shields.io/badge/YouTube-subscribe-active?logo=youtube
-[community]: https://www.graalvm.org/community/
-[contributors]: https://www.graalvm.org/community/contributors/
-[docs]: https://www.graalvm.org/docs/introduction/
-[downloads]: https://www.graalvm.org/downloads/
-[fastr]: https://github.com/oracle/fastr
-[gate]: https://github.com/oracle/graal/actions/workflows/main.yml
-[getting-started]: https://www.graalvm.org/docs/getting-started/
-[graaljs]: https://github.com/oracle/graaljs
-[graalpython]: https://github.com/oracle/graalpython
-[graalvm-demos]: https://github.com/graalvm/graalvm-demos
-[graalvm-sdk]: https://www.graalvm.org/sdk/javadoc/
-[issues]: https://github.com/oracle/graal/issues
-[java-on-truffle]: https://www.graalvm.org/reference-manual/java-on-truffle/
-[native-build-tools]: https://github.com/graalvm/native-build-tools
-[native-image]: https://www.graalvm.org/reference-manual/native-image/
-[reference-compiler]: https://www.graalvm.org/reference-manual/compiler/
-[reference-graalwasm]: https://www.graalvm.org/reference-manual/wasm/
-[reference-sulong]: https://www.graalvm.org/reference-manual/llvm/
-[reporting-vulnerabilities]: https://www.oracle.com/corporate/security-practices/assurance/vulnerability/reporting.html
-[simplelanguage]: https://github.com/graalvm/simplelanguage
-[simpletool]: https://github.com/graalvm/simpletool
-[slack]: https://www.graalvm.org/slack-invitation/
-[truffle]: https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/
-[truffleruby]: https://github.com/oracle/truffleruby
-[twitter]: https://twitter.com/graalvm
-[vscode-extensions]: https://github.com/graalvm/vscode-extensions
-[website]: https://www.graalvm.org/
-[youtube]: https://www.youtube.com/graalvm
+## Project goals/milestones
+- The [project's](docs/ero-proposal.pdf) main goal is to extend GraalVM native images with TEE (Intel SGX) functionality. We have the following milestones: 
+- [x] Running a full native image java program inside the enclave for a start (this branch; the rest on `jtransform` branch)
+- [x] Produce 2 separate binaries with secure/unsecure methods.
+- [x] Generation of transition routines for ecalls/ocalls.
+- [x] Creating proxy and mirror objects across both runtimes (primitive params only).
+- [x] GC modifications to synchronize proxy/mirror object destructions (proxy cleaner class).
+- [ ] Object parameter and return types via serialization.
+- [ ] Validating our approach with a motivating example e.g executing smart contracts.
+- [ ] Adding PM functionality to our system. 
+
+
+
+## Substrate VM
+- Substrate VM is the component which creates native images and is the core repo we are working on.
+- SVM supports AoT compilation of Java apps into standalone executable images (i.e native images).
+- Native image includes the necessary components like mem management and thread scheduling from substrate VM: deoptimizer, GC, thread scheduling etc
+
+## Building and running a substrate VM native image in an Intel SGX enclave on Linux.  
+- Clone this repo to a directory in local environment, which we will call `graal-sgx-root`. Unless stated otherwise, all `cd` commands assume `graal-sgx-root` as the top working directory.
+```
+mkdir graal-sgx-root && cd graal-sgx-root
+git clone git@gitlab.com:Yuhala/graal-sgx.git
+
+```
+
+### SGX Installation
+- We created a script to install SGX for Ubuntu based systems: `16.04`, `18.04`, and `20.04`. It was tested on both `18.04` and `20.04`
+- Copy the `sgx-install.sh` script from `graal-tee` folder into `graal-sgx-root`: 
+```
+cp graal-tee/sgx-install.sh .
+
+```
+- The script by default will install SGX tools with debug information included. To install the tools without debug information, change the value of `debug_info` to `0`.
+- Run the SGX install script:
+```
+./sgx-install.sh
+
+```
+- If your hardware does not support SGX, the necessary packages will still be installed; however you will have to use SGX in simulation mode in your makefiles (`SGX_MODE=SIM`).
+- To use the SGX SDK custom debugger `sgx-gdb`, install these packages: `sudo apt libsgx-enclave-common-dbgsym libsgx-urts-dbgsym`.
+
+### Installing graalvm tools
+- Note: for `Ubuntu 20.04`,  you may need to properly configure an `http_proxy` to build graal properly. Our tests with `Ubuntu 18.04` worked without any issues.
+- Install the [mx](https://github.com/graalvm/mx) build tool:
+
+```
+git clone https://github.com/graalvm/mx.git
+
+```
+- GraalVM's JIT compiler works with the default JVM as a plugin with the help of the JVM compiler interface (JVMCI), and thus requires a JDK which supports a graal-compatible version of JVMCI. You can find a compatible version in the `graal-tee` folder: `openjdk-8u282+08-jvmci-21.1-b01-linux-amd64.tar.gz`. Other compatible versions can be found here: [jvmci releases](https://github.com/graalvm/graal-jvmci-8/releases).
+
+- Copy and extract this file in `graal-sgx-root`.
+
+```
+cp graal-tee/openjdk-8u282+08-jvmci-21.1-b01-linux-amd64.tar.gz . 
+tar -xvf openjdk-8u282+08-jvmci-21.1-b01-linux-amd64.tar.gz
+openjdk1.8.0_282-jvmci-21.1-b01
+
+```
+- Copy the native image agent shared library to the `jre/lib/amd64` folder of this jdk. The native image agent generates useful config files for native images at runtime.
+
+```
+cp graal-tee/libnative-image-agent.so openjdk1.8.0_282-jvmci-21.1-b01/jre/lib/amd64
+
+```
+
+- Add `mx` to path and point `JAVA-HOME` to the jdk with jvmci:
+```
+cp graal-tee/config-env .
+source config-env
+
+```
+
+### Build and run a native image in an Intel SGX enclave
+- Here we will build a simple native image java program with SVM and run it in an Intel SGX enclave. 
+- The program simulates a smart contract for transferring assets between peers.
+- The application package is `substratevm/smartc` directory. SVM AoT compiles this program into an object file: `main.o` which will be linked to enclave libraries in the `sgx module` to build an Intel SGX enclave application.
+-  CD into `graal-tee` directory and run the script: `build.sh` to build and copy `main.o` to the `sgx module`:
+```
+cd graal-tee
+./build.sh 
+
+```
+- Note the path to the static library: `liblibchelper.a` at the end of the build process; it would be helpful in case the present version in `sgx/Common` is not compatible with your linker.
+- The path to the other static libs should probably be: `sdk/mxbuild/linux-amd64/GRAALVM_change-this-path_JAVA11/graalvm-dev/lib/static/linux-amd64/glibc`
+- The `cpuid.c` file was removed from the graal libchelper due to multiple definitions already found in the sgx-module. 
+
+- CD into the `sgx module` and run the script `make clean && make` to build the final enclave application. 
+
+```bash
+cd graal-tee/sgx
+make clean && make
+
+```
+- Run the resulting program `app`.
+
+```bash
+./app
+
+```
+
+## Possible build errors
+- In the event of linker errors with `liblibchelper.a`, remove the latter from `sgx/Common` folder and replace it with the one built during the build process above which can be found here: `substratevm/mxbuild/linux-amd64/SVM_HOSTED_NATIVE/linux-amd64/liblibchelper.a`
+
+- Rebuild the SGX program.
+
+## Other resources
+- Article on Graal compiler by Chris Seaton: https://chrisseaton.com/truffleruby/jokerconf17/
+- Medium article on native images by Christian Wimmer: https://medium.com/graalvm/isolates-and-compressed-references-more-flexible-and-efficient-memory-management-for-graalvm-a044cc50b67e

@@ -89,6 +89,10 @@ public class SubstrateOptions {
     @Option(help = "Build shared library")//
     public static final HostedOptionKey<Boolean> SharedLibrary = new HostedOptionKey<>(false);
 
+    @APIOption(name = "sgx")//
+    @Option(help = "Build only object file to be linked in Intel SGX enclave")//
+    public static final HostedOptionKey<Boolean> SGXObject = new HostedOptionKey<>(false);
+
     @APIOption(name = "static")//
     @Option(help = "Build statically linked executable (requires static libc and zlib)")//
     public static final HostedOptionKey<Boolean> StaticExecutable = new HostedOptionKey<>(false);

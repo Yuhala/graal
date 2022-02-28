@@ -93,7 +93,12 @@ extern "C"
     int getpwuid_r(unsigned int uid, void *pwd,char *buf, size_t buflen, void **result);
     int deflateReset(Z_STREAMP stream);
 
-
+    //int sched_setaffinity(pid_t pid, size_t cpusetsize,const cpu_set_t *mask);
+    //int sched_getaffinity(pid_t pid, size_t cpusetsize,cpu_set_t *mask);
+    
+    int sched_setaffinity(pid_t pid, size_t cpusetsize,const void *mask);
+    int sched_getaffinity(pid_t pid, size_t cpusetsize,void *mask);
+    int __sched_cpucount (size_t setsize, const void *setp);
 
 
     long sysconf(int name);
@@ -116,6 +121,8 @@ extern "C"
     //mem management
     int munmap(void *addr, size_t length);
     void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+
+
 
     //clock
     int clock_gettime(clockid_t clk_id, struct timespec *tp);
@@ -140,6 +147,7 @@ extern "C"
     int sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
     sighandler_t signal(int signum, sighandler_t handler);
     void sig_handler(int param);
+    int nanosleep(const struct timespec *__requested_time, struct timespec *__remaining);
 
     //io
     int fsync(int fd);

@@ -361,6 +361,8 @@ int get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned 
 
     return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
 }
+
+
 pid_t waitpid(pid_t pid, int *wstatus, int options)
 {
     GRAAL_SGX_INFO();

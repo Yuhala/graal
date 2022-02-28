@@ -10,8 +10,6 @@ extern "C" {
 
 int run_main(int argc, char** argv);
 
-int graal_add(graal_isolatethread_t*, int, int);
-
 void vmLocatorSymbol(graal_isolatethread_t* thread);
 
 #if defined(__cplusplus)
