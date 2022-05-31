@@ -4,8 +4,10 @@
 # adds mx to path and points java home to jdk-jvmci
 #
 
-export PATH=$PWD/vm/latest_graalvm/graalvm-dev/bin:$PATH
-export JAVA_HOME=$PWD/vm/latest_graalvm/graalvm-dev
+GRAALVM_DEV="graalvm-d6856a2436-java11-22.1.0-dev"
+
+export PATH=$PWD/vm/latest_graalvm/$GRAALVM_DEV/bin:$PATH
+export JAVA_HOME=$PWD/vm/latest_graalvm/$GRAALVM_DEV
 
 
 

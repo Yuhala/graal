@@ -1,2 +1,2 @@
 DEFAULT_DYNAMIC_IMPORTS=/substratevm,/tools,/sulong,/graal-nodejs
-EXCLUDE_COMPONENTS=nju,nic,llp,poly,lsp,pro,ins,njs,pmh,gvm,insight,vvm,dap,cov,llrn,llrl,pbm,llrc,dis,pbi,lli,polybench
+EXCLUDE_COMPONENTS=nju,nic,llp,poly,lsp,pro,ins,njs,pmh,gvm,insight,vvm,dap,cov,llrn,llrl,pbm,llrc,dis,pbi,lli,polybench,jsvm
