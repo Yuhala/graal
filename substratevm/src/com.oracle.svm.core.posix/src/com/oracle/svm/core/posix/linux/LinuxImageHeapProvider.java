@@ -76,7 +76,7 @@ class LinuxImageHeapProviderFeature implements Feature {
     public void duringSetup(DuringSetupAccess access) {
         if (!ImageSingletons.contains(ImageHeapProvider.class)) {
              //pyuhala
-             ImageSingletons.add(ImageHeapProvider.class, new CopyingImageHeapProvider());
+            ImageSingletons.add(ImageHeapProvider.class, new CopyingImageHeapProvider());
             //ImageSingletons.add(ImageHeapProvider.class, new LinuxImageHeapProvider());
         }
     }

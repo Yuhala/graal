@@ -1,0 +1,7 @@
+tree 75a79cebad8328643c4a3e60fcb53c8f4efbc559
+parent b22ecd13d11b8245b0886933aeef3e7fbef06542
+author Christos Kotselidis <christos.kotselidis@oracle.com> 1374492483 +0200
+committer Christos Kotselidis <christos.kotselidis@oracle.com> 1374492483 +0200
+HG:rename-source hg
+
+Add Javadoc to G1ReferentFieldReadBarrier

@@ -121,6 +121,14 @@ typedef struct ms_ocall_fwrite_t {
 	SGX_FILE ms_stream;
 } ms_ocall_fwrite_t;
 
+typedef struct ms_ocall_fread_t {
+	size_t ms_retval;
+	void* ms_ptr;
+	size_t ms_size;
+	size_t ms_nmemb;
+	SGX_FILE ms_stream;
+} ms_ocall_fread_t;
+
 typedef struct ms_ocall_read_t {
 	ssize_t ms_retval;
 	int ms_fd;
@@ -1015,6 +1023,14 @@ static sgx_status_t SGX_CDECL Enclave_ocall_fwrite(void* pms)
 {
 	ms_ocall_fwrite_t* ms = SGX_CAST(ms_ocall_fwrite_t*, pms);
 	ms->ms_retval = ocall_fwrite(ms->ms_ptr, ms->ms_size, ms->ms_nmemb, ms->ms_stream);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_ocall_fread(void* pms)
+{
+	ms_ocall_fread_t* ms = SGX_CAST(ms_ocall_fread_t*, pms);
+	ms->ms_retval = ocall_fread(ms->ms_ptr, ms->ms_size, ms->ms_nmemb, ms->ms_stream);
 
 	return SGX_SUCCESS;
 }
@@ -1989,9 +2005,9 @@ static sgx_status_t SGX_CDECL Enclave_pthread_wakeup_ocall(void* pms)
 
 static const struct {
 	size_t nr_ocall;
-	void * table[137];
+	void * table[138];
 } ocall_table_Enclave = {
-	137,
+	138,
 	{
 		(void*)Enclave_ocall_print_string,
 		(void*)Enclave_ocall_fsync,
@@ -2009,6 +2025,7 @@ static const struct {
 		(void*)Enclave_ocall_fdopen,
 		(void*)Enclave_ocall_fclose,
 		(void*)Enclave_ocall_fwrite,
+		(void*)Enclave_ocall_fread,
 		(void*)Enclave_ocall_read,
 		(void*)Enclave_ocall_write,
 		(void*)Enclave_ocall_fscanf,

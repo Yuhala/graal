@@ -71,8 +71,9 @@ import com.oracle.svm.hosted.meta.HostedUniverse;
 
 public abstract class NativeImageViaCC extends NativeImage {
 
-    public NativeImageViaCC(NativeImageKind k, HostedUniverse universe, HostedMetaAccess metaAccess, NativeLibraries nativeLibs, NativeImageHeap heap, NativeImageCodeCache codeCache,
-                    List<HostedMethod> entryPoints, ClassLoader imageClassLoader) {
+    public NativeImageViaCC(NativeImageKind k, HostedUniverse universe, HostedMetaAccess metaAccess,
+            NativeLibraries nativeLibs, NativeImageHeap heap, NativeImageCodeCache codeCache,
+            List<HostedMethod> entryPoints, ClassLoader imageClassLoader) {
         super(k, universe, metaAccess, nativeLibs, heap, codeCache, entryPoints, imageClassLoader);
     }
 
@@ -80,10 +81,10 @@ public abstract class NativeImageViaCC extends NativeImage {
         return imageKind;
     }
 
-
     class BinutilsCCLinkerInvocation extends CCLinkerInvocation {
 
-        private final boolean staticExecWithDynamicallyLinkLibC = SubstrateOptions.StaticExecutableWithDynamicLibC.getValue();
+        private final boolean staticExecWithDynamicallyLinkLibC = SubstrateOptions.StaticExecutableWithDynamicLibC
+                .getValue();
         private final Set<String> libCLibaries = new HashSet<>(Arrays.asList("pthread", "dl", "rt", "m"));
 
         BinutilsCCLinkerInvocation() {
@@ -100,9 +101,12 @@ public abstract class NativeImageViaCC extends NativeImage {
             }
 
             /*
-             * On Linux we use --dynamic-list to ensure only our defined entrypoints end up as
-             * global symbols in the dynamic symbol table of the image. However, when compiling a
-             * static image these are not needed, and some linkers interpret them wrong, creating a
+             * On Linux we use --dynamic-list to ensure only our defined entrypoints end up
+             * as
+             * global symbols in the dynamic symbol table of the image. However, when
+             * compiling a
+             * static image these are not needed, and some linkers interpret them wrong,
+             * creating a
              * corrupt binary.
              */
             if (!SubstrateOptions.StaticExecutable.getValue()) {
@@ -133,8 +137,8 @@ public abstract class NativeImageViaCC extends NativeImage {
         @Override
         public List<String> getImageSymbols(boolean onlyGlobal) {
             return codeCache.getSymbols(getOrCreateDebugObjectFile(), onlyGlobal).stream()
-                            .map(ObjectFile.Symbol::getName)
-                            .collect(Collectors.toList());
+                    .map(ObjectFile.Symbol::getName)
+                    .collect(Collectors.toList());
         }
 
         @Override
@@ -161,8 +165,8 @@ public abstract class NativeImageViaCC extends NativeImage {
             for (String lib : libs) {
                 if (staticExecWithDynamicallyLinkLibC) {
                     String linkingMode = libCLibaries.contains(lib)
-                                    ? "dynamic"
-                                    : "static";
+                            ? "dynamic"
+                            : "static";
                     cmd.add("-Wl,-B" + linkingMode);
                 }
                 cmd.add("-l" + lib);
@@ -192,7 +196,8 @@ public abstract class NativeImageViaCC extends NativeImage {
             }
 
             /*
-             * On Darwin we use -exported_symbols_list to ensure only our defined entrypoints end up
+             * On Darwin we use -exported_symbols_list to ensure only our defined
+             * entrypoints end up
              * as global symbols in the dynamic symbol table of the image.
              */
             try {
@@ -219,15 +224,16 @@ public abstract class NativeImageViaCC extends NativeImage {
         @Override
         public List<String> getImageSymbols(boolean onlyGlobal) {
             return codeCache.getSymbols(getOrCreateDebugObjectFile(), onlyGlobal).stream()
-                            .map(symbol -> ((MachOSymtab.Entry) symbol).getNameInObject())
-                            .collect(Collectors.toList());
+                    .map(symbol -> ((MachOSymtab.Entry) symbol).getNameInObject())
+                    .collect(Collectors.toList());
         }
 
         @Override
         protected void setOutputKind(List<String> cmd) {
             switch (imageKind) {
                 case STATIC_EXECUTABLE:
-                    throw UserError.abort("%s does not support building static executable images.", OS.getCurrent().name());
+                    throw UserError.abort("%s does not support building static executable images.",
+                            OS.getCurrent().name());
                 case SHARED_LIBRARY:
                     cmd.add("-shared");
                     if (Platform.includedIn(Platform.DARWIN.class)) {
@@ -268,8 +274,8 @@ public abstract class NativeImageViaCC extends NativeImage {
         @Override
         public List<String> getImageSymbols(boolean onlyGlobal) {
             return codeCache.getSymbols(getOrCreateDebugObjectFile(), onlyGlobal).stream()
-                            .map(ObjectFile.Symbol::getName)
-                            .collect(Collectors.toList());
+                    .map(ObjectFile.Symbol::getName)
+                    .collect(Collectors.toList());
         }
 
         @Override
@@ -358,7 +364,8 @@ public abstract class NativeImageViaCC extends NativeImage {
         }
 
         Path outputFile = outputDirectory.resolve(imageName + imageKind.getFilenameSuffix());
-        UserError.guarantee(!Files.isDirectory(outputFile), "Cannot write image to %s. Path exists as directory. (Use -H:Name=<image name>)", outputFile);
+        UserError.guarantee(!Files.isDirectory(outputFile),
+                "Cannot write image to %s. Path exists as directory. (Use -H:Name=<image name>)", outputFile);
         inv.setOutputFile(outputFile);
         inv.setTempDirectory(tempDirectory);
 
@@ -372,10 +379,13 @@ public abstract class NativeImageViaCC extends NativeImage {
         }
 
         Collection<String> libraries = nativeLibs.getLibraries();
-        if (Platform.includedIn(Platform.LINUX.class) && ImageSingletons.lookup(LibCBase.class).getName().equals("bionic")) {
-            // on Bionic LibC pthread.h and rt.h are included in standard library and adding them in
+        if (Platform.includedIn(Platform.LINUX.class)
+                && ImageSingletons.lookup(LibCBase.class).getName().equals("bionic")) {
+            // on Bionic LibC pthread.h and rt.h are included in standard library and adding
+            // them in
             // linker call produces error
-            libraries = libraries.stream().filter(library -> !Arrays.asList("pthread", "rt").contains(library)).collect(Collectors.toList());
+            libraries = libraries.stream().filter(library -> !Arrays.asList("pthread", "rt").contains(library))
+                    .collect(Collectors.toList());
         }
         libraries.forEach(inv::addLinkedLibrary);
 
@@ -393,12 +403,16 @@ public abstract class NativeImageViaCC extends NativeImage {
     private static List<String> diagnoseLinkerFailure(String linkerOutput) {
         List<String> potentialCauses = new ArrayList<>();
         if (linkerOutput.contains("access beyond end of merged section")) {
-            potentialCauses.add("Native Image is using a linker that appears to be incompatible with the tool chain used to build the JDK static libraries. " +
+            potentialCauses.add(
+                    "Native Image is using a linker that appears to be incompatible with the tool chain used to build the JDK static libraries. "
+                            +
                             "The latter is typically shown in the output of `java -Xinternalversion`.");
         }
-        if (SubstrateOptions.ForceNoROSectionRelocations.getValue() && (linkerOutput.contains("fatal error: cannot find ") ||
+        if (SubstrateOptions.ForceNoROSectionRelocations.getValue()
+                && (linkerOutput.contains("fatal error: cannot find ") ||
                         linkerOutput.contains("error: invalid linker name in argument"))) {
-            potentialCauses.add(SubstrateOptions.ForceNoROSectionRelocations.getName() + " option cannot be used if ld.gold linker is missing from the host system");
+            potentialCauses.add(SubstrateOptions.ForceNoROSectionRelocations.getName()
+                    + " option cannot be used if ld.gold linker is missing from the host system");
         }
 
         Pattern p = Pattern.compile(".*cannot find -l([^\\s]+)\\s.*", Pattern.DOTALL);
@@ -407,41 +421,50 @@ public abstract class NativeImageViaCC extends NativeImage {
             OS os = OS.getCurrent();
             String libPrefix = os == OS.WINDOWS ? "" : "lib";
             String libSuffix = os == OS.WINDOWS ? ".lib" : ".a";
-            potentialCauses.add(String.format("It appears as though %s%s%s is missing. Please install it.", libPrefix, m.group(1), libSuffix));
+            potentialCauses.add(String.format("It appears as though %s%s%s is missing. Please install it.", libPrefix,
+                    m.group(1), libSuffix));
         }
         return potentialCauses;
     }
 
     @Override
     @SuppressWarnings("try")
-    public LinkerInvocation write(DebugContext debug, Path outputDirectory, Path tempDirectory, String imageName, BeforeImageWriteAccessImpl config) {
+    public LinkerInvocation write(DebugContext debug, Path outputDirectory, Path tempDirectory, String imageName,
+            BeforeImageWriteAccessImpl config) {
 
-        //pyuhala
+        // pyuhala
         boolean isSGXObject = getOutputKind().getSGXType();
         try (Indent indent = debug.logAndIndent("Writing native image")) {
             // 1. write the relocatable file
-            write(debug, tempDirectory.resolve(imageName + ObjectFile.getFilenameSuffix()),isSGXObject);
+            write(debug, tempDirectory.resolve(imageName + ObjectFile.getFilenameSuffix()), isSGXObject);
             if (NativeImageOptions.ExitAfterRelocatableImageWrite.getValue()) {
                 return null;
             }
 
-             /**
+            /**
              * Bypass the linker for sgx objects: We added a NativeImageOption to test for
              * SGX-builds. These do not require a linker invocation as the relocatable
              * images can be transfered to the SGX module at this point. pyuhala
              */
+
+            System.out.println("----------- List of native image static libraries --------------");
+            for (Path staticLibrary : nativeLibs.getStaticLibraries()) {
+                System.out.println(staticLibrary.toString());
+            }
             if (isSGXObject) {
                 System.out.println("Is SGX Object: returning null linker invocation");
                 System.out.println("Done building image object for sgx module");
                 return null;
-            } 
-
+            }
 
             // 2. run a command to make an executable of it
             /*
-             * To support automated stub generation, we first search for a libsvm.a in the images
-             * directory. FIXME: make this a per-image directory, to avoid clobbering on multiple
-             * runs. It actually doesn't matter, because it's a .a file which will get absorbed into
+             * To support automated stub generation, we first search for a libsvm.a in the
+             * images
+             * directory. FIXME: make this a per-image directory, to avoid clobbering on
+             * multiple
+             * runs. It actually doesn't matter, because it's a .a file which will get
+             * absorbed into
              * the executable, but avoiding clobbering will help debugging.
              */
 
@@ -474,20 +497,24 @@ public abstract class NativeImageViaCC extends NativeImage {
                 }
 
                 Path imagePath = inv.getOutputFile();
-                BuildArtifacts.singleton().add(imageKind.isExecutable ? ArtifactType.EXECUTABLE : ArtifactType.SHARED_LIB, imagePath);
+                BuildArtifacts.singleton()
+                        .add(imageKind.isExecutable ? ArtifactType.EXECUTABLE : ArtifactType.SHARED_LIB, imagePath);
 
                 if (OS.getCurrent() == OS.WINDOWS && !imageKind.isExecutable) {
                     /* Provide an import library for the built shared library. */
                     String importLib = imageName + ".lib";
                     Path importLibPath = imagePath.resolveSibling(importLib);
-                    Files.move(inv.getTempDirectory().resolve(importLib), importLibPath, StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(inv.getTempDirectory().resolve(importLib), importLibPath,
+                            StandardCopyOption.REPLACE_EXISTING);
                     BuildArtifacts.singleton().add(ArtifactType.IMPORT_LIB, importLibPath);
                 }
 
                 if (SubstrateOptions.GenerateDebugInfo.getValue() > 0) {
-                    BuildArtifacts.singleton().add(ArtifactType.DEBUG_INFO, SubstrateOptions.getDebugInfoSourceCacheRoot());
+                    BuildArtifacts.singleton().add(ArtifactType.DEBUG_INFO,
+                            SubstrateOptions.getDebugInfoSourceCacheRoot());
                     if (OS.getCurrent() == OS.WINDOWS) {
-                        BuildArtifacts.singleton().add(ArtifactType.DEBUG_INFO, imagePath.resolveSibling(imageName + ".pdb"));
+                        BuildArtifacts.singleton().add(ArtifactType.DEBUG_INFO,
+                                imagePath.resolveSibling(imageName + ".pdb"));
                     } else {
                         BuildArtifacts.singleton().add(ArtifactType.DEBUG_INFO, imagePath);
                     }

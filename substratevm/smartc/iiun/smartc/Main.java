@@ -16,10 +16,14 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Hello Java!");
         // context without try block
-        Context ctx = Context.create();
-
+        System.out.println("xxxxxxxxxxxxxxx creating polyglot context xxxxxxxxxxxxxxxxx");
+        //Context ctx = Context.create();
+        
         // run javascript code
+        //System.out.println("xxxxxxxxxxxxxxx evaluating js code xxxxxxxxxxxxxxxxx");
         //ctx.eval("js", "print('Hello javascript!');");
+
+      
         //Value array = ctx.eval("js", "[1,2,42,4]");
 
         //int result = array.getArrayElement(2).asInt();
@@ -28,14 +32,10 @@ public class Main {
         //int myInt = ctx.eval("js", "2").asInt();
         //System.out.println("My int in JS is: " + myInt);
 
-
-
-        // run simple language code
-        ctx.eval("sl", "function main() { println(\"Hello simplelanguage!\");}");
-        ctx.eval("sl", "function main() { println(10/3);}");
-
-        int secureInt =   ctx.eval("sl", "function main() {return 66;}").asInt();
-        System.out.println("My int in SL is: " + secureInt);  
+        // run secureL code
+        // int secureInt = ctx.eval("secL", "sInt(25)").asInt();      
+        //System.out.println("My int in SecL is: " + secureInt);      
+   
     }
 
     static void contextWithTry() {

@@ -6,17 +6,44 @@
 
 #include <sgx/mem/sgx_mman.h>
 #include <errno.h>
-#include "checks.h"  //for pointer checks
-#include "Enclave.h" //for printf
+#include "checks.h" //for pointer checks
+#include "../../Enclave.h"
 #include "graalsgx_malloc.h"
 //#include "sgx_rsrv_mem_mngr.h"
 
 static int map_array[NUM_MAPS];
 
+//--------------------------------------------------------
+/**
+ * These functions need to be revisited.
+ */
+int waitid(int idtype, int id, void *infop, int options)
+{
+    // TODO
+    return 0;
+}
+int posix_spawn(void *pid, void *path, void *file_actions, void *attrp, void **argv, void **envp)
+{
+    // TODO
+    return 0;
+}
+int sscanf(const char *str, const char *format)
+{
+    // TODO
+    return 0;
+}
+ssize_t __getdelim(char **lineptr, size_t *n, int delim, SGX_FILE *stream)
+{
+    // TODO
+    return 0;
+}
+
+//--------------------------------------------------------
+
 /*We do not support dynamic loading of libs. We get the appropriate routine name and call the wrapper function.*/
 void *getSymbolHandle(const char *symbol)
 {
-    //TODO: add diff return vals for diff symbols
+    // TODO: add diff return vals for diff symbols
     if (strcmp(symbol, "inet_pton") == 0)
     {
         return (void *)&inet_pton;
@@ -57,7 +84,7 @@ void *dlsym(void *handle, const char *symbol)
     GRAAL_SGX_INFO();
     void *res = getSymbolHandle(symbol);
     printf("Symbol: %s\n", symbol);
-    //ocall_dlsym(handle, symbol, res);
+    // ocall_dlsym(handle, symbol, res);
     return res;
 }
 
@@ -109,9 +136,9 @@ int getrlimit(int res, struct rlimit *rlim)
 {
     GRAAL_SGX_INFO();
     int ret;
-    //printf("Resource limit b4: cur = %ld, max = %ld\n", rlim->rlim_cur, rlim->rlim_max);
+    // printf("Resource limit b4: cur = %ld, max = %ld\n", rlim->rlim_cur, rlim->rlim_max);
     ocall_getrlimit(&ret, res, rlim);
-    //printf("Resource limit after: resource = %d cur = %ld, max = %ld\n", res, rlim->rlim_cur, rlim->rlim_max);
+    // printf("Resource limit after: resource = %d cur = %ld, max = %ld\n", res, rlim->rlim_cur, rlim->rlim_max);
     return ret;
 }
 
@@ -119,7 +146,7 @@ int setrlimit(int resource, const struct rlimit *rlim)
 {
     GRAAL_SGX_INFO();
     int ret;
-    //TODO
+    // TODO
     printf("Resource limit set: res: %d cur = %ld, max = %ld\n", resource, rlim->rlim_cur, rlim->rlim_max);
     return 0;
     ocall_setrlimit(&ret, resource, (struct rlimit *)rlim);
@@ -130,7 +157,7 @@ long syscall(long num, ...)
 {
     GRAAL_SGX_INFO();
     long ret = 0;
-    //ocall_syscall(...)
+    // ocall_syscall(...)
     return ret;
 }
 
@@ -168,8 +195,8 @@ int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
 {
     GRAAL_SGX_INFO();
     int ret;
-    //TODO
-    //ocall_sigaction(&ret, signum, act, oldact);
+    // TODO
+    // ocall_sigaction(&ret, signum, act, oldact);
     return ret;
 }
 
@@ -177,34 +204,34 @@ int sigemptyset(sigset_t *set)
 {
     GRAAL_SGX_INFO();
     int ret;
-    //TODO
-    //ocall_sigemptyset(&ret, set);
+    // TODO
+    // ocall_sigemptyset(&ret, set);
     return ret;
 }
 int sigaddset(sigset_t *set, int signum)
 {
     GRAAL_SGX_INFO();
     int ret;
-    //TODO
-    //ocall_sigaddset(&ret, set, signum);
+    // TODO
+    // ocall_sigaddset(&ret, set, signum);
     return ret;
 }
 int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 {
     GRAAL_SGX_INFO();
     int ret;
-    //TODO
-    //ocall_sigprocmask(&ret, how, set, oldset);
+    // TODO
+    // ocall_sigprocmask(&ret, how, set, oldset);
     return ret;
 }
 __sighandler_t signal(int signum, __sighandler_t handler)
 {
     GRAAL_SGX_INFO();
-    //TODO
-    //printf("Signal num: %d\n", signum);
-    //handler = &sig_handler;
-    __sighandler_t ret = &sig_handler; //nullptr;
-    //ocall_signal(&ret, signum, handler);
+    // TODO
+    // printf("Signal num: %d\n", signum);
+    // handler = &sig_handler;
+    __sighandler_t ret = &sig_handler; // nullptr;
+    // ocall_signal(&ret, signum, handler);
     return nullptr;
 }
 
@@ -248,7 +275,7 @@ void *mmap(void *hint, size_t length, int prot, int flags, int fd, off_t offset)
     // File mapping can be added by reading the content of the file and writing it into the memory area.
     if (fd != -1)
     {
-        //TODO: use mmap64 in this case
+        // TODO: use mmap64 in this case
         errno = EBADF;
         GRAAL_SGX_DEBUG_PRINT("error: mmap cannot map a file or a device in the enclave.");
         return MAP_FAILED;
@@ -328,81 +355,80 @@ int mprotect(void *addr, size_t len, int prot)
 }
 
 /* cpuid routines: for libchelper.a */
-unsigned int get_cpuid_max(unsigned int ext, unsigned int *sig)
+/* unsigned int get_cpuid_max(unsigned int ext, unsigned int *sig)
 {
-    GRAAL_SGX_INFO();
-    unsigned int ret;
-    ocall_get_cpuid_max(&ret, ext, sig);
-    //printf("cpu max level is: %d--------------------------------\n", *sig);
-    return ret;
+   GRAAL_SGX_INFO();
+   unsigned int ret;
+   ocall_get_cpuid_max(&ret, ext, sig);
+   //printf("cpu max level is: %d--------------------------------\n", *sig);
+   return ret;
 
-    /* return __get_cpuid_max(ext, sig); */
+   //return __get_cpuid_max(ext, sig);
 }
 
 int get_cpuid_count(unsigned int leaf, unsigned int subleaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
-    GRAAL_SGX_INFO();
+   GRAAL_SGX_INFO();
 
-    int ret;
-    ocall_get_cpuid_count(&ret, leaf, subleaf, eax, ebx, ecx, edx);
-    return ret;
+   int ret;
+   ocall_get_cpuid_count(&ret, leaf, subleaf, eax, ebx, ecx, edx);
+   return ret;
 
-    //return 1;
-    /* __cpuid_count(leaf, subleaf, *eax, *ebx, *ecx, *edx);
-    return 1; */
+   //return 1;
+   // __cpuid_count(leaf, subleaf, *eax, *ebx, *ecx, *edx);
+   //return 1;
 }
 
 int get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
-    GRAAL_SGX_INFO();
-    /* int ret;
-    ocall_get_cpuid(&ret, leaf, 0, eax, ebx, ecx, edx);
-    return ret; */
+   GRAAL_SGX_INFO();
+   //int ret;
+   //ocall_get_cpuid(&ret, leaf, 0, eax, ebx, ecx, edx);
+   //return ret;
 
-    return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
-}
-
+   return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
+}*/
 
 pid_t waitpid(pid_t pid, int *wstatus, int options)
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    //TODO
+    // TODO
     return ret;
-} //out
+} // out
 pid_t vfork(void)
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    //TODO
+    // TODO
     return ret;
 }
 pid_t fork(void)
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    //TODO
+    // TODO
     return ret;
 }
 int statvfs64(const char *path, struct statvfs *buf)
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    //TODO
+    // TODO
     return ret;
-} //out
+} // out
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    //TODO
+    // TODO
     return ret;
 }
 int execvp(const char *file, char *const argv[])
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    //TODO
+    // TODO
     return ret;
 }
 void _exit(int status)

@@ -52,6 +52,8 @@ enclave {
        SGX_FILE ocall_fdopen(int fd, [in, string]const char *mode);
        int ocall_fclose(SGX_FILE stream);
        size_t ocall_fwrite([in,size=size, count=nmemb]const void *ptr, size_t size, size_t nmemb, SGX_FILE stream);
+       size_t ocall_fread([out,size=size, count=nmemb]void *ptr, size_t size, size_t nmemb, SGX_FILE stream);
+
        ssize_t ocall_read(int fd, [out, size=count]void *buf, size_t count);
        ssize_t ocall_write(int fd, [in, size=count]const void *buf, size_t count);
        int ocall_fscanf(SGX_FILE stream, [in, string]const char *format);

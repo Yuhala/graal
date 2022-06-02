@@ -33,6 +33,8 @@
 #include "../../Enclave_u.h"
 #include <stdio.h>
 
+
+
 void ocall_dlsym(void *handle, const char *symbol, void *res)
 {
     log_ocall(__func__);
@@ -84,7 +86,7 @@ int ocall_getrlimit(int res, struct rlimit *rlim)
 int ocall_setrlimit(int resource, struct rlimit *rlim)
 {
     log_ocall(__func__);
-    //if (resource == 7) return 0;
+    // if (resource == 7) return 0;
     printf("ocall_setrlimit(resource: %d; rlim->rlim_cur: %lu; rlim->rlim_max: %lu)\n",
            resource, rlim->rlim_cur, rlim->rlim_max);
     return setrlimit(resource, rlim);
@@ -143,7 +145,7 @@ int ocall_sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
 __sighandler_t ocall_signal(int signum, __sighandler_t handler)
 {
     log_ocall(__func__);
-    return nullptr; //signal(signum, handler);
+    return nullptr; // signal(signum, handler);
 }
 
 /* Mem management */
@@ -160,7 +162,7 @@ void *ocall_mmap(void *addr, size_t length, int prot, int flags, int fd, off_t o
 }
 int ocall_mprotect(void *addr, size_t len, int prot)
 {
-    //int new_prot = prot;
+    // int new_prot = prot;
     log_ocall(__func__);
     return mprotect(addr, len, prot);
 }
@@ -191,13 +193,11 @@ int ocall_get_cpuid_count(unsigned int leaf, unsigned int subleaf, unsigned int 
 int ocall_get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
     log_ocall(__func__);
-    //return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
+    // return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
 }
 
-
-
 /* Part 2: for untrusted side: app */
-//TODO: put these prototypes in a header file
+// TODO: put these prototypes in a header file
 #if defined(__cplusplus)
 extern "C"
 {
@@ -211,7 +211,7 @@ extern "C"
 }
 #endif
 
-unsigned int get_cpuid_max(unsigned int ext, unsigned int *sig)
+/* unsigned int get_cpuid_max(unsigned int ext, unsigned int *sig)
 {
 
     return __get_cpuid_max(ext, sig);
@@ -238,7 +238,7 @@ int get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned 
 {
 
     return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
-}
+} */
 
 int ocall_dladdr(const void *addr, void *info)
 {
@@ -262,7 +262,8 @@ int ocall_getpwuid_r(unsigned int uid, void *pwd, char *buf, size_t buflen, void
     return getpwuid_r((uid_t)uid, (struct passwd *)pwd, buf, buflen, (struct passwd **)result);
 }
 
-int ocall_deflateReset(Z_STREAMP stream){
+int ocall_deflateReset(Z_STREAMP stream)
+{
     log_ocall(__func__);
-    //TODO: deflateReset is defined in zlib: https://github.com/madler/zlib/blob/master/zlib.h
+    // TODO: deflateReset is defined in zlib: https://github.com/madler/zlib/blob/master/zlib.h
 }

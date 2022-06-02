@@ -1,19 +1,17 @@
 #!/bin/bash
 # 
 # Author: Peterson Yuhala
-# adds mx to path and points java home to jdk-jvmci
+# This script updates adds graalvm dev build to the path 
+# and modifies JAVA_HOME to point to it.
 #
 
-GRAALVM_DEV="graalvm-d6856a2436-java11-22.1.0-dev"
+#GRAALVM_DEV="graalvm-d6856a2436-java11-22.1.0-dev"
+DIR_LIST=($PWD/vm/latest_graalvm/*)
 
-export PATH=$PWD/vm/latest_graalvm/$GRAALVM_DEV/bin:$PATH
-export JAVA_HOME=$PWD/vm/latest_graalvm/$GRAALVM_DEV
+GRAALVM_DEV=${DIR_LIST[0]}
 
+echo "+++++++++++++++++++++ GraalVM-dev home is: $GRAALVM_DEV" 
 
+export PATH=$GRAALVM_DEV/bin:$PATH
+export JAVA_HOME=$GRAALVM_DEV
 
-#
-# Each graal build has a different name so we need a more practical
-# way of adding the new directory to the path
-#
-
-# TODO

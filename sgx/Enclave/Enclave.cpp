@@ -145,7 +145,7 @@ void ecall_graal_main(int id)
     global_eid = id;
     enclave_initiated = true;
     global_enc_iso = isolate_generator();
-    printf("<<<<<< Ecall graal main >>>>>>\n");
+    printf("============================= Ecall graal main =========================\n");
 
     char str[16];
     snprintf(str, 16, "%d", 1000); //good
@@ -153,7 +153,7 @@ void ecall_graal_main(int id)
     char *argv[16] = {str, "-XX:+PrintGC", "-XX:+VerboseGC"};   
 
     run_main(1,NULL);
-    run_main(3, argv);
+    //run_main(3, argv);
 }
 
 //run main with an additional argument

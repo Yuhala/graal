@@ -62,6 +62,7 @@ sgx_status_t SGX_CDECL ocall_fopen(SGX_FILE* retval, const char* filename, const
 sgx_status_t SGX_CDECL ocall_fdopen(SGX_FILE* retval, int fd, const char* mode);
 sgx_status_t SGX_CDECL ocall_fclose(int* retval, SGX_FILE stream);
 sgx_status_t SGX_CDECL ocall_fwrite(size_t* retval, const void* ptr, size_t size, size_t nmemb, SGX_FILE stream);
+sgx_status_t SGX_CDECL ocall_fread(size_t* retval, void* ptr, size_t size, size_t nmemb, SGX_FILE stream);
 sgx_status_t SGX_CDECL ocall_read(ssize_t* retval, int fd, void* buf, size_t count);
 sgx_status_t SGX_CDECL ocall_write(ssize_t* retval, int fd, const void* buf, size_t count);
 sgx_status_t SGX_CDECL ocall_fscanf(int* retval, SGX_FILE stream, const char* format);

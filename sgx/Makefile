@@ -39,10 +39,10 @@
 ######## SGX SDK Settings ########
 
 SGX_SDK ?= /opt/intel/sgxsdk
-SGX_MODE ?=xHW
+SGX_MODE ?=HW
 SGX_ARCH ?= x64
-#SGX_DEBUG ?= 1
-SGX_PRERELEASE = 1
+SGX_DEBUG ?= 1
+#SGX_PRERELEASE = 1
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
@@ -90,7 +90,7 @@ Graal_Objects_In := $(wildcard Enclave/graalsgx/*.o)
 
 # Static graal libs
 Graal_Libs_Path := ./Common
-Graal_Libs := -lfdlibm -lffi -ljava -ljvm -llibchelper -lnet -lnio -lzip
+Graal_Libs := -lfdlibm -lffi -ljava -ljvm -llibchelper -lnet -lextnet -lnio -lzip
 
 # Untrusted objects from graal AoT compilation
 Graal_Objects_Out := $(wildcard App/graalsgx/*.o)

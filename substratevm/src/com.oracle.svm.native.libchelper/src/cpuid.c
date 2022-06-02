@@ -58,7 +58,7 @@ int get_cpuid_count (unsigned int leaf, unsigned int subleaf, unsigned int *eax,
 
 int get_cpuid (unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx) {
     return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
-}
+} 
  
 #else
 

@@ -182,6 +182,18 @@ size_t ocall_fwrite(const void *ptr, size_t size, size_t nmemb, SGX_FILE stream)
     FILE *f = getFile(stream);
     return fwrite(ptr, size, nmemb, f);
 }
+
+size_t ocall_fread(void *ptr, size_t size, size_t nmemb, SGX_FILE stream)
+{
+    log_ocall(__func__);
+    FILE *f = getFile(stream);
+    ssize_t total_bytes = size * nmemb;
+    ssize_t ret = fread(ptr, size, nmemb, f);
+    //printf("--------------- fread expected: %d actually read: %d ---------------------\n", total_bytes, ret);
+    return ret;
+}
+
+
 ssize_t ocall_read(int fd, void *buf, size_t count)
 {
     log_ocall(__func__);

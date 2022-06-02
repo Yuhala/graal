@@ -77,7 +77,7 @@ sgx_enclave_id_t global_eid = 0;
 /* Main app isolate */
 graal_isolatethread_t *global_app_iso;
 /*Main thread id*/
-//std::thread::id main_thread_id = std::this_thread::get_id();
+// std::thread::id main_thread_id = std::this_thread::get_id();
 pthread_t main_thread_id;
 
 /* Ocall counter */
@@ -126,7 +126,7 @@ void destroy_isolate(graal_isolatethread_t *iso)
 void fill_array()
 {
     printf("Filling outside array\n");
-    unsigned int size = 1024 * 1024 * 4; //16mb
+    unsigned int size = 1024 * 1024 * 4; // 16mb
     int *array = (int *)malloc(sizeof(int) * size);
     int idx = 0;
     for (int i = 0; i < size; i++)
@@ -172,19 +172,21 @@ int SGX_CDECL main(int argc, char *argv[])
 {
     (void)(argc);
     (void)(argv);
-    //run_main(1, NULL);
-    //return 0;
-    //I use only 1 arg for now
+    // run_main(1, NULL);
+    // return 0;
+    // I use only 1 arg for now
     int arg1 = 0;
 
-    //const char* arg1 = argv[1];
+    // const char* arg1 = argv[1];
 
     global_app_iso = isolate_generator();
-    run_main(1,NULL);
-    return 0;
+    graal_isolatethread_t* temp = isolate_generator();
+    
+    //run_main(1, NULL);
+    //return 0;
 
-    printf("<<<<<<< Created untrusted app isolate >>>>>> \n");
-    getchar();//pyuhala: halt to verify message b4 the clumsy debug messages
+    printf("<<<<<<< Created untrusted app isolate: enter a char to continue ... >>>>>> \n");
+    getchar(); // pyuhala: halt to verify message b4 the clumsy debug messages
 
     setMainAttribs();
 
@@ -213,18 +215,18 @@ int SGX_CDECL main(int argc, char *argv[])
         ecall_graal_main(global_eid, id);
     }
 
-    //ecall_create_enclave_isolate(global_eid);
-    //ecall_graal_main_args(global_eid, id, arg1);
+    // ecall_create_enclave_isolate(global_eid);
+    // ecall_graal_main_args(global_eid, id, arg1);
     /**
-     * Invoke main routine of java application: for partitioned apps. 
+     * Invoke main routine of java application: for partitioned apps.
      * This is the initial entrypoint method, all further ecalls are performed there.
      */
 
-    //run_main(argc, argv);
+    // run_main(argc, argv);
 
     printf("Number of ocalls: %d\n", ocall_count);
     showOcallLog(10);
-    writeVal("./results/temp.csv", ocall_count);
+    //writeVal("./results/temp.csv", ocall_count);
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
@@ -237,7 +239,7 @@ int SGX_CDECL main(int argc, char *argv[])
     /*  printf("Time inside: %lf\n", in);
     printf("Time outside: %lf\n", out); */
 
-    //printf("Enter a character before exit ...\n");
-    //getchar();
+    // printf("Enter a character before exit ...\n");
+    // getchar();
     return 0;
 }

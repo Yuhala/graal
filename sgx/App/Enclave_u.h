@@ -90,6 +90,10 @@ int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_fclose, (SGX_FILE stream));
 #define OCALL_FWRITE_DEFINED__
 size_t SGX_UBRIDGE(SGX_NOCONVENTION, ocall_fwrite, (const void* ptr, size_t size, size_t nmemb, SGX_FILE stream));
 #endif
+#ifndef OCALL_FREAD_DEFINED__
+#define OCALL_FREAD_DEFINED__
+size_t SGX_UBRIDGE(SGX_NOCONVENTION, ocall_fread, (void* ptr, size_t size, size_t nmemb, SGX_FILE stream));
+#endif
 #ifndef OCALL_READ_DEFINED__
 #define OCALL_READ_DEFINED__
 ssize_t SGX_UBRIDGE(SGX_NOCONVENTION, ocall_read, (int fd, void* buf, size_t count));
