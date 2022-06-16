@@ -43,7 +43,10 @@ extern "C" {
 
 void ecall_graal_main_args(int id, int arg1);
 void ecall_graal_main(int id);
+void ecall_test_pwuid(unsigned int id);
 void ecall_set_environ(void** env_ptr);
+void ecall_create_enclave_isolate(void);
+void ecall_destroy_enclave_isolate(void);
 void ecall_execute_job(pthread_t pthread_self_id, unsigned long int job_id);
 
 sgx_status_t SGX_CDECL ocall_print_string(const char* str);
@@ -109,7 +112,7 @@ sgx_status_t SGX_CDECL ocall_deflateInit2(int* retval, z_streamp stream, int lev
 sgx_status_t SGX_CDECL ocall_inflateReset(int* retval, z_streamp stream);
 sgx_status_t SGX_CDECL ocall_sendfile64(ssize_t* retval, int out_fd, int in_fd, off_t* offset, size_t count);
 sgx_status_t SGX_CDECL ocall_adler32(ulong* retval, ulong adler, const Bytef* buf, size_t len);
-sgx_status_t SGX_CDECL ocall_getenv(int* retval, const char* env, int envlen, char* ret_str, int ret_len);
+sgx_status_t SGX_CDECL ocall_getenv(char** retval, const char* name);
 sgx_status_t SGX_CDECL ocall_fileno(int* retval, SGX_FILE* stream);
 sgx_status_t SGX_CDECL ocall_isatty(int* retval, int fd);
 sgx_status_t SGX_CDECL ocall_umask(mode_t* retval, mode_t mask);
@@ -145,9 +148,9 @@ sgx_status_t SGX_CDECL ocall_send(ssize_t* retval, int sockfd, const void* buf, 
 sgx_status_t SGX_CDECL ocall_dlsym(void* handle, const char* symbol, void* res);
 sgx_status_t SGX_CDECL ocall_dlopen(void** retval, const char* symbol, int flag);
 sgx_status_t SGX_CDECL ocall_sysconf(long int* retval, int name);
-sgx_status_t SGX_CDECL ocall_getuid(int* retval);
+sgx_status_t SGX_CDECL ocall_getuid(unsigned int* retval);
 sgx_status_t SGX_CDECL ocall_getcwd(char* buf, size_t len);
-sgx_status_t SGX_CDECL ocall_getpwuid(uid_t uid, struct passwd* ret);
+sgx_status_t SGX_CDECL ocall_getpwuid(void** retval, uid_t uid);
 sgx_status_t SGX_CDECL ocall_exit(int stat);
 sgx_status_t SGX_CDECL ocall_getrlimit(int* retval, int res, struct rlimit* rlim);
 sgx_status_t SGX_CDECL ocall_setrlimit(int* retval, int resource, struct rlimit* rlim);

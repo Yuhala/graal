@@ -338,6 +338,9 @@ extern "C"
     int sscanf(const char *str, const char *format);
     ssize_t __getdelim(char **lineptr, size_t *n, int delim, SGX_FILE *stream);
 
+    // For libchelper redefinitions  
+    char *SVM_FindJavaTZmd(const char *tzmappings, int length);
+
 #if defined(__cplusplus)
 }
 #endif

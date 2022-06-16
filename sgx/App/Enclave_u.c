@@ -10,6 +10,10 @@ typedef struct ms_ecall_graal_main_t {
 	int ms_id;
 } ms_ecall_graal_main_t;
 
+typedef struct ms_ecall_test_pwuid_t {
+	unsigned int ms_id;
+} ms_ecall_test_pwuid_t;
+
 typedef struct ms_ecall_set_environ_t {
 	void** ms_env_ptr;
 } ms_ecall_set_environ_t;
@@ -425,11 +429,8 @@ typedef struct ms_ocall_adler32_t {
 } ms_ocall_adler32_t;
 
 typedef struct ms_ocall_getenv_t {
-	int ms_retval;
-	const char* ms_env;
-	int ms_envlen;
-	char* ms_ret_str;
-	int ms_ret_len;
+	char* ms_retval;
+	const char* ms_name;
 } ms_ocall_getenv_t;
 
 typedef struct ms_ocall_fileno_t {
@@ -671,7 +672,7 @@ typedef struct ms_ocall_sysconf_t {
 } ms_ocall_sysconf_t;
 
 typedef struct ms_ocall_getuid_t {
-	int ms_retval;
+	unsigned int ms_retval;
 } ms_ocall_getuid_t;
 
 typedef struct ms_ocall_getcwd_t {
@@ -680,8 +681,8 @@ typedef struct ms_ocall_getcwd_t {
 } ms_ocall_getcwd_t;
 
 typedef struct ms_ocall_getpwuid_t {
+	void* ms_retval;
 	uid_t ms_uid;
-	struct passwd* ms_ret;
 } ms_ocall_getpwuid_t;
 
 typedef struct ms_ocall_exit_t {
@@ -1406,7 +1407,7 @@ static sgx_status_t SGX_CDECL Enclave_ocall_adler32(void* pms)
 static sgx_status_t SGX_CDECL Enclave_ocall_getenv(void* pms)
 {
 	ms_ocall_getenv_t* ms = SGX_CAST(ms_ocall_getenv_t*, pms);
-	ms->ms_retval = ocall_getenv(ms->ms_env, ms->ms_envlen, ms->ms_ret_str, ms->ms_ret_len);
+	ms->ms_retval = ocall_getenv(ms->ms_name);
 
 	return SGX_SUCCESS;
 }
@@ -1710,7 +1711,7 @@ static sgx_status_t SGX_CDECL Enclave_ocall_getcwd(void* pms)
 static sgx_status_t SGX_CDECL Enclave_ocall_getpwuid(void* pms)
 {
 	ms_ocall_getpwuid_t* ms = SGX_CAST(ms_ocall_getpwuid_t*, pms);
-	ocall_getpwuid(ms->ms_uid, ms->ms_ret);
+	ms->ms_retval = ocall_getpwuid(ms->ms_uid);
 
 	return SGX_SUCCESS;
 }
@@ -2168,12 +2169,35 @@ sgx_status_t ecall_graal_main(sgx_enclave_id_t eid, int id)
 	return status;
 }
 
+sgx_status_t ecall_test_pwuid(sgx_enclave_id_t eid, unsigned int id)
+{
+	sgx_status_t status;
+	ms_ecall_test_pwuid_t ms;
+	ms.ms_id = id;
+	status = sgx_ecall(eid, 2, &ocall_table_Enclave, &ms);
+	return status;
+}
+
 sgx_status_t ecall_set_environ(sgx_enclave_id_t eid, void** env_ptr)
 {
 	sgx_status_t status;
 	ms_ecall_set_environ_t ms;
 	ms.ms_env_ptr = env_ptr;
-	status = sgx_ecall(eid, 2, &ocall_table_Enclave, &ms);
+	status = sgx_ecall(eid, 3, &ocall_table_Enclave, &ms);
+	return status;
+}
+
+sgx_status_t ecall_create_enclave_isolate(sgx_enclave_id_t eid)
+{
+	sgx_status_t status;
+	status = sgx_ecall(eid, 4, &ocall_table_Enclave, NULL);
+	return status;
+}
+
+sgx_status_t ecall_destroy_enclave_isolate(sgx_enclave_id_t eid)
+{
+	sgx_status_t status;
+	status = sgx_ecall(eid, 5, &ocall_table_Enclave, NULL);
 	return status;
 }
 
@@ -2183,7 +2207,7 @@ sgx_status_t ecall_execute_job(sgx_enclave_id_t eid, pthread_t pthread_self_id, 
 	ms_ecall_execute_job_t ms;
 	ms.ms_pthread_self_id = pthread_self_id;
 	ms.ms_job_id = job_id;
-	status = sgx_ecall(eid, 3, &ocall_table_Enclave, &ms);
+	status = sgx_ecall(eid, 6, &ocall_table_Enclave, &ms);
 	return status;
 }
 

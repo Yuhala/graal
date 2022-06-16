@@ -305,12 +305,12 @@ int __fxstat64(int ver, int fd, struct stat *stat_buf)
 char *getenv(const char *name)
 {
     GRAAL_SGX_INFO();
-    /* char *ret = nullptr;
-    ocall_getenv(name,);
-    return ret; */
-    // TODO: try obtaining it from environ var
-    printf("GraalSGX: getenv(%s): workaround\n", name);
-    return NULL;
+    char *retval;
+    sgx_status_t status = ocall_getenv(&retval, name);
+    // CHECK_STATUS(status);
+    return retval;
+
+   
 }
 
 ulong crc32(ulong crc, const Byte *buf, uint len)

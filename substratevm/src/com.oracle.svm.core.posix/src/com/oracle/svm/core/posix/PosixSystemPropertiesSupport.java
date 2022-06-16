@@ -37,20 +37,42 @@ import com.oracle.svm.core.posix.headers.Unistd;
 public abstract class PosixSystemPropertiesSupport extends SystemPropertiesSupport {
 
     /*
-     * Initialization code is adapted from the JDK native code that initializes the system
+     * Initialization code is adapted from the JDK native code that initializes the
+     * system
      * properties, as found in src/solaris/native/java/lang/java_props_md.c
      */
+
+    /**
+     * Peterson Yuhala:
+     * These functions cause segfaults enclave side so I'm hardcoding some values
+     * compatible with my server ONLY for dev purposes.
+     * pw_name : ubuntu
+     * pw_uid : 1001
+     * pw_gid : 1001
+     * pw_dir : /home/ubuntu
+     * pw_shell : /bin/bash
+     * 
+     */
+
+    public static final String pw_name = "ubuntu";
+    public static final String pw_dir = "/home/ubuntu";
 
     @Override
     protected String userNameValue() {
         Pwd.passwd pwent = Pwd.getpwuid(Unistd.getuid());
+        // System.out.println("userNameValue: " +
+        // CTypeConversion.toJavaString(pwent.pw_name()));
         return pwent.isNull() ? "?" : CTypeConversion.toJavaString(pwent.pw_name());
+        // return pw_name;
     }
 
     @Override
     protected String userHomeValue() {
         Pwd.passwd pwent = Pwd.getpwuid(Unistd.getuid());
+        // System.out.println("userNameValue: " +
+        // CTypeConversion.toJavaString(pwent.pw_dir()));
         return pwent.isNull() ? "?" : CTypeConversion.toJavaString(pwent.pw_dir());
+        // return pw_dir;
     }
 
     @Override

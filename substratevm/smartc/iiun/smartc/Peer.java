@@ -21,6 +21,10 @@ public class Peer {
         return peerId;
     }
 
+    public static void helloJava(){
+        System.out.println("----- Hello from Java -----::)");
+    }
+
     public void setPeerId(String pid) {
         this.peerId = pid;
     }

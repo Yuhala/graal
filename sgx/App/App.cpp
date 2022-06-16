@@ -63,6 +63,11 @@
 #include <map>
 #include "ocall_logger.h"
 
+// for pwd_test
+#define _POSIX_SOURCE
+#include <sys/types.h>
+#include <pwd.h>
+
 /* Benchmarking */
 //#include "benchtools.h"
 #include <time.h>
@@ -90,6 +95,29 @@ extern char **environ;
 void gen_sighandler(int sig, siginfo_t *si, void *arg)
 {
     printf("Caught signal: %d\n", sig);
+}
+
+/**
+ * @brief
+ * From IBM code examples.
+ */
+void pwd_test()
+{
+    struct passwd *p;
+    uid_t uid = getuid();
+
+    if ((p = getpwuid(uid)) == NULL)
+        perror("getpwuid() error");
+    else
+    {
+        printf("getpwuid() returned the following info for uid %d:\n",
+               (int)uid);
+        printf("  pw_name  : %s\n", p->pw_name);
+        printf("  pw_uid   : %d\n", (int)p->pw_uid);
+        printf("  pw_gid   : %d\n", (int)p->pw_gid);
+        printf("  pw_dir   : %s\n", p->pw_dir);
+        printf("  pw_shell : %s\n", p->pw_shell);
+    }
 }
 
 /**
@@ -178,12 +206,13 @@ int SGX_CDECL main(int argc, char *argv[])
     int arg1 = 0;
 
     // const char* arg1 = argv[1];
+    // pwd_test();
 
     global_app_iso = isolate_generator();
-    graal_isolatethread_t* temp = isolate_generator();
-    
-    //run_main(1, NULL);
-    //return 0;
+    graal_isolatethread_t *temp = isolate_generator();
+
+    // run_main(1, NULL);
+    // return 0;
 
     printf("<<<<<<< Created untrusted app isolate: enter a char to continue ... >>>>>> \n");
     getchar(); // pyuhala: halt to verify message b4 the clumsy debug messages
@@ -202,6 +231,12 @@ int SGX_CDECL main(int argc, char *argv[])
     printf("Enclave initialized\n");
 
     int id = global_eid;
+
+    // pwuid test
+    /*uid_t uid = getuid();
+    unsigned int pwid = uid;
+    ecall_test_pwuid(global_eid, pwid);
+    return 0;*/
 
     if (argc > 1)
     {
@@ -226,7 +261,7 @@ int SGX_CDECL main(int argc, char *argv[])
 
     printf("Number of ocalls: %d\n", ocall_count);
     showOcallLog(10);
-    //writeVal("./results/temp.csv", ocall_count);
+    // writeVal("./results/temp.csv", ocall_count);
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);

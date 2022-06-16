@@ -10,6 +10,8 @@ extern "C" {
 
 typedef int (*run_main_fn_t)(int argc, char** argv);
 
+typedef int (*polytaint_add_fn_t)(graal_isolatethread_t*, int, int);
+
 typedef void (*vmLocatorSymbol_fn_t)(graal_isolatethread_t* thread);
 
 #if defined(__cplusplus)

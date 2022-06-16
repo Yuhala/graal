@@ -36,6 +36,10 @@ typedef struct ms_ecall_graal_main_t {
 	int ms_id;
 } ms_ecall_graal_main_t;
 
+typedef struct ms_ecall_test_pwuid_t {
+	unsigned int ms_id;
+} ms_ecall_test_pwuid_t;
+
 typedef struct ms_ecall_set_environ_t {
 	void** ms_env_ptr;
 } ms_ecall_set_environ_t;
@@ -451,11 +455,8 @@ typedef struct ms_ocall_adler32_t {
 } ms_ocall_adler32_t;
 
 typedef struct ms_ocall_getenv_t {
-	int ms_retval;
-	const char* ms_env;
-	int ms_envlen;
-	char* ms_ret_str;
-	int ms_ret_len;
+	char* ms_retval;
+	const char* ms_name;
 } ms_ocall_getenv_t;
 
 typedef struct ms_ocall_fileno_t {
@@ -697,7 +698,7 @@ typedef struct ms_ocall_sysconf_t {
 } ms_ocall_sysconf_t;
 
 typedef struct ms_ocall_getuid_t {
-	int ms_retval;
+	unsigned int ms_retval;
 } ms_ocall_getuid_t;
 
 typedef struct ms_ocall_getcwd_t {
@@ -706,8 +707,8 @@ typedef struct ms_ocall_getcwd_t {
 } ms_ocall_getcwd_t;
 
 typedef struct ms_ocall_getpwuid_t {
+	void* ms_retval;
 	uid_t ms_uid;
-	struct passwd* ms_ret;
 } ms_ocall_getpwuid_t;
 
 typedef struct ms_ocall_exit_t {
@@ -961,6 +962,24 @@ static sgx_status_t SGX_CDECL sgx_ecall_graal_main(void* pms)
 	return status;
 }
 
+static sgx_status_t SGX_CDECL sgx_ecall_test_pwuid(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_ecall_test_pwuid_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_ecall_test_pwuid_t* ms = SGX_CAST(ms_ecall_test_pwuid_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+
+
+
+	ecall_test_pwuid(ms->ms_id);
+
+
+	return status;
+}
+
 static sgx_status_t SGX_CDECL sgx_ecall_set_environ(void* pms)
 {
 	CHECK_REF_POINTER(pms, sizeof(ms_ecall_set_environ_t));
@@ -977,6 +996,22 @@ static sgx_status_t SGX_CDECL sgx_ecall_set_environ(void* pms)
 	ecall_set_environ(_tmp_env_ptr);
 
 
+	return status;
+}
+
+static sgx_status_t SGX_CDECL sgx_ecall_create_enclave_isolate(void* pms)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	if (pms != NULL) return SGX_ERROR_INVALID_PARAMETER;
+	ecall_create_enclave_isolate();
+	return status;
+}
+
+static sgx_status_t SGX_CDECL sgx_ecall_destroy_enclave_isolate(void* pms)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	if (pms != NULL) return SGX_ERROR_INVALID_PARAMETER;
+	ecall_destroy_enclave_isolate();
 	return status;
 }
 
@@ -1000,161 +1035,164 @@ static sgx_status_t SGX_CDECL sgx_ecall_execute_job(void* pms)
 
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[4];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[7];
 } g_ecall_table = {
-	4,
+	7,
 	{
 		{(void*)(uintptr_t)sgx_ecall_graal_main_args, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_graal_main, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_test_pwuid, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_set_environ, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_create_enclave_isolate, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_destroy_enclave_isolate, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_execute_job, 0, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[138][4];
+	uint8_t entry_table[138][7];
 } g_dyn_entry_table = {
 	138,
 	{
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 1, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 1, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
 	}
 };
 
@@ -3997,24 +4035,19 @@ sgx_status_t SGX_CDECL ocall_adler32(ulong* retval, ulong adler, const Bytef* bu
 	return status;
 }
 
-sgx_status_t SGX_CDECL ocall_getenv(int* retval, const char* env, int envlen, char* ret_str, int ret_len)
+sgx_status_t SGX_CDECL ocall_getenv(char** retval, const char* name)
 {
 	sgx_status_t status = SGX_SUCCESS;
-	size_t _len_env = envlen;
-	size_t _len_ret_str = ret_len;
+	size_t _len_name = name ? strlen(name) + 1 : 0;
 
 	ms_ocall_getenv_t* ms = NULL;
 	size_t ocalloc_size = sizeof(ms_ocall_getenv_t);
 	void *__tmp = NULL;
 
-	void *__tmp_ret_str = NULL;
 
-	CHECK_ENCLAVE_POINTER(env, _len_env);
-	CHECK_ENCLAVE_POINTER(ret_str, _len_ret_str);
+	CHECK_ENCLAVE_POINTER(name, _len_name);
 
-	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (env != NULL) ? _len_env : 0))
-		return SGX_ERROR_INVALID_PARAMETER;
-	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (ret_str != NULL) ? _len_ret_str : 0))
+	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (name != NULL) ? _len_name : 0))
 		return SGX_ERROR_INVALID_PARAMETER;
 
 	__tmp = sgx_ocalloc(ocalloc_size);
@@ -4026,48 +4059,26 @@ sgx_status_t SGX_CDECL ocall_getenv(int* retval, const char* env, int envlen, ch
 	__tmp = (void *)((size_t)__tmp + sizeof(ms_ocall_getenv_t));
 	ocalloc_size -= sizeof(ms_ocall_getenv_t);
 
-	if (env != NULL) {
-		ms->ms_env = (const char*)__tmp;
-		if (_len_env % sizeof(*env) != 0) {
+	if (name != NULL) {
+		ms->ms_name = (const char*)__tmp;
+		if (_len_name % sizeof(*name) != 0) {
 			sgx_ocfree();
 			return SGX_ERROR_INVALID_PARAMETER;
 		}
-		if (memcpy_s(__tmp, ocalloc_size, env, _len_env)) {
+		if (memcpy_s(__tmp, ocalloc_size, name, _len_name)) {
 			sgx_ocfree();
 			return SGX_ERROR_UNEXPECTED;
 		}
-		__tmp = (void *)((size_t)__tmp + _len_env);
-		ocalloc_size -= _len_env;
+		__tmp = (void *)((size_t)__tmp + _len_name);
+		ocalloc_size -= _len_name;
 	} else {
-		ms->ms_env = NULL;
+		ms->ms_name = NULL;
 	}
 	
-	ms->ms_envlen = envlen;
-	if (ret_str != NULL) {
-		ms->ms_ret_str = (char*)__tmp;
-		__tmp_ret_str = __tmp;
-		if (_len_ret_str % sizeof(*ret_str) != 0) {
-			sgx_ocfree();
-			return SGX_ERROR_INVALID_PARAMETER;
-		}
-		memset(__tmp_ret_str, 0, _len_ret_str);
-		__tmp = (void *)((size_t)__tmp + _len_ret_str);
-		ocalloc_size -= _len_ret_str;
-	} else {
-		ms->ms_ret_str = NULL;
-	}
-	
-	ms->ms_ret_len = ret_len;
 	status = sgx_ocall(63, ms);
 
 	if (status == SGX_SUCCESS) {
 		if (retval) *retval = ms->ms_retval;
-		if (ret_str) {
-			if (memcpy_s((void*)ret_str, _len_ret_str, __tmp_ret_str, _len_ret_str)) {
-				sgx_ocfree();
-				return SGX_ERROR_UNEXPECTED;
-			}
-		}
 	}
 	sgx_ocfree();
 	return status;
@@ -5676,7 +5687,7 @@ sgx_status_t SGX_CDECL ocall_sysconf(long int* retval, int name)
 	return status;
 }
 
-sgx_status_t SGX_CDECL ocall_getuid(int* retval)
+sgx_status_t SGX_CDECL ocall_getuid(unsigned int* retval)
 {
 	sgx_status_t status = SGX_SUCCESS;
 
@@ -5757,21 +5768,14 @@ sgx_status_t SGX_CDECL ocall_getcwd(char* buf, size_t len)
 	return status;
 }
 
-sgx_status_t SGX_CDECL ocall_getpwuid(uid_t uid, struct passwd* ret)
+sgx_status_t SGX_CDECL ocall_getpwuid(void** retval, uid_t uid)
 {
 	sgx_status_t status = SGX_SUCCESS;
-	size_t _len_ret = sizeof(struct passwd);
 
 	ms_ocall_getpwuid_t* ms = NULL;
 	size_t ocalloc_size = sizeof(ms_ocall_getpwuid_t);
 	void *__tmp = NULL;
 
-	void *__tmp_ret = NULL;
-
-	CHECK_ENCLAVE_POINTER(ret, _len_ret);
-
-	if (ADD_ASSIGN_OVERFLOW(ocalloc_size, (ret != NULL) ? _len_ret : 0))
-		return SGX_ERROR_INVALID_PARAMETER;
 
 	__tmp = sgx_ocalloc(ocalloc_size);
 	if (__tmp == NULL) {
@@ -5783,25 +5787,10 @@ sgx_status_t SGX_CDECL ocall_getpwuid(uid_t uid, struct passwd* ret)
 	ocalloc_size -= sizeof(ms_ocall_getpwuid_t);
 
 	ms->ms_uid = uid;
-	if (ret != NULL) {
-		ms->ms_ret = (struct passwd*)__tmp;
-		__tmp_ret = __tmp;
-		memset(__tmp_ret, 0, _len_ret);
-		__tmp = (void *)((size_t)__tmp + _len_ret);
-		ocalloc_size -= _len_ret;
-	} else {
-		ms->ms_ret = NULL;
-	}
-	
 	status = sgx_ocall(101, ms);
 
 	if (status == SGX_SUCCESS) {
-		if (ret) {
-			if (memcpy_s((void*)ret, _len_ret, __tmp_ret, _len_ret)) {
-				sgx_ocfree();
-				return SGX_ERROR_UNEXPECTED;
-			}
-		}
+		if (retval) *retval = ms->ms_retval;
 	}
 	sgx_ocfree();
 	return status;

@@ -107,7 +107,7 @@ long sysconf(int name)
 uid_t getuid()
 {
     GRAAL_SGX_INFO();
-    int ret;
+    unsigned int ret;
     ocall_getuid(&ret);
     return (uid_t)ret;
 }
@@ -122,10 +122,29 @@ char *getcwd(char *buf, size_t size)
 struct passwd *getpwuid(uid_t uid)
 {
     GRAAL_SGX_INFO();
-    struct passwd *ret;
-    ocall_getpwuid(uid, ret);
-    return ret;
+    void *ret;
+    ocall_getpwuid(&ret, uid);
+    struct passwd *p = (struct passwd *)ret;
+
+    /*if (p == NULL)
+    {
+        printf("ocall getpwuid() error");
+    }
+
+    else
+    {
+        printf("getpwuid() returned the following info for uid %d:\n",
+               (int)uid);
+        printf("  pw_name  : %s\n", p->pw_name);
+        printf("  pw_uid   : %d\n", (int)p->pw_uid);
+        printf("  pw_gid   : %d\n", (int)p->pw_gid);
+        printf("  pw_dir   : %s\n", p->pw_dir);
+        printf("  pw_shell : %s\n", p->pw_shell);
+    }*/
+
+    return p;
 }
+
 void exit(int status)
 {
     GRAAL_SGX_INFO();
@@ -354,40 +373,25 @@ int mprotect(void *addr, size_t len, int prot)
     return 0;
 }
 
-/* cpuid routines: for libchelper.a */
-/* unsigned int get_cpuid_max(unsigned int ext, unsigned int *sig)
-{
-   GRAAL_SGX_INFO();
-   unsigned int ret;
-   ocall_get_cpuid_max(&ret, ext, sig);
-   //printf("cpu max level is: %d--------------------------------\n", *sig);
-   return ret;
+/**
+ * cpuid routines: for libchelper.a
+ * The cpuid.c file is removed from libchelper in graal to
+ * prevent multiple definitions.
+ * The version of libchelper.a does not contain the below
+ * defitions; they were then added back again to cpuid.c in graal to rebuild
+ * other native images like gu correctly.
+ *
+ */
 
-   //return __get_cpuid_max(ext, sig);
+extern "C"
+{
+    char *SVM_FindJavaTZmd(const char *tzmappings, int length)
+    {
+        GRAAL_SGX_INFO();
+        char *ret = "dummy_tz";
+        return ret;
+    }
 }
-
-int get_cpuid_count(unsigned int leaf, unsigned int subleaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
-{
-   GRAAL_SGX_INFO();
-
-   int ret;
-   ocall_get_cpuid_count(&ret, leaf, subleaf, eax, ebx, ecx, edx);
-   return ret;
-
-   //return 1;
-   // __cpuid_count(leaf, subleaf, *eax, *ebx, *ecx, *edx);
-   //return 1;
-}
-
-int get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
-{
-   GRAAL_SGX_INFO();
-   //int ret;
-   //ocall_get_cpuid(&ret, leaf, 0, eax, ebx, ecx, edx);
-   //return ret;
-
-   return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
-}*/
 
 pid_t waitpid(pid_t pid, int *wstatus, int options)
 {

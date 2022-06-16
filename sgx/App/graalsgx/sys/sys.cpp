@@ -33,7 +33,8 @@
 #include "../../Enclave_u.h"
 #include <stdio.h>
 
-
+// for cpuid stuff
+#include "../cpuid/graalcpuid.h"
 
 void ocall_dlsym(void *handle, const char *symbol, void *res)
 {
@@ -54,11 +55,11 @@ long ocall_sysconf(int name)
     return sysconf(name);
 }
 
-int ocall_getuid()
+unsigned int ocall_getuid()
 {
     log_ocall(__func__);
     uid_t ret = getuid();
-    return (int)ret;
+    return (unsigned int)ret;
 }
 
 void ocall_getcwd(char *buf, size_t size)
@@ -67,10 +68,11 @@ void ocall_getcwd(char *buf, size_t size)
     getcwd(buf, size);
 }
 
-void ocall_getpwuid(uid_t uid, struct passwd *ret)
+void *ocall_getpwuid(uid_t uid)
 {
     log_ocall(__func__);
-    ret = getpwuid(uid);
+    // ret = getpwuid(uid);
+    return (void *)getpwuid(uid);
 }
 void ocall_exit(int status)
 {
@@ -170,15 +172,18 @@ int ocall_mprotect(void *addr, size_t len, int prot)
 /* cpuid: for libchelper.a */
 #include <cpuid.h>
 /* Part 1: for trusted side: enclave */
+
 unsigned int ocall_get_cpuid_max(unsigned int ext, unsigned int *sig)
 {
     log_ocall(__func__);
-    return __get_cpuid_max(ext, sig);
+    // return __get_cpuid_max(ext, sig);
+    return get_cpuid_max(ext, sig);
 }
 int ocall_get_cpuid_count(unsigned int leaf, unsigned int subleaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
     log_ocall(__func__);
-    int cpuInfo[4];
+    return get_cpuid_count(leaf, subleaf, eax, ebx, ecx, edx);
+    /* int cpuInfo[4];
     asm volatile("cpuid"
                  : "=a"(cpuInfo[0]), "=b"(cpuInfo[1]), "=c"(cpuInfo[2]), "=d"(cpuInfo[3])
                  : "a"(leaf), "c"(0));
@@ -188,11 +193,12 @@ int ocall_get_cpuid_count(unsigned int leaf, unsigned int subleaf, unsigned int 
     *ecx = cpuInfo[2];
     *edx = cpuInfo[3];
 
-    return 1;
+    return 1; */
 }
 int ocall_get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
     log_ocall(__func__);
+    return get_cpuid(leaf, eax, ebx, ecx, edx);
     // return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
 }
 
@@ -203,42 +209,17 @@ extern "C"
 {
 #endif
 
-    unsigned int get_cpuid_max(unsigned int ext, unsigned int *sig);
-    int get_cpuid_count(unsigned int leaf, unsigned int subleaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx);
-    int get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx);
+    char *SVM_FindJavaTZmd(const char *tzmappings, int length);
 
 #if defined(__cplusplus)
 }
 #endif
 
-/* unsigned int get_cpuid_max(unsigned int ext, unsigned int *sig)
+char *SVM_FindJavaTZmd(const char *tzmappings, int length)
 {
-
-    return __get_cpuid_max(ext, sig);
+    char *ret = "dummy_tz";
+    return ret;
 }
-
-int get_cpuid_count(unsigned int leaf, unsigned int subleaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
-{
-
-    int cpuInfo[4];
-    asm volatile("cpuid"
-                 : "=a"(cpuInfo[0]), "=b"(cpuInfo[1]), "=c"(cpuInfo[2]), "=d"(cpuInfo[3])
-                 : "a"(leaf), "c"(0));
-
-    *eax = cpuInfo[0];
-    *ebx = cpuInfo[1];
-    *ecx = cpuInfo[2];
-    *edx = cpuInfo[3];
-
-    //__cpuid_count(leaf, subleaf, *eax, *ebx, *ecx, *edx);
-    return 1;
-}
-
-int get_cpuid(unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
-{
-
-    return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
-} */
 
 int ocall_dladdr(const void *addr, void *info)
 {

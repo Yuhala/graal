@@ -2,6 +2,10 @@
 import org.graalvm.polyglot.*;
 import org.graalvm.polyglot.proxy.*;
 
+import org.graalvm.nativeimage.IsolateThread;
+import org.graalvm.nativeimage.c.function.CEntryPoint;
+import org.graalvm.nativeimage.CurrentIsolate;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -12,16 +16,31 @@ public class HelloPolyglot {
     public static void main(String[] args) {
         System.out.println("Hello Java!");
         // evaluate JS code
+        //evalJSCode();
+
+          // Testing centrypoints
+          System.out.println("Creating isolate and Testing entrypoint");
+          IsolateThread iso = CurrentIsolate.getCurrentThread();
+          int sum = polytaint_add(iso, 23, 27);
+          System.out.println("Sum from isolate entrypoint is: " + sum);
 
         // evaluate JS source
-        String js_src_string = "function hello() {\n" +
+        /* String js_src_string = "function hello() {\n" +
                 "print('Hello JavaScript! xxxxxx +++++ -----');\n" +
                 "}\n" +
-                "hello();\n";
+                "hello();\n"; */
         //evalJsSource(js_src_string);
-        String js_file_src = readFileContent("./hello.js");
-        evalJsSource(js_file_src);
+        //String js_file_src = readFileContent("./hello.js");
+        //evalJsSource(js_file_src);
 
+    }
+
+    /**
+     * GraalVM entry point test
+     */
+    @CEntryPoint(name = "polytaint_add")
+    static int polytaint_add(IsolateThread thread, int a, int b) {
+        return a + b;
     }
 
     /**

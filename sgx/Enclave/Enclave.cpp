@@ -83,15 +83,15 @@ void ecall_create_enclave_isolate()
     int ret;
     printf(">>>>>>>>>>>>>>>>>>> Creating global enclave isolate ...\n");
     global_enc_iso = isolate_generator();
-    //destroy_isolate(enc_iso);
-    //enc_iso2 = isolate_generator();
-    //destroy_isolate(enc_iso2);
-    //graal_isolatethread_t *temp = isolate_generator();
-    //destroy_isolate(temp);
+    // destroy_isolate(enc_iso);
+    // enc_iso2 = isolate_generator();
+    // destroy_isolate(enc_iso2);
+    // graal_isolatethread_t *temp = isolate_generator();
+    // destroy_isolate(temp);
     printf(">>>>>>>>>>>>>>>>>>> Global enclave isolate creation successfull!\n");
-    //printf(">>>>>>>>>>>>>>>>>>> isolate destruction...\n");
-    //destroy_isolate(enc_iso);
-    //printf(">>>>>>>>>>>>>>>>>>> OK!\n");
+    // printf(">>>>>>>>>>>>>>>>>>> isolate destruction...\n");
+    // destroy_isolate(enc_iso);
+    // printf(">>>>>>>>>>>>>>>>>>> OK!\n");
 }
 
 /**
@@ -110,8 +110,8 @@ void ecall_set_environ(void **env_ptr)
 {
     set_environ(env_ptr);
 }
-/* 
- * printf: 
+/*
+ * printf:
  *   Invokes OCALL to display the enclave buffer to the terminal.
  */
 int printf(const char *fmt, ...)
@@ -128,7 +128,7 @@ int printf(const char *fmt, ...)
 void fill_array()
 {
     printf("Filling inside array\n");
-    unsigned int size = 1024 * 1024 * 4; //16mb
+    unsigned int size = 1024 * 1024 * 4; // 16mb
     int *array = (int *)malloc(sizeof(int) * size);
     int idx = 0;
     for (int i = 0; i < size; i++)
@@ -139,7 +139,7 @@ void fill_array()
     printf("Largest index in: %d\n", idx);
 }
 
-//run main w/0 args: default
+// run main w/0 args: default
 void ecall_graal_main(int id)
 {
     global_eid = id;
@@ -148,27 +148,34 @@ void ecall_graal_main(int id)
     printf("============================= Ecall graal main =========================\n");
 
     char str[16];
-    snprintf(str, 16, "%d", 1000); //good
-    //creating GC arguments
-    char *argv[16] = {str, "-XX:+PrintGC", "-XX:+VerboseGC"};   
+    snprintf(str, 16, "%d", 1000); // good
+    // creating GC arguments
+    char *argv[16] = {str, "-XX:+PrintGC", "-XX:+VerboseGC"};
 
-    run_main(1,NULL);
-    //run_main(3, argv);
+    printf("============================= Entering run_main =========================\n");
+    run_main(1, NULL);
+    // run_main(3, argv);
 }
 
-//run main with an additional argument
+void ecall_test_pwuid(unsigned int id)
+{
+    uid_t val = (uid_t)id;
+    struct passwd *p = getpwuid(val);
+}
+
+// run main with an additional argument
 void ecall_graal_main_args(int id, int arg1)
 {
     global_eid = id;
     enclave_initiated = true;
-    //global_enc_iso = isolate_generator();
+    // global_enc_iso = isolate_generator();
     printf("In ecall graal main w/ args: %d\n", arg1);
 
     char str[32];
-    snprintf(str, 32, "%d", arg1); //good
-    //creating GC arguments
-    //char *argv[32] = {"run_main", str, "-XX:+PrintGC", "-XX:+VerboseGC"};
-    //run_main(4, argv);
+    snprintf(str, 32, "%d", arg1); // good
+    // creating GC arguments
+    // char *argv[32] = {"run_main", str, "-XX:+PrintGC", "-XX:+VerboseGC"};
+    // run_main(4, argv);
 
     char *argv[32] = {"run_main", str};
     run_main(2, argv);
@@ -176,8 +183,8 @@ void ecall_graal_main_args(int id, int arg1)
 
 void *graal_job(void *arg)
 {
-    //int sum = graal_add(enc_iso, 1, 2);
-    //printf("Enclave Graal add 1+2 = %d\n", sum);
+    // int sum = graal_add(enc_iso, 1, 2);
+    // printf("Enclave Graal add 1+2 = %d\n", sum);
 
     printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Native Image Code Start xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");
     run_main(1, NULL);

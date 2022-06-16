@@ -45,7 +45,7 @@ unsigned int get_cpuid_max (unsigned int ext, unsigned int *sig);
 int get_cpuid_count (unsigned int leaf, unsigned int subleaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx);
 int get_cpuid (unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx);
 
- unsigned int get_cpuid_max (unsigned int ext, unsigned int *sig) {
+unsigned int get_cpuid_max (unsigned int ext, unsigned int *sig) {
     return __get_cpuid_max(ext, sig);
 }
 
@@ -58,8 +58,8 @@ int get_cpuid_count (unsigned int leaf, unsigned int subleaf, unsigned int *eax,
 
 int get_cpuid (unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx) {
     return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
-} 
- 
+}
+
 #else
 
 #include <intrin.h>
@@ -78,7 +78,7 @@ int get_cpuid_count (unsigned int leaf, unsigned int subleaf, unsigned int *eax,
 int get_cpuid (unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx);
 
 // https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=msvc-160
- unsigned int get_cpuid_max (unsigned int ext, unsigned int *sig) {
+/* unsigned int get_cpuid_max (unsigned int ext, unsigned int *sig) {
     int cpuInfo[4];
 
     cpuInfo[0] = 0;
@@ -101,7 +101,7 @@ int get_cpuid_count (unsigned int leaf, unsigned int subleaf, unsigned int *eax,
 int get_cpuid (unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx) {
     return (get_cpuid_count(leaf, 0, eax, ebx, ecx, edx));
 }
- 
+ */
 #endif
 
 static uint32_t extended_cpu_model(CpuidInfo *_cpuid_info) {

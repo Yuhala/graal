@@ -280,7 +280,7 @@ ulong SGX_UBRIDGE(SGX_NOCONVENTION, ocall_adler32, (ulong adler, const Bytef* bu
 #endif
 #ifndef OCALL_GETENV_DEFINED__
 #define OCALL_GETENV_DEFINED__
-int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_getenv, (const char* env, int envlen, char* ret_str, int ret_len));
+char* SGX_UBRIDGE(SGX_NOCONVENTION, ocall_getenv, (const char* name));
 #endif
 #ifndef OCALL_FILENO_DEFINED__
 #define OCALL_FILENO_DEFINED__
@@ -424,7 +424,7 @@ long int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_sysconf, (int name));
 #endif
 #ifndef OCALL_GETUID_DEFINED__
 #define OCALL_GETUID_DEFINED__
-int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_getuid, (void));
+unsigned int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_getuid, (void));
 #endif
 #ifndef OCALL_GETCWD_DEFINED__
 #define OCALL_GETCWD_DEFINED__
@@ -432,7 +432,7 @@ void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_getcwd, (char* buf, size_t len));
 #endif
 #ifndef OCALL_GETPWUID_DEFINED__
 #define OCALL_GETPWUID_DEFINED__
-void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_getpwuid, (uid_t uid, struct passwd* ret));
+void* SGX_UBRIDGE(SGX_NOCONVENTION, ocall_getpwuid, (uid_t uid));
 #endif
 #ifndef OCALL_EXIT_DEFINED__
 #define OCALL_EXIT_DEFINED__
@@ -581,7 +581,10 @@ int SGX_UBRIDGE(SGX_CDECL, pthread_wakeup_ocall, (unsigned long long waiter));
 
 sgx_status_t ecall_graal_main_args(sgx_enclave_id_t eid, int id, int arg1);
 sgx_status_t ecall_graal_main(sgx_enclave_id_t eid, int id);
+sgx_status_t ecall_test_pwuid(sgx_enclave_id_t eid, unsigned int id);
 sgx_status_t ecall_set_environ(sgx_enclave_id_t eid, void** env_ptr);
+sgx_status_t ecall_create_enclave_isolate(sgx_enclave_id_t eid);
+sgx_status_t ecall_destroy_enclave_isolate(sgx_enclave_id_t eid);
 sgx_status_t ecall_execute_job(sgx_enclave_id_t eid, pthread_t pthread_self_id, unsigned long int job_id);
 
 #ifdef __cplusplus

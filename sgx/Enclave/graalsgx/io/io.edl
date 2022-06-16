@@ -113,7 +113,7 @@ enclave {
 
         ssize_t ocall_sendfile64(int out_fd, int in_fd,[user_check]off_t *offset, size_t count);
         ulong ocall_adler32(ulong adler,[in,size=len] const Bytef *buf, size_t len);
-        int ocall_getenv([in,size=envlen]const char *env, int envlen, [out,size=ret_len]char *ret_str,int ret_len);
+        char *ocall_getenv([in, string] const char *name);
         
         int ocall_fileno([in]SGX_FILE *stream); 
         int ocall_isatty(int fd);

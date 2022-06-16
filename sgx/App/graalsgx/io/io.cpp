@@ -422,7 +422,7 @@ ssize_t ocall_pwrite(int fd, const void *buf, size_t count, off_t offset)
     log_ocall(__func__);
     return pwrite(fd, buf, count, offset);
 }
-int ocall_getenv(const char *env, int envlen, char *ret_str, int ret_len)
+/* int ocall_getenv(const char *env, int envlen, char *ret_str, int ret_len)
 {
     log_ocall(__func__);
     const char *env_val = getenv(env);
@@ -432,7 +432,14 @@ int ocall_getenv(const char *env, int envlen, char *ret_str, int ret_len)
     }
     memcpy(ret_str, env_val, strlen(env_val) + 1);
     return 0;
+} */
+
+char *ocall_getenv(const char *name)
+{
+    log_ocall(__func__);
+    return getenv(name);
 }
+
 int ocall_chdir(const char *path)
 {
     log_ocall(__func__);

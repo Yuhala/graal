@@ -71,7 +71,8 @@ function install_language_components() {
 }
 ## ---------------------------------------------------------------------------
 
-#build_graalvm
+build_graalvm
+
 #exit 1
 ## ----------------------------------------------------------
 
@@ -97,7 +98,6 @@ install_language_components
 
 
 ## ---------------- other variables ------------------
-# NB: this does not set the "real" env variable
 JAVA_HOME=$graalvm_dev
 JAVAC="$JAVA_HOME/bin/javac"
 
@@ -118,6 +118,7 @@ DB="$APP_DIR/data"
 #clean old objects and rebuild svm if changed
 OLD_OBJS=(/tmp/main.o main.so $APP_DIR/*.class $SGX_DIR/Enclave/graalsgx/*.o $SGX_DIR/App/graalsgx/*.o)
 cd $SVM_DIR
+
 echo "------------- Removing old objects -----------"
 for obj in $OLD_OBJS; do
     rm $obj
@@ -129,6 +130,7 @@ function build_svm {
     rm -rf svmbuild
     mx build
 }
+
 #build_svm
 
 
@@ -145,6 +147,7 @@ $JAVAC -cp $CP $BUILD_OPTS $APP_DIR/$PKG_PATH/$MAIN.java
 
 echo "------------ Running $APP_NAME on normal JVM  ----------"
 $JAVA_HOME/bin/java  -cp $CP $APP_PKG.$MAIN
+
 
 
 #echo "------------ Building native executable of applicaton ---------- "
@@ -170,6 +173,15 @@ NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-c
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
 
 $native_image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
+
+#mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
+
+function clean_polytaint_files() {
+    rm $SGX_DIR/Enclave/graalsgx/polytaint/*.h
+    rm $SGX_DIR/Enclave/graalsgx/polytaint/*.cpp
+    rm $SGX_DIR/App/graalsgx/polytaint/*.h
+    rm $SGX_DIR/App/graalsgx/polytaint/*.cpp
+}
 
 #copy new created object file to sgx module
 cp /tmp/main.o $SGX_DIR/Enclave/graalsgx/
