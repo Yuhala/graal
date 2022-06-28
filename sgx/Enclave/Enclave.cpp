@@ -29,6 +29,19 @@
  *
  */
 
+/**
+ * @file Enclave.cpp
+ * @author your name (you@domain.com)
+ * @brief
+ * @version 0.1
+ * @date 2022-06-20
+ *
+ * @copyright Copyright (c) 2022
+ * Some useful debugging sites
+ * https://www.felixcloutier.com/x86/eresume
+ *
+ */
+
 #include "Enclave.h"
 
 // Graal headers
@@ -145,7 +158,7 @@ void ecall_graal_main(int id)
     global_eid = id;
     enclave_initiated = true;
     global_enc_iso = isolate_generator();
-    printf("============================= Ecall graal main =========================\n");
+    printf("============================= Ecall graal main: global_enc_iso = %p\n", (void *)global_enc_iso);
 
     char str[16];
     snprintf(str, 16, "%d", 1000); // good
@@ -153,6 +166,9 @@ void ecall_graal_main(int id)
     char *argv[16] = {str, "-XX:+PrintGC", "-XX:+VerboseGC"};
 
     printf("============================= Entering run_main =========================\n");
+
+    // printf("polytaint_add result: %d >>>>>>>>>>>>>>>>>\n", polytaint_add(global_enc_iso, 44, 33));
+    // enclave_create_context(global_enc_iso);
     run_main(1, NULL);
     // run_main(3, argv);
 }

@@ -90,7 +90,7 @@ echo "+++++++++++++++++++++ graalvm_home: $graalvm_home++++++++++++++++"
 
 
 ## ---------------- Install components --------------
-install_language_components
+# install_language_components
 
 ## --------------------------------------------------
 
@@ -150,17 +150,6 @@ $JAVA_HOME/bin/java  -cp $CP $APP_PKG.$MAIN
 
 
 
-#echo "------------ Building native executable of applicaton ---------- "
-#$native_image -cp $CP --no-fallback --language:js --allow-incomplete-classpath $APP_PKG.$MAIN
-#exit 0
-
-#run application in jvm to generate any useful configuration files: reflection, serialization, dynamic class loading etc
-#echo "--------------- Running $APP_PKG on JVM to generate useful config files-----------"
-#mkdir -p META-INF/native-image
-#$JAVA_HOME/bin/java -agentlib:native-image-agent=config-output-dir=META-INF/native-image -cp $CP $APP_PKG.$MAIN 100
-
-
-
 echo "--------------- Building $APP_NAME SGX native image -----------"
 NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath"
 
@@ -182,6 +171,8 @@ function clean_polytaint_files() {
     rm $SGX_DIR/App/graalsgx/polytaint/*.h
     rm $SGX_DIR/App/graalsgx/polytaint/*.cpp
 }
+
+clean_polytaint_files
 
 #copy new created object file to sgx module
 cp /tmp/main.o $SGX_DIR/Enclave/graalsgx/

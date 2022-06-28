@@ -1,6 +1,6 @@
 [HEADER]
-main.h
 graal_isolate.h
-main_dynamic.h
+main.h
 graal_isolate_dynamic.h
+main_dynamic.h
 

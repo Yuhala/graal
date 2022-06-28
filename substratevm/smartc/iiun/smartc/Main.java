@@ -16,50 +16,36 @@ import org.graalvm.nativeimage.CurrentIsolate;
 
 public class Main {
 
-    public static Context globalContext;
+    // public static Context globalContext;
     public static void main(String[] args) {
-        System.out.println("<<< ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Hello Java! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ >>>");
-        // context without try block
-
-        // test entry points
-        // testEntryPoints();
-
-        // test export of java func into js
-        // callJavaMethodFromJS();
-
-        // System.out.println("Creating context");
-        // Context ctx = Context.create();
-        //
+        System.out.println("<<< ~~~~~~~~~~~~~~~~ Hello Java! ~~~~~~~~~~~~~~~~~ >>>");
 
         // run javascript code
-        System.out.println("<<< ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Building global language context! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ >>>");
-        //globalContext = Context.newBuilder().allowAllAccess(true).build();
+        System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
+
         Context ctx = Context.create();
+        // context with all access
+        // Context ctx = Context.newBuilder().allowAllAccess(true).build();
 
-        System.out.println("<<< ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Evaluationg js source code! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ >>>");
+        System.out.println("<<< ~~~~~~~~~~~~~~ Evaluationg js source code! ~~~~~~~~~~~~~~>>>");
         ctx.eval("js", "console.log('Hello javascript!');");
-
-        // Value array = ctx.eval("js", "[1,2,42,4]");
-
-        // int result = array.getArrayElement(2).asInt();
-        // System.out.println("Result is: " + result);
-
-        // int myInt = ctx.eval("js", "2").asInt();
-        // System.out.println("My int in JS is: " + myInt);
-
-        // run secureL code
-        // int secureInt = ctx.eval("secL", "sInt(25)").asInt();
-        // System.out.println("My int in SecL is: " + secureInt);
 
     }
 
-    static void contextWithTry() {
-        try (Context context = Context.create()) {
-            System.out.println("About to run js context");
-            context.eval("js", "console.log('Hello JavaScript!');");
+    /**
+     * Create context inside manual GraalVM entry point method.
+     * This method can be called directly in C code. See sgx/Enclave/Enclave.cpp
+     * file
+     */
+    @CEntryPoint(name = "enclave_create_context")
+    public static void enclave_create_context(IsolateThread thread) {
+        // globalContext = Context.newBuilder().allowAllAccess(true).build();
 
-        }
+        // Context ctx = Context.newBuilder().allowAllAccess(true).build();
 
+        Context ctx = Context.create();
+        System.out.println("<<< !!!!!!!!!!!!!!!!! Created enclave context !!!!!!!!!!!!!!!!! >>>");
+        ctx.eval("js", "console.log('Hello javascript!');");
     }
 
     /**

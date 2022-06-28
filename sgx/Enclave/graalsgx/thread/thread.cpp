@@ -4,7 +4,7 @@
  * Copyright (c) 2017 Panoply
  * Copyright (c) 2020 Peterson Yuhala, IIUN
  * Some code ideas here is based on code from Panoply source code e.g job map
- * 
+ *
  */
 #include "../../checks.h" //for pointer checks
 #include "../../Enclave.h"
@@ -62,60 +62,59 @@ int pthread_join(pthread_t thread, void **retval)
 
 int nanosleep(const struct timespec *__requested_time, struct timespec *__remaining)
 {
-    //TODO
+    // TODO
     return 0;
 }
 
-
-
-int sched_setaffinity(pid_t pid, size_t cpusetsize,const void *mask){
-        //TODO
-        return 0;
+int sched_setaffinity(pid_t pid, size_t cpusetsize, const void *mask)
+{
+    // TODO
+    return 0;
 }
-int sched_getaffinity(pid_t pid, size_t cpusetsize,void *mask){
-        //TODO
-        return 0;
-}
-
-int __sched_cpucount (size_t setsize, const void *setp){
-    //TODO
+int sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask)
+{
+    // TODO
     return 0;
 }
 
-
+int __sched_cpucount(size_t setsize, const void *setp)
+{
+    // TODO
+    return 0;
+}
 
 int pthread_attr_setdetachstate(GRAAL_SGX_PTHREAD_ATTR attr, int detachstate)
 {
     GRAAL_SGX_INFO();
-    //TODO
+    // TODO
     int ret = 0;
     return ret;
 }
-int pthread_attr_init(GRAAL_SGX_PTHREAD_ATTR attr)
+int pthread_attr_init(void *attr)
 {
     GRAAL_SGX_INFO();
-    //TODO
+    // TODO
     int ret = 0;
     return ret;
 }
 int pthread_setname_np(pthread_t thread, const char *name)
 {
     GRAAL_SGX_INFO();
-    //TODO
+    // TODO
     int ret = 0;
     return ret;
 }
 int pthread_getname_np(pthread_t thread, char *name, size_t len)
 {
     GRAAL_SGX_INFO();
-    //TODO
+    // TODO
     int ret = 0;
     return ret;
 }
 int pthread_attr_setstacksize(GRAAL_SGX_PTHREAD_ATTR attr, size_t stacksize)
 {
     GRAAL_SGX_INFO();
-    //TODO
+    // TODO
     int ret = 0;
     return ret;
 }
@@ -125,7 +124,7 @@ int pthread_attr_getguardsize(GRAAL_SGX_PTHREAD_ATTR attr, size_t *guardsize)
     GRAAL_SGX_INFO();
     int ret = 0;
     ocall_pthread_attr_getguardsize__bypass(&ret, attr, sizeof(pthread_attr_t), guardsize);
-    //ocall_pthread_attr_getguardsize(&ret, guardsize);
+    // ocall_pthread_attr_getguardsize(&ret, guardsize);
     return ret;
 }
 
@@ -134,17 +133,22 @@ int pthread_attr_destroy(GRAAL_SGX_PTHREAD_ATTR attr)
     GRAAL_SGX_INFO();
     int ret = 0;
     ocall_pthread_attr_destroy__bypass(&ret, attr, sizeof(pthread_attr_t));
-    //ocall_pthread_attr_destroy(&ret);
+    // ocall_pthread_attr_destroy(&ret);
     return ret;
 }
 
 int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
 {
     GRAAL_SGX_INFO();
-    //printf("[ENCLAVE] pthread_attr_getstack(..)\n");
+    // printf("[ENCLAVE] pthread_attr_getstack(..)\n");
     int ret = 0;
-    ocall_pthread_attr_getstack__bypass(&ret, attr, sizeof(pthread_attr_t), stackaddr, sizeof(intptr_t), stacksize);
-    //ocall_pthread_attr_getstack(&ret, stackaddr, stacksize);
+    pthread_t id;
+    ocall_pthread_self(&id);
+    ocall_pthread_attr_getstack__bypass(&ret, attr, sizeof(pthread_attr_t), stackaddr, sizeof(intptr_t), stacksize, id);
+
+    printf(">>>>>>>>>> attr_get_stack details in enclave - pid: %lu stackaddr: %p stack-size: %d\n", id, *stackaddr, *stacksize);
+
+    // ocall_pthread_attr_getstack(&ret, stackaddr, stacksize);
     return ret;
 }
 
@@ -176,7 +180,7 @@ int pthread_getattr_np(pthread_t tid, GRAAL_SGX_PTHREAD_ATTR attr)
     printf(">>>>>>>>>> POSIX thread id: %lu\n", pthread_self());
     int ret = 0;
     ocall_pthread_getattr_np__bypass(&ret, tid, attr, sizeof(pthread_attr_t));
-    //ocall_pthread_getattr_np(&ret, tid);
+    // ocall_pthread_getattr_np(&ret, tid);
     return ret;
 }
 
@@ -191,9 +195,9 @@ int pthread_getattr_np(pthread_t tid, GRAAL_SGX_PTHREAD_ATTR attr)
 int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id)
 {
     GRAAL_SGX_INFO();
-    //TODO xxx
+    // TODO xxx
     int ret = 0;
-    ret = ocall_pthread_condattr_setclock(&ret, attr, clock_id,sizeof(pthread_condattr));
+    ret = ocall_pthread_condattr_setclock(&ret, attr, clock_id, sizeof(pthread_condattr));
 
     return ret;
 }
@@ -202,8 +206,8 @@ int pthread_condattr_init(pthread_condattr_t *attr)
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    memset(attr, '\0', sizeof(*attr)); //TODO: allocate attr in map outside with pthread id
-    //ocall_pthread_condattr_init(&ret, attr);
+    memset(attr, '\0', sizeof(*attr)); // TODO: allocate attr in map outside with pthread id
+    // ocall_pthread_condattr_init(&ret, attr);
     return ret;
 }
 
@@ -211,9 +215,9 @@ int pthread_cond_timedwait(pthread_cond_t *__restrict__ cond,
                            pthread_mutex_t *__restrict__ mutex,
                            const struct timespec *__restrict__ abstime)
 {
-    //GRAAL_SGX_INFO();
+    // GRAAL_SGX_INFO();
     int ret = 0;
-    //TODO xxx
+    // TODO xxx
     ret = sgx_thread_cond_wait((sgx_thread_cond_t *)cond, (sgx_thread_mutex_t *)mutex);
     return ret;
 }
@@ -289,8 +293,8 @@ unsigned long int put_job(pthread_job_t new_job)
 
 bool get_job(unsigned long int job_id, pthread_job_t *pt_job)
 {
-    //Retrieve the job information for the corresponding job id
-    // printf("Some one call get_job %d \n", job_id);
+    // Retrieve the job information for the corresponding job id
+    //  printf("Some one call get_job %d \n", job_id);
     std::map<unsigned long int, pthread_job_t>::iterator it = id_to_job_info_map.find(job_id);
     if (it != id_to_job_info_map.end())
     {

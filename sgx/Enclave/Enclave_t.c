@@ -807,6 +807,7 @@ typedef struct ms_ocall_deflateReset_t {
 
 typedef struct ms_ocall_pthread_attr_init_t {
 	int ms_retval;
+	void* ms_attr;
 } ms_ocall_pthread_attr_init_t;
 
 typedef struct ms_ocall_pthread_create_t {
@@ -868,6 +869,7 @@ typedef struct ms_ocall_pthread_attr_getstack__bypass_t {
 	void** ms_stk_addr;
 	size_t ms_len;
 	size_t* ms_stack_size;
+	pthread_t ms_id;
 } ms_ocall_pthread_attr_getstack__bypass_t;
 
 typedef struct ms_ocall_pthread_getattr_np_t {
@@ -6543,7 +6545,7 @@ sgx_status_t SGX_CDECL ocall_deflateReset(int* retval, Z_STREAMP stream)
 	return status;
 }
 
-sgx_status_t SGX_CDECL ocall_pthread_attr_init(int* retval)
+sgx_status_t SGX_CDECL ocall_pthread_attr_init(int* retval, void* attr)
 {
 	sgx_status_t status = SGX_SUCCESS;
 
@@ -6561,6 +6563,7 @@ sgx_status_t SGX_CDECL ocall_pthread_attr_init(int* retval)
 	__tmp = (void *)((size_t)__tmp + sizeof(ms_ocall_pthread_attr_init_t));
 	ocalloc_size -= sizeof(ms_ocall_pthread_attr_init_t);
 
+	ms->ms_attr = attr;
 	status = sgx_ocall(117, ms);
 
 	if (status == SGX_SUCCESS) {
@@ -6993,7 +6996,7 @@ sgx_status_t SGX_CDECL ocall_pthread_attr_getstack(int* retval, void** stk_addr,
 	return status;
 }
 
-sgx_status_t SGX_CDECL ocall_pthread_attr_getstack__bypass(int* retval, void* attr, size_t attr_len, void** stk_addr, size_t len, size_t* stack_size)
+sgx_status_t SGX_CDECL ocall_pthread_attr_getstack__bypass(int* retval, void* attr, size_t attr_len, void** stk_addr, size_t len, size_t* stack_size, pthread_t id)
 {
 	sgx_status_t status = SGX_SUCCESS;
 	size_t _len_attr = attr_len;
@@ -7068,6 +7071,7 @@ sgx_status_t SGX_CDECL ocall_pthread_attr_getstack__bypass(int* retval, void* at
 		ms->ms_stack_size = NULL;
 	}
 	
+	ms->ms_id = id;
 	status = sgx_ocall(127, ms);
 
 	if (status == SGX_SUCCESS) {

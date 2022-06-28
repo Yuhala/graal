@@ -496,7 +496,7 @@ int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_deflateReset, (Z_STREAMP stream));
 #endif
 #ifndef OCALL_PTHREAD_ATTR_INIT_DEFINED__
 #define OCALL_PTHREAD_ATTR_INIT_DEFINED__
-int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_pthread_attr_init, (void));
+int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_pthread_attr_init, (void* attr));
 #endif
 #ifndef OCALL_PTHREAD_CREATE_DEFINED__
 #define OCALL_PTHREAD_CREATE_DEFINED__
@@ -536,7 +536,7 @@ int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_pthread_attr_getstack, (void** stk_addr,
 #endif
 #ifndef OCALL_PTHREAD_ATTR_GETSTACK__BYPASS_DEFINED__
 #define OCALL_PTHREAD_ATTR_GETSTACK__BYPASS_DEFINED__
-int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_pthread_attr_getstack__bypass, (void* attr, size_t attr_len, void** stk_addr, size_t len, size_t* stack_size));
+int SGX_UBRIDGE(SGX_NOCONVENTION, ocall_pthread_attr_getstack__bypass, (void* attr, size_t attr_len, void** stk_addr, size_t len, size_t* stack_size, pthread_t id));
 #endif
 #ifndef OCALL_PTHREAD_GETATTR_NP_DEFINED__
 #define OCALL_PTHREAD_GETATTR_NP_DEFINED__

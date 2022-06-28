@@ -19,7 +19,7 @@ enclave {
 
     };
     untrusted {
-        int ocall_pthread_attr_init();
+        int ocall_pthread_attr_init([user_check]void *attr);
         int ocall_pthread_create([out]pthread_t *new_thread, unsigned long int job_id, sgx_enclave_id_t eid) allow (ecall_execute_job);
         pthread_t ocall_pthread_self(void);
         int ocall_pthread_join(pthread_t pt, [user_check] void **res);
@@ -30,7 +30,7 @@ enclave {
         int ocall_pthread_attr_destroy__bypass([out,size=attr_len] void* attr, size_t attr_len);
         //int ocall_pthread_attr_getstack([out,size=len]void **stk_addr,size_t len,[out]size_t *stack_size);
         int ocall_pthread_attr_getstack([user_check]void **stk_addr,[out]size_t *stack_size);
-        int ocall_pthread_attr_getstack__bypass([out,size=attr_len] void* attr, size_t attr_len, [out,size=len]void **stk_addr,size_t len,[out]size_t *stack_size);
+        int ocall_pthread_attr_getstack__bypass([out,size=attr_len] void* attr, size_t attr_len, [out,size=len]void **stk_addr,size_t len,[out]size_t *stack_size,pthread_t id);
         int ocall_pthread_getattr_np(pthread_t tid);
         int ocall_pthread_getattr_np__bypass(pthread_t tid, [out,size=len] void *attr, size_t len);
     };

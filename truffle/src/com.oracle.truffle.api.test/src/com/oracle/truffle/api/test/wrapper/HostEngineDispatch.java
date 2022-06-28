@@ -85,6 +85,7 @@ public class HostEngineDispatch extends AbstractEngineDispatch {
                     Map<String, String> options, Map<String, String[]> arguments, String[] onlyLanguages, FileSystem fileSystem, Object logHandlerOrStream, boolean allowCreateProcess,
                     ProcessHandler processHandler, EnvironmentAccess environmentAccess, Map<String, String> environment, ZoneId zone, Object limitsImpl, String currentWorkingDirectory,
                     ClassLoader hostClassLoader, boolean allowValueSharing, boolean useSystemExit) {
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> HostEngineDispatch.createContext");
         HostEngine engine = (HostEngine) receiver;
         Engine localEngine = engine.localEngine;
         AbstractEngineDispatch dispatch = api.getDispatch(localEngine);

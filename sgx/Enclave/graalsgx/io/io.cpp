@@ -188,7 +188,7 @@ ssize_t write(int fd, const void *buf, size_t count)
 {
     GRAAL_SGX_INFO();
     ssize_t ret = 0;
-
+    // printf(">>>>>>>>>>>>> write fd: %d\n", fd);
     ocall_write(&ret, fd, buf, count);
     return ret;
 }
@@ -305,12 +305,12 @@ int __fxstat64(int ver, int fd, struct stat *stat_buf)
 char *getenv(const char *name)
 {
     GRAAL_SGX_INFO();
+
     char *retval;
     sgx_status_t status = ocall_getenv(&retval, name);
     // CHECK_STATUS(status);
+    // printf(">>>>>>>>>>>>>>>>>>> get env: %s result: %s\n", name, retval);
     return retval;
-
-   
 }
 
 ulong crc32(ulong crc, const Byte *buf, uint len)

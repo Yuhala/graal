@@ -207,6 +207,7 @@ int SGX_CDECL main(int argc, char *argv[])
 
     // const char* arg1 = argv[1];
     // pwd_test();
+    // return 0;
 
     global_app_iso = isolate_generator();
     graal_isolatethread_t *temp = isolate_generator();
@@ -214,8 +215,8 @@ int SGX_CDECL main(int argc, char *argv[])
     // run_main(1, NULL);
     // return 0;
 
-    printf("<<<<<<< Created untrusted app isolate: enter a char to continue ... >>>>>> \n");
-    getchar(); // pyuhala: halt to verify message b4 the clumsy debug messages
+    // printf("<<<<<<< Created untrusted app isolate: enter a char to continue ... >>>>>> \n");
+    // getchar(); // pyuhala: halt to verify message b4 the clumsy debug messages
 
     setMainAttribs();
 

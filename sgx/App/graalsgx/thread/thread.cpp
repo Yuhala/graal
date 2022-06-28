@@ -2,13 +2,15 @@
  * Created on Fri Jul 24 2020
  *
  * Copyright (c) 2020 Peterson Yuhala, IIUN
- * 
+ *
  */
 
 #include <thread>
 #include <pthread.h>
 #include "Enclave_u.h"
 #include <sys/types.h>
+#include <limits.h>
+#include <errno.h>
 #include <unistd.h>
 #include "sgx_eid.h"
 #include "../../error/error.h"
@@ -16,7 +18,7 @@
 #include "ocall_logger.h"
 #include <map>
 
-#define GRAAL_SGX_STACK 0x40000UL //256kb
+#define GRAAL_SGX_STACK 0x40000UL // 256kb
 
 extern sgx_enclave_id_t global_eid;
 using namespace std;
@@ -33,6 +35,9 @@ typedef struct
     sgx_enclave_id_t eid;
 } internal_ecall_arg;
 
+// forward declarations
+int manual_setstack(pthread_attr_t *attr, void **stk_addr, size_t *stack_size);
+
 void *generic_ecall_routine(void *arguments)
 {
 
@@ -45,10 +50,11 @@ void *generic_ecall_routine(void *arguments)
     free(arguments);
 }
 
-int ocall_pthread_attr_init()
+int ocall_pthread_attr_init(void *_attr)
 {
     log_ocall(__func__);
     GRAAL_SGX_INFO();
+
     /*
     pthread_t id = TEMP_ID;
     attr_array[++count] = (pthread_attr_t *)malloc(sizeof(pthread_attr_t));
@@ -75,17 +81,17 @@ int ocall_pthread_create(pthread_t *new_thread, unsigned long int job_id, sgx_en
 
     /* Create attrib */
     pthread_attr_t *attr = (pthread_attr_t *)malloc(sizeof(pthread_attr_t));
-    //increase stack size
+    // increase stack size
 
     int ret = pthread_create(new_thread, NULL, generic_ecall_routine, (void *)arguments);
-    //int ret = pthread_create(new_thread, NULL, generic_ecall_routine, (void *)arguments);
+    // int ret = pthread_create(new_thread, NULL, generic_ecall_routine, (void *)arguments);
     pthread_attr_t *new_thread_attr;
-    //int attr_ret = pthread_getattr_np(*new_thread, new_thread_attr);
-    //pthread_attr_setstacksize(attr, GRAAL_SGX_STACK);
+    // int attr_ret = pthread_getattr_np(*new_thread, new_thread_attr);
+    // pthread_attr_setstacksize(attr, GRAAL_SGX_STACK);
 
-    //pthread_attr_setstacksize(attr, GRAAL_SGX_STACK);
+    // pthread_attr_setstacksize(attr, GRAAL_SGX_STACK);
     /* Add tid and attr pair to map */
-    //attr_map.insert(pair<pthread_t, pthread_attr_t *>(*new_thread, new_thread_attr));
+    // attr_map.insert(pair<pthread_t, pthread_attr_t *>(*new_thread, new_thread_attr));
     attr_map.insert(pair<pthread_t, pthread_attr_t *>(*new_thread, attr));
 
     void *val;
@@ -149,6 +155,22 @@ int ocall_pthread_attr_destroy()
     attr_map[pthread_self()] = NULL;
     return ret;
 }
+
+int ocall_pthread_attr_getstack__bypass(void *attr, size_t attr_len, void **stk_addr, size_t len, size_t *stack_size, pthread_t id)
+{
+    log_ocall(__func__);
+    GRAAL_SGX_INFO();
+    int ret = pthread_attr_getstack((pthread_attr_t *)attr, stk_addr, stack_size);
+    printf("getstack outside: pid: %d stk_addr: %p pthread_attr_t: %p>>>>>>>\n", id, *stk_addr, attr, *stack_size);
+
+    if (*stack_size == 0)
+    {
+        //ret = manual_setstack((pthread_attr_t *)attr, stk_addr, stack_size);
+    }
+
+    return ret;
+}
+
 int ocall_pthread_attr_getstack(void **stk_addr, size_t *stack_size)
 {
     log_ocall(__func__);
@@ -160,11 +182,61 @@ int ocall_pthread_attr_getstack(void **stk_addr, size_t *stack_size)
         size_t size;
         void **addr;
         ret = pthread_attr_getstack(attr, stk_addr, &size);
-        //printf("Stack addr out: %p\n", *stk_addr);
+        // printf("Stack addr out: %p\n", *stk_addr);
         *stack_size = size;
-        //*stk_addr = *addr;
+        //
+        *stk_addr = *addr;
+    }
+    if (*stack_size == 0)
+    {
+        ret = manual_setstack(attr, stk_addr, stack_size);
     }
     return ret;
+}
+
+/**
+ * @brief
+ * Pyuhala:
+ * Manually set the threads stack attributes.
+ * Based on code from: https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-pthread-attr-setstack-set-stack-attribute
+ *
+ * @param stk_addr
+ * @param stack_size
+ * @return int
+ */
+int manual_setstack(pthread_attr_t *attr, void **stk_addr, size_t *stack_size)
+{
+    // set stack size
+    *stack_size = 2 * PTHREAD_STACK_MIN;
+    // init attributes
+
+    /**
+     * @brief
+     * Get a big enough stack and align on 4K boundary.
+     *
+     */
+    *stk_addr = malloc(PTHREAD_STACK_MIN * 3);
+    if (*stk_addr != NULL)
+    {
+        *stk_addr = (void *)((((long)*stk_addr + (PTHREAD_STACK_MIN - 1)) /
+                              PTHREAD_STACK_MIN) *
+                             PTHREAD_STACK_MIN);
+    }
+    else
+    {
+        perror("Manual malloc stack allocation failed.");
+        exit(2);
+    }
+    printf(">>>>> Setting stackaddr to %x\n", *stk_addr);
+    printf(">>>>>> Setting stacksize to %x\n", *stack_size);
+    int rc = pthread_attr_setstack(attr, stk_addr, *stack_size);
+    if (rc != 0)
+    {
+        printf("pthread_attr_setstack returned: %d\n", rc);
+        exit(3);
+    }
+
+    return rc;
 }
 
 int ocall_pthread_getattr_np(pthread_t tid)
@@ -172,12 +244,16 @@ int ocall_pthread_getattr_np(pthread_t tid)
     log_ocall(__func__);
     GRAAL_SGX_INFO();
     int ret = -1;
-    //printf("Attrib tid: %d \n", tid);
+    // printf("Attrib tid: %d \n", tid);
     pthread_attr_t *attr = getAttrib(tid);
-    //pthread_t thread = (pthread_t)attr;
+    // pthread_t thread = (pthread_t)attr;
     if (attr != NULL)
     {
         ret = pthread_getattr_np(tid, attr);
+    }
+    else
+    {
+        printf(">>>>>>>>>>>>>>>>>> thread attr does not exist in list\n");
     }
     return ret;
 }
@@ -186,15 +262,9 @@ int ocall_pthread_getattr_np__bypass(pthread_t tid, void *attr, size_t len)
 {
     log_ocall(__func__);
     GRAAL_SGX_INFO();
-    
-    return pthread_getattr_np(tid, (pthread_attr_t *)attr);
-}
 
-int ocall_pthread_attr_getstack__bypass(void *attr, size_t attr_len, void **stk_addr, size_t len, size_t *stack_size)
-{
-    log_ocall(__func__);
-    GRAAL_SGX_INFO();
-    return pthread_attr_getstack((pthread_attr_t *)attr, stk_addr, stack_size);
+    int ret = pthread_getattr_np(tid, (pthread_attr_t *)attr);
+    return ret;
 }
 
 int ocall_pthread_attr_getguardsize__bypass(void *attr, size_t attr_len, size_t *guardsize)

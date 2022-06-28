@@ -633,6 +633,7 @@ public final class Engine implements AutoCloseable {
 
         @Override
         public Context newContext(AbstractContextDispatch dispatch, Object receiver, Engine engine) {
+            System.out.println(">>>>>>>> in Engine.APIAccessImpl newContext");
             return new Context(dispatch, receiver, engine);
         }
 

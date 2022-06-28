@@ -24,8 +24,7 @@ enclave {
 
    trusted {
        public void ecall_graal_main_args(int id, int arg1);
-       public void ecall_graal_main(int id);
-       //public int ecall_enclave_add(int a, int b);
+       public void ecall_graal_main(int id);       
        public void ecall_test_pwuid(unsigned int id);
 
        public void ecall_set_environ([user_check]void **env_ptr);
