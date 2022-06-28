@@ -2,7 +2,7 @@
 
 #
 # This script downloads and installs some 
-# ubuntu packages needed for the SGX debug tool: sgx-gdb
+# ubuntu 18.04 packages needed for the SGX debug tool: sgx-gdb
 #
 
 sudo apt install wget
