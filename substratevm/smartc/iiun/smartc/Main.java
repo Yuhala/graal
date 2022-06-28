@@ -20,7 +20,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("<<< ~~~~~~~~~~~~~~~~ Hello Java! ~~~~~~~~~~~~~~~~~ >>>");
 
-        // run javascript code
+        // create context and run js snippet
         System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
 
         Context ctx = Context.create();
@@ -39,9 +39,11 @@ public class Main {
      */
     @CEntryPoint(name = "enclave_create_context")
     public static void enclave_create_context(IsolateThread thread) {
-        // globalContext = Context.newBuilder().allowAllAccess(true).build();
-
         // Context ctx = Context.newBuilder().allowAllAccess(true).build();
+        System.out.println("<<< ~~~~~~~~~~~~~~~~ Hello Java! ~~~~~~~~~~~~~~~~~ >>>");
+
+        // create context and run js snippet
+        System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
 
         Context ctx = Context.create();
         System.out.println("<<< !!!!!!!!!!!!!!!!! Created enclave context !!!!!!!!!!!!!!!!! >>>");
