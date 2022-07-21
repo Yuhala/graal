@@ -92,7 +92,7 @@ final class PinnedObjectImpl implements PinnedObject {
 
     static PinnedObjectImpl getPinnedObjects() {
         assert VMOperation.isGCInProgress();
-        UninterruptibleUtils.AtomicReference<PinnedObjectImpl> pinHead = HeapImpl.getHeapImpl().getPinHead();
+        UninterruptibleUtils.AtomicReference<PinnedObjectImpl> pinHead = HeapImpl.getHeapImpl().getPinHead();       
         return pinHead.get();
     }
 

@@ -55,11 +55,15 @@
 #include <sgx/sys/poll.h>
 #include <sgx/sys/epoll.h>
 
+#include <zlib/zlib.h>
+
 // threads
 //#include <pthread.h>
 #include <struct/sgx_pthread_struct.h>
 #include <sgx_thread.h>
 //#include <sgx_pthread.h>
+
+#include "thread/stack.h"
 
 // TODO
 typedef unsigned char Byte;
@@ -67,7 +71,7 @@ typedef unsigned char Bytef;
 typedef long off64_t;
 typedef size_t z_size_t;
 typedef void DIR;
-// typedef int z_streamp;
+// typedef int Z_STREAMP;
 struct statvfs
 {
     int todo;
@@ -79,6 +83,8 @@ struct statvfs
 extern "C"
 {
 #endif
+
+  
 
     // custom routines
     void sgx_exit();
@@ -181,11 +187,11 @@ extern "C"
     int __lxstat64(int ver, const char *path, struct stat *stat_buf);
     int __xmknod(int vers, const char *path, mode_t mode, dev_t *dev);
     int symlink(const char *target, const char *linkpath);
-    int deflateEnd(z_streamp stream);
-    int deflateParams(z_streamp stream, int level, int strategy);
-    int deflate(z_streamp stream, int flush);
-    int deflateInit2_(z_streamp stream, int level, int method, int windowBits, int memLevel, int strategy);
-    int inflateReset(z_streamp stream);
+    int deflateEnd(Z_STREAMP stream);
+    int deflateParams(Z_STREAMP stream, int level, int strategy);
+    int deflate(Z_STREAMP stream, int flush);
+    int deflateInit2_(Z_STREAMP stream, int level, int method, int windowBits, int memLevel, int strategy);
+    int inflateReset(Z_STREAMP stream);
 
     //----------------------------------------------------------
 
@@ -269,9 +275,9 @@ extern "C"
     int fcntl(int fd, int cmd, ... /* arg */);
     int fstatvfs64(int fd, struct statvfs *buf);
     int pthread_kill(pthread_t thread, int sig);
-    int inflateInit2_(z_streamp strm, int windowBits, char *version, int stream_size);
-    int inflate(z_streamp stream, int flush);
-    int inflateEnd(z_streamp stream);
+    int inflateInit2_(Z_STREAMP strm, int windowBits, char *version, int stream_size);
+    int inflate(Z_STREAMP stream, int flush);
+    int inflateEnd(Z_STREAMP stream);
     int dup(int oldfd);
     int access(const char *pathname, int mode);
     int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
@@ -338,7 +344,7 @@ extern "C"
     int sscanf(const char *str, const char *format);
     ssize_t __getdelim(char **lineptr, size_t *n, int delim, SGX_FILE *stream);
 
-    // For libchelper redefinitions  
+    // For libchelper redefinitions
     char *SVM_FindJavaTZmd(const char *tzmappings, int length);
 
 #if defined(__cplusplus)

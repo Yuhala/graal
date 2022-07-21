@@ -92,6 +92,9 @@ Graal_Objects_In := $(wildcard Enclave/graalsgx/*.o)
 Graal_Libs_Path := ./Common
 Graal_Libs := -lfdlibm -lffi -ljava -ljvm  -lnet -lextnet -lnio -lzip
 
+ZLib := -lzlib
+
+
 # Untrusted objects from graal AoT compilation
 Graal_Objects_Out := $(wildcard App/graalsgx/*.o)
 
@@ -111,7 +114,7 @@ else
 endif
 
 App_Cpp_Files := App/App.cpp  $(GraalSGX_Cpp_FIles_Out) $(wildcard App/*/*.cpp)
-App_Include_Paths := -IInclude -IInclude/out -IApp -I$(SGX_SDK)/include -IEnclave/graalsgx/include
+App_Include_Paths := -IInclude -IInclude/out -IApp -I$(SGX_SDK)/include -IEnclave/graalsgx/include -Izlib
 
 App_C_Flags := -fPIC -Wno-attributes $(App_Include_Paths)
 
@@ -130,7 +133,7 @@ endif
 App_Cpp_Flags := $(App_C_Flags)
 
 # Graal needs: -lpthread -ldl -lz -lrt 
-App_Link_Flags := -L$(SGX_LIBRARY_PATH) -L$(Graal_Libs_Path) -Wl,--start-group $(Graal_Libs) -Wl,--end-group -l$(Urts_Library_Name) -lpthread -ldl -lz -lrt
+App_Link_Flags := -L$(SGX_LIBRARY_PATH) -L$(Graal_Libs_Path) -Wl,--start-group $(Graal_Libs) $(ZLib) -Wl,--end-group -l$(Urts_Library_Name) -lpthread -ldl -lz -lrt
 
 
 App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
@@ -209,7 +212,7 @@ endif
 endif
 
 
-.PHONY: all target run
+.PHONY: all target run prot
 all: .config_$(Build_Mode)_$(SGX_ARCH)
 	@$(MAKE) target
 
@@ -288,8 +291,6 @@ Enclave/%.o: Enclave/%.cpp Enclave/Enclave_t.h
 
 #Enclave/graalsgx.o: $(Graal_Objects_In) Enclave/Enclave.o 
 
-prot: $(Signed_Enclave_Name)
-
 $(Enclave_Name): Enclave/Enclave_t.o  $(Enclave_Cpp_Objects) $(Graal_Objects_In)
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
@@ -298,7 +299,15 @@ $(Signed_Enclave_Name): $(Enclave_Name)
 	@$(SGX_ENCLAVE_SIGNER) sign -key Enclave/Enclave_private.pem -enclave $(Enclave_Name) -out $@ -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
-.PHONY: clean
+Re-Signed_Enclave_Name := $(Signed_Enclave_Name)
+
+prot: $(Re-Signed_Enclave_Name)
+$(Re-Signed_Enclave_Name): $(Enclave_Name)
+	@$(SGX_ENCLAVE_SIGNER) sign -key Enclave/Enclave_private.pem -enclave $(Enclave_Name) -out $@ -config $(Enclave_Config_File)
+	@echo "SIGN =>  $@"
+
+
+.PHONY: clean 
 
 clean:
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave/Enclave_t.*

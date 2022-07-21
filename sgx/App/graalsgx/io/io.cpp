@@ -18,19 +18,20 @@
 #include <map>
 #include "ocall_logger.h"
 #include "Enclave_u.h"
+#include "zlib.h"
 
 using namespace std;
-//max num of file descriptors open at once
+// max num of file descriptors open at once
 #define MAX_FILE_DES 100000
 #define MAX_DIR 10000
 #define MAX_STREAMS 100000
 
-z_streamp *zs_array[MAX_STREAMS];
+void **zs_array[MAX_STREAMS];
 
 FILE *fd_array[MAX_FILE_DES];
 DIR *dir_array[MAX_DIR];
 
-//std::map<char* name, DIR *> dir_map;
+// std::map<char* name, DIR *> dir_map;
 
 static int num_fd = SGX_STDERR + 1; //(3 files open by default: stdin, stdout, stderr)
 
@@ -51,7 +52,7 @@ FILE *getFile(int fd)
     return fd_array[fd];
 }
 
-//DIR *getDir(const char*)
+// DIR *getDir(const char*)
 int ocall_fsync(int fd)
 {
     log_ocall(__func__);
@@ -122,7 +123,7 @@ int ocall_readdir64_r(void *dirp, void *entry, struct dirent **result)
     log_ocall(__func__);
     DIR *dir = (DIR *)dirp;
     return readdir64_r(dir, (struct dirent64 *)entry, (struct dirent64 **)result);
-    //TODO
+    // TODO
 }
 void *ocall_opendir(const char *name)
 {
@@ -142,7 +143,7 @@ long ocall_pathconf(const char *path, int name)
     return pathconf(path, name);
 }
 
-//all names with x prefix prevent possible redefinition problems
+// all names with x prefix prevent possible redefinition problems
 int ocall_xclose(int fd)
 {
     log_ocall(__func__);
@@ -155,7 +156,7 @@ SGX_FILE ocall_fopen(const char *filename, const char *mode)
     SGX_FILE fd = num_fd++;
     FILE *f = NULL;
     f = fopen(filename, mode);
-    //printf("fopen filename: %s\n",filename);
+    // printf("fopen filename: %s\n",filename);
     fd_array[fd] = f;
 
     return (f == NULL ? 0 : fd);
@@ -164,7 +165,7 @@ SGX_FILE ocall_fopen(const char *filename, const char *mode)
 SGX_FILE ocall_fdopen(int fd, const char *mode)
 {
     log_ocall(__func__);
-    //FILE *f = fdopen(fd, mode);
+    // FILE *f = fdopen(fd, mode);
     return fd;
 }
 
@@ -189,10 +190,9 @@ size_t ocall_fread(void *ptr, size_t size, size_t nmemb, SGX_FILE stream)
     FILE *f = getFile(stream);
     ssize_t total_bytes = size * nmemb;
     ssize_t ret = fread(ptr, size, nmemb, f);
-    //printf("--------------- fread expected: %d actually read: %d ---------------------\n", total_bytes, ret);
+    // printf("--------------- fread expected: %d actually read: %d ---------------------\n", total_bytes, ret);
     return ret;
 }
-
 
 ssize_t ocall_read(int fd, void *buf, size_t count)
 {
@@ -222,8 +222,8 @@ int ocall_fprintf(SGX_FILE stream, const char *str)
 void ocall_print_string(const char *str)
 {
     log_ocall(__func__);
-    /* Proxy/Bridge will check the length and null-terminate 
-     * the input string to prevent buffer overflow. 
+    /* Proxy/Bridge will check the length and null-terminate
+     * the input string to prevent buffer overflow.
      */
     printf("%s", str);
 }
@@ -233,7 +233,7 @@ void ocall_fgets(char *str, int n, SGX_FILE stream)
     log_ocall(__func__);
     FILE *f = getFile(stream);
     char *ret = fgets(str, n, f);
-    //printf("Ocall_fgets: %s\n", ret);
+    // printf("Ocall_fgets: %s\n", ret);
 }
 SGX_FILE ocall_stderr()
 {
@@ -247,7 +247,7 @@ int ocall_puts(const char *str)
     return puts(str);
 }
 
-//used by graphchi
+// used by graphchi
 int ocall_mkdir(const char *pathname, mode_t mode)
 {
     log_ocall(__func__);
@@ -352,33 +352,129 @@ int ocall_fcntl(int fd, int cmd, int arg)
     log_ocall(__func__);
     return fcntl(fd, cmd, arg);
 }
-//--------------------------------zlib-------------------------------
 
-int ocall_deflateEnd(z_streamp stream)
-{
-    log_ocall(__func__);
+/**
+ * @brief
+ * PYuhala
+ * Ocalls to ZLIB Library functions.
+ * NB: Z_STREAMP is a void* pointer typedef for in-enclave usage
+ * of the real void* (i.e zstream pointer) in zlib. So make sure
+ * to case void* to the correct type when invoking the real zlib routine.
+ *
+ */
 
-    return 0; //TODO: get zlib
-}
-int ocall_deflateParams(z_streamp stream, int level, int strategy)
+int ocall_deflateEnd(void *streamp)
 {
     log_ocall(__func__);
-    return 0; //TODO: get zlib
+    return deflateEnd((z_streamp)streamp);
 }
-int ocall_deflate(z_streamp stream, int flush)
+int ocall_deflateParams(void *streamp, int level, int strategy)
 {
     log_ocall(__func__);
-    return 0; //TODO: get zlib
+    return deflateParams((z_streamp)streamp, level, strategy);
 }
-int ocall_deflateInit2(z_streamp stream, int level, int method, int windowBits, int memLevel, int strategy)
+int ocall_deflate(void *streamp, int flush)
 {
     log_ocall(__func__);
-    return 0; //TODO: get zlib
+    return deflate((z_streamp)streamp, flush);
 }
-int ocall_inflateReset(z_streamp stream)
+int ocall_deflateInit2(void *streamp, int level, int method, int windowBits, int memLevel, int strategy)
 {
     log_ocall(__func__);
-    return 0; //TODO: get zlib
+    return deflateInit2((z_streamp)streamp, level, method, windowBits, memLevel, strategy);
+}
+
+int ocall_inflate(void *streamp, int flush)
+{
+    log_ocall(__func__);
+    return inflate((z_streamp)streamp, flush);
+}
+int ocall_inflateInit2_(void *streamp, int windowBits, char *version, int stream_size)
+{
+    log_ocall(__func__);
+    // printf(">>>>> zlib inflateInit2 version out:  %s\n", version);
+    return inflateInit2_((z_streamp)streamp, windowBits, version, stream_size);
+}
+int ocall_inflateEnd(void *streamp)
+{
+    log_ocall(__func__);
+    return inflateEnd((z_streamp)streamp);
+}
+
+void copy_zstreamp_content()
+{
+}
+/**
+ * @brief
+ * pyuhala:
+ * Allocates zstream pointer which will be used
+ * in place of enclave pointer for the untrusted side.
+ * Its contents will be copied to the in-enclave pointer
+ * inside the enclave.
+ * @return void*
+ */
+
+#define USE_ZSTREAMP 1
+void *ocall_alloc_zstream()
+{
+#ifdef USE_ZSTREAMP
+    z_streamp streamp = (z_streamp)calloc(1, sizeof(z_stream));
+
+    streamp->zalloc = Z_NULL; // this defaults to libc
+    streamp->zfree = Z_NULL;  // this defaults to libc free
+    streamp->opaque = Z_NULL;
+    streamp->next_in = NULL;
+    streamp->avail_in = 0;
+
+    streamp->avail_out = 0;
+    streamp->next_out = NULL;
+    // streamp->adler = 0;
+    // streamp->reserved = 0;
+
+    // streamp->data_type = Z_UNKNOWN;
+    return (void *)streamp;
+
+    // streamp->next_in = (Bytef *)malloc(sizeof(Bytef));
+    // streamp->next_out = (Bytef *)malloc(sizeof(Bytef));
+    // printf("allocated untrusted zstreamp out: %x >>>>>>>>\n", (void *)streamp);
+
+#else
+    z_stream stream;
+
+    stream.zalloc = Z_NULL; // this defaults to libc
+    stream.zfree = Z_NULL;  // this defaults to libc free
+    stream.opaque = Z_NULL;
+    stream.next_in = NULL;
+    stream.avail_in = 0;
+
+    stream.avail_out = 0;
+    stream.next_out = NULL;
+
+    stream.data_type = Z_UNKNOWN;
+    return ((void *)&stream);
+
+#endif
+}
+
+/**
+ * @brief
+ *
+ * Allocation functions; mainly for use with zlib
+ */
+
+void *ocall_malloc(size_t size)
+{
+    return malloc(size);
+}
+void ocall_free(void *ptr)
+{
+    free(ptr);
+}
+
+int ocall_inflateReset(void *streamp)
+{
+    log_ocall(__func__);
+    return inflateReset((z_streamp)streamp);
 }
 ssize_t ocall_sendfile64(int out_fd, int in_fd, off_t *offset, size_t count)
 {
@@ -388,7 +484,13 @@ ssize_t ocall_sendfile64(int out_fd, int in_fd, off_t *offset, size_t count)
 ulong ocall_adler32(ulong adler, const Bytef *buf, size_t len)
 {
     log_ocall(__func__);
-    return 0; //TODO: get zlib
+    return adler32(adler, buf, len);
+}
+
+ulong ocall_crc32(ulong crc, const Byte *buf, uint len)
+{
+    log_ocall(__func__);
+    return crc32(crc, buf, len);
 }
 
 off_t ocall_lseek(int fd, off_t offset, int whence)

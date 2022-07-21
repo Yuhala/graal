@@ -14,6 +14,8 @@ typedef void (*enclave_create_context_fn_t)(graal_isolatethread_t*);
 
 typedef int (*polytaint_add_fn_t)(graal_isolatethread_t*, int, int);
 
+typedef void (*gc_test_fn_t)(graal_isolatethread_t*, int);
+
 typedef void (*vmLocatorSymbol_fn_t)(graal_isolatethread_t* thread);
 
 #if defined(__cplusplus)

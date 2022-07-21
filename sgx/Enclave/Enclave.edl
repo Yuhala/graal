@@ -27,6 +27,7 @@ enclave {
        public void ecall_graal_main(int id);       
        public void ecall_test_pwuid(unsigned int id);
 
+       public void ecall_stackoverflow_test();
        public void ecall_set_environ([user_check]void **env_ptr);
        public void ecall_create_enclave_isolate(); 
        public void ecall_destroy_enclave_isolate();

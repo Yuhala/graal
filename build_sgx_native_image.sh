@@ -151,7 +151,7 @@ $JAVA_HOME/bin/java  -cp $CP $APP_PKG.$MAIN
 
 
 echo "--------------- Building $APP_NAME SGX native image -----------"
-NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath"
+NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath -O0"
 
 #NATIVE_IMG_OPTS="--no-fallback --allow-incomplete-classpath --language:js "
 
@@ -160,8 +160,10 @@ NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-c
 #--trace-class-initialization=org.springframework.util.ClassUtils
 
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
+HEAP_OPTS="-R:MinHeapSize=1g -R:MaxHeapSize=1g"
+LOCAL_OPT=-H:+LocalizationOptimizedMode 
 
-$native_image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
+$native_image -cp $CP $NATIVE_IMG_OPTS $HEAP_OPTS $LOCAL_OPT $APP_PKG.$MAIN
 
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
 

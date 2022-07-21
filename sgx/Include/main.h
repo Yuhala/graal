@@ -14,6 +14,8 @@ void enclave_create_context(graal_isolatethread_t*);
 
 int polytaint_add(graal_isolatethread_t*, int, int);
 
+void gc_test(graal_isolatethread_t*, int);
+
 void vmLocatorSymbol(graal_isolatethread_t* thread);
 
 #if defined(__cplusplus)

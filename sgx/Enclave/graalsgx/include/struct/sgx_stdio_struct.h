@@ -8,8 +8,7 @@
 
 typedef int SGX_FILE;
 typedef int SGX_DIR;
-typedef int z_streamp;
-typedef int Z_STREAMP;
+typedef void* Z_STREAMP;
 
 /* End of file character.
    Some things throughout the library rely on this being -1.  */

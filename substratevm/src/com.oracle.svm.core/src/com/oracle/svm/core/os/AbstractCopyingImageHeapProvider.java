@@ -119,7 +119,7 @@ public abstract class AbstractCopyingImageHeapProvider extends AbstractImageHeap
      */
     //@Override
     @Uninterruptible(reason = "Called during isolate initialization.")
-    public int initialize_old(Pointer reservedAddressSpace, UnsignedWord reservedSize, WordPointer basePointer, WordPointer endPointer) {
+    public int initializexx(Pointer reservedAddressSpace, UnsignedWord reservedSize, WordPointer basePointer, WordPointer endPointer) {
         // Reserve an address space for the image heap if necessary.
         UnsignedWord imageHeapAddressSpaceSize = getImageHeapAddressSpaceSize();
         Pointer heapBase;

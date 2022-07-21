@@ -40,6 +40,7 @@ void *mmap_resv(void *hint, size_t size, int prot, int flags)
     if (prot & MMAP_PROT_EXEC)
         mprot |= SGX_PROT_EXEC;
 
+    printf(">>>>>>>>>>>>>>>>> sgx_tprotect_rsrv_mem ....\n");
     st = sgx_tprotect_rsrv_mem(ret, aligned_size, mprot);
     if (st != SGX_SUCCESS)
     {

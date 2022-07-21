@@ -18,7 +18,7 @@ public class Main {
 
     // public static Context globalContext;
     public static void main(String[] args) {
-        System.out.println("<<< ~~~~~~~~~~~~~~~~ Hello Java! ~~~~~~~~~~~~~~~~~ >>>");
+        System.out.println("<<< ********** Hello Java! ******** >>>");
 
         // create context and run js snippet
         System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
@@ -28,7 +28,7 @@ public class Main {
         // Context ctx = Context.newBuilder().allowAllAccess(true).build();
 
         System.out.println("<<< ~~~~~~~~~~~~~~ Evaluationg js source code! ~~~~~~~~~~~~~~>>>");
-        ctx.eval("js", "console.log('Hello javascript!');");
+        ctx.eval("js", "console.log('****** Hello javascript ******!');");
 
     }
 
@@ -39,15 +39,15 @@ public class Main {
      */
     @CEntryPoint(name = "enclave_create_context")
     public static void enclave_create_context(IsolateThread thread) {
-        // Context ctx = Context.newBuilder().allowAllAccess(true).build();
+        Context ctx = Context.newBuilder().allowAllAccess(true).build();
         System.out.println("<<< ~~~~~~~~~~~~~~~~ Hello Java! ~~~~~~~~~~~~~~~~~ >>>");
 
         // create context and run js snippet
         System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
 
-        Context ctx = Context.create();
+        // Context ctx = Context.create();
         System.out.println("<<< !!!!!!!!!!!!!!!!! Created enclave context !!!!!!!!!!!!!!!!! >>>");
-        ctx.eval("js", "console.log('Hello javascript!');");
+        ctx.eval("js", "console.log('******* Hello javascript ******!');");
     }
 
     /**
@@ -56,6 +56,20 @@ public class Main {
     @CEntryPoint(name = "polytaint_add")
     public static int polytaint_add(IsolateThread thread, int a, int b) {
         return a + b;
+    }
+
+    /**
+     * GC test.
+     */
+    @CEntryPoint(name = "gc_test")
+    public static void gc_test(IsolateThread thread, int num) {
+        System.out.println(">>>> in gc_test entry point");
+        int sum = 0;
+        for (int i = 0; i < num; i++) {
+            sum += i;
+        }
+        System.out.println(">>>> Sum is: " + sum);
+        System.gc();
     }
 
     public static void helloJava(int param) {

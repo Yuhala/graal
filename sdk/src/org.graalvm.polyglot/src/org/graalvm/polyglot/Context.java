@@ -537,7 +537,6 @@ public final class Context implements AutoCloseable {
      * @since 19.0
      */
     public Value eval(String languageId, CharSequence source) {
-        System.out.println("-------pyuhala-------->>>: in context.eval");
         return eval(Source.create(languageId, source));
     }
 
@@ -1336,13 +1335,9 @@ public final class Context implements AutoCloseable {
         private boolean useSystemExit;
 
         Builder(String... permittedLanguages) {
-            System.out.println(">>>>>>>>>>>>>>> Builder(..): before object requireNonNull");
-            if (permittedLanguages == null) {
-                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!! Builder param permitted languages is null");
-            }
+           
             Objects.requireNonNull(permittedLanguages);
-
-            System.out.println(">>>>>>>>>>>>>>> Builder(..): after object requireNonNull");
+          
             for (String language : permittedLanguages) {
                 Objects.requireNonNull(language);
             }
@@ -1377,12 +1372,8 @@ public final class Context implements AutoCloseable {
          * @since 19.0
          */
         public Builder out(OutputStream out) {
-            System.out.println(">>>>>>>>>>>>>>> Builder.out(..): before object requireNonNull");
-            if (out == null) {
-                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!! Builder.out param out is null");
-            }
-            Objects.requireNonNull(out);
-            System.out.println(">>>>>>>>>>>>>>> Builder.out(..): after object requireNonNull");
+           
+            Objects.requireNonNull(out);         
             this.out = out;
             return this;
         }
@@ -1397,12 +1388,9 @@ public final class Context implements AutoCloseable {
          * @since 19.0
          */
         public Builder err(OutputStream err) {
-            System.out.println(">>>>>>>>>>>>>>> Builder.err(..): before object requireNonNull");
-            if (err == null) {
-                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!! Builder.err param err is null");
-            }
+           
             Objects.requireNonNull(err);
-            System.out.println(">>>>>>>>>>>>>>> Builder.err(..): after object requireNonNull");
+          
             this.err = err;
             return this;
         }
@@ -1416,12 +1404,9 @@ public final class Context implements AutoCloseable {
          * @since 19.0
          */
         public Builder in(InputStream in) {
-            System.out.println(">>>>>>>>>>>>>>> Builder.in(..): before object requireNonNull");
-            if (in == null) {
-                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!! Builder.in param in is null");
-            }
+          
             Objects.requireNonNull(in);
-            System.out.println(">>>>>>>>>>>>>>> Builder.in(..): after object requireNonNull");
+          
             this.in = in;
             return this;
         }
@@ -2095,11 +2080,9 @@ public final class Context implements AutoCloseable {
          * @since 19.1.0
          */
         public Builder environment(String name, String value) {
-            System.out.println(">>>>>>>>>>>>>>> environment(..): before object requireNonNull");
+
             Objects.requireNonNull(name, "Name must be non null.");
-            System.out.println(">>>>>>>>>>>>>>> environment(..): after object.name requireNonNull");
             Objects.requireNonNull(value, "Value must be non null.");
-            System.out.println(">>>>>>>>>>>>>>> environment(..): after object.value requireNonNull");
 
             if (this.environment == null) {
                 this.environment = new HashMap<>();
@@ -2118,7 +2101,7 @@ public final class Context implements AutoCloseable {
          * @since 19.1.0
          */
         public Builder environment(Map<String, String> env) {
-            System.out.println(">>>>>>>>>>>>>>> Builder.environment(..): before object requireNonNull");
+            
             Objects.requireNonNull(env, "Env must be non null.");
             for (Map.Entry<String, String> e : env.entrySet()) {
                 environment(e.getKey(), e.getValue());
@@ -2203,8 +2186,6 @@ public final class Context implements AutoCloseable {
             boolean experimentalOptions = orAllAccess(allowExperimentalOptions);
 
             if (this.allowHostAccess != null && this.hostAccess != null) {
-                System.out.println(
-                        "!!!!!!!!!!!!!!!!!!!!!! he method allowHostAccess with boolean and with HostAccess are mutually exclusive");
                 throw new IllegalArgumentException(
                         "The method allowHostAccess with boolean and with HostAccess are mutually exclusive.");
             }
@@ -2306,16 +2287,23 @@ public final class Context implements AutoCloseable {
                 contextIn = in;
             }
 
-            System.out.println("@@@@@@@@@@@@@@@@@@@@@>>>>>>>>>>>>>>>>>>>>> before dispatch.createContext >>>> ");
+           /*  Map<String, String[]> args;
+
             if (arguments == null) {
-                System.out.println("!!!!!!!!!!!!!!!!!! engine.dispatch.createContext arguments == null");
-                arguments = new HashMap<String, String[]>();
-            }
+                System.out.println("!!!!!!!!!!!!!!!! >>>>>>>>>>>> arguments == null, running Collections.emptyMap() >>>> ");
+                args = Collections.emptyMap();
+                System.out.println("!!!!!!!!!!!!!!!! >>>>>>>>>>>> Collections.emptyMap() complete >>>> ");
+            } else {
+                args = arguments;
+            } */
+
+            System.out.println("@@@@@@@@@@@@@@@@@@@@@>>>>>>>>>>>>>>>>>>>>> before dispatch.createContext >>>> ");
+            // arguments == null ? Collections.emptyMap() : arguments,
             ctx = engine.dispatch.createContext(engine.receiver, contextOut, contextErr, contextIn,
                     hostClassLookupEnabled, hostAccess, polyglotAccess, nativeAccess, createThread,
                     io, hostClassLoading, experimentalOptions,
                     localHostLookupFilter, contextOptions,
-                    /* arguments == null ? Collections.emptyMap() : arguments */arguments,
+                    arguments == null ? Collections.emptyMap() : arguments,
                     permittedLanguages, customFileSystem, customLogHandler, createProcess, processHandler,
                     environmentAccess, environment, zone, limits,
                     localCurrentWorkingDirectory, hostClassLoader, allowValueSharing, useSystemExit);

@@ -140,6 +140,7 @@ int ocall_pthread_attr_getguardsize(size_t *guardsize)
     }
     return ret;
 }
+
 int ocall_pthread_attr_destroy()
 {
     log_ocall(__func__);
@@ -160,12 +161,27 @@ int ocall_pthread_attr_getstack__bypass(void *attr, size_t attr_len, void **stk_
 {
     log_ocall(__func__);
     GRAAL_SGX_INFO();
-    int ret = pthread_attr_getstack((pthread_attr_t *)attr, stk_addr, stack_size);
-    printf("getstack outside: pid: %d stk_addr: %p pthread_attr_t: %p>>>>>>>\n", id, *stk_addr, attr, *stack_size);
+
+    pthread_attr_t *attrib = getAttrib(pthread_self());
+
+    int ret;
+
+    // ret = pthread_attr_getstack((pthread_attr_t *)attr, stk_addr, stack_size);
+    // return ret;
+
+    if (attrib == NULL)
+    {
+        printf("!!!!!!!!!!!>>>>>>>>>> thread attribute does not exist/NULL: %s ...\n", __FUNCTION__);
+    }
+    else
+    {
+        ret = pthread_attr_getstack((pthread_attr_t *)attrib, stk_addr, stack_size);
+        printf("getstack outside: pid: %d stk_addr: %p pthread_attr_t: %p stack_size: %d>>>>>>>\n", id, *stk_addr, attrib, *stack_size);
+    }
 
     if (*stack_size == 0)
     {
-        //ret = manual_setstack((pthread_attr_t *)attr, stk_addr, stack_size);
+        ret = manual_setstack((pthread_attr_t *)attrib, stk_addr, stack_size);
     }
 
     return ret;
@@ -179,14 +195,16 @@ int ocall_pthread_attr_getstack(void **stk_addr, size_t *stack_size)
     pthread_attr_t *attr = getAttrib(pthread_self());
     if (attr != NULL)
     {
+        printf(">>>>>>> thread attribute found\n");
         size_t size;
         void **addr;
-        ret = pthread_attr_getstack(attr, stk_addr, &size);
+        ret = pthread_attr_getstack(attr, stk_addr, stack_size);
         // printf("Stack addr out: %p\n", *stk_addr);
-        *stack_size = size;
-        //
-        *stk_addr = *addr;
+        //*stack_size = size;
+        //*stk_addr = *addr;
+        printf("pthread_attr_getstack ret vals: stk_addr: %p, stk_size: %d", *stk_addr, *stack_size);
     }
+   
     if (*stack_size == 0)
     {
         ret = manual_setstack(attr, stk_addr, stack_size);
@@ -207,7 +225,7 @@ int ocall_pthread_attr_getstack(void **stk_addr, size_t *stack_size)
 int manual_setstack(pthread_attr_t *attr, void **stk_addr, size_t *stack_size)
 {
     // set stack size
-    *stack_size = 2 * PTHREAD_STACK_MIN;
+    *stack_size = 3 * PTHREAD_STACK_MIN;
     // init attributes
 
     /**

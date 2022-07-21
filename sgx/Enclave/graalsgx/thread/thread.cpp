@@ -11,6 +11,8 @@
 #include <map>
 #include <sgx_trts.h>
 
+extern __thread uintptr_t thread_stack_address;
+
 extern sgx_enclave_id_t global_eid;
 extern bool enclave_initiated;
 
@@ -141,36 +143,33 @@ int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacks
 {
     GRAAL_SGX_INFO();
     // printf("[ENCLAVE] pthread_attr_getstack(..)\n");
+
     int ret = 0;
     pthread_t id;
+    //(void *)0x00007f7bd0
+    //*stackaddr = get_stack_address(0); // get_r15_register(); // get_stack_address(0);
+    //*stacksize = 0x200000;        // using 1mb even tho default stk size is 2mb
+
     ocall_pthread_self(&id);
     ocall_pthread_attr_getstack__bypass(&ret, attr, sizeof(pthread_attr_t), stackaddr, sizeof(intptr_t), stacksize, id);
-
-    printf(">>>>>>>>>> attr_get_stack details in enclave - pid: %lu stackaddr: %p stack-size: %d\n", id, *stackaddr, *stacksize);
-
-    // ocall_pthread_attr_getstack(&ret, stackaddr, stacksize);
+    //  ocall_pthread_attr_getstack(&ret, stackaddr, stacksize);
+    printf(">>>>>>>>>> attr_get_stack details in enclave:: pid: %lu stackaddr: %p stack-size: %d\n", id, *stackaddr, *stacksize);
     return ret;
 }
 
-/*int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
+int xxxpthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
 {
     GRAAL_SGX_INFO();
     int ret = 0;
-    intptr_t sp; //stack pointer
-    //printf("Dummy stack addr: %p\n", *stackaddr);
-    //*stackaddr = nullptr;
-    //*stacksize = 0x1000000;
-    ocall_pthread_attr_getstack(&ret, stackaddr, sizeof(intptr_t), stacksize);
-    //printf("Stack addr ocall: %p\n", *stackaddr);
-    *stacksize = 0x1000000;
-    asm("movq %%rsp, %0"
-        : "=r"(sp));
+    intptr_t sp; // stack pointer
+                 // printf("Dummy stack addr: %p\n", *stackaddr);
+                 //*stackaddr = get_stack_bottom();//(void *)0x00007f7bd0;
+                 //*stacksize = 0x800000;
+    ocall_pthread_attr_getstack(&ret, stackaddr, stacksize);
+    printf(">>>>>>>>>> attr_get_stack details in enclave:: stackaddr: %p stack-size: %d\n", *stackaddr, *stacksize);
 
-    *stackaddr = nullptr;
-    // *stackaddr = (void *)sp;
-    // printf("Stack addr regis: %p\n", (void *)sp);
     return ret;
-}*/
+}
 
 int pthread_getattr_np(pthread_t tid, GRAAL_SGX_PTHREAD_ATTR attr)
 {

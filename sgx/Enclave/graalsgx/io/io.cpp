@@ -316,7 +316,9 @@ char *getenv(const char *name)
 ulong crc32(ulong crc, const Byte *buf, uint len)
 {
     GRAAL_SGX_INFO();
-    // TODO
+    ulong ret;
+    ocall_crc32(&ret, crc, buf, len);
+    return ret;
 }
 
 int mkdir(const char *pathname, mode_t mode)
@@ -460,41 +462,7 @@ int symlink(const char *target, const char *linkpath)
     ocall_symlink(&ret, target, linkpath);
     return ret;
 }
-int deflateEnd(z_streamp stream)
-{
-    GRAAL_SGX_INFO();
-    int ret = 0;
-    ocall_deflateEnd(&ret, stream);
-    return ret;
-}
-int deflateParams(z_streamp stream, int level, int strategy)
-{
-    GRAAL_SGX_INFO();
-    int ret = 0;
-    ocall_deflateParams(&ret, stream, level, strategy);
-    return ret;
-}
-int deflate(z_streamp stream, int flush)
-{
-    GRAAL_SGX_INFO();
-    int ret = 0;
-    ocall_deflate(&ret, stream, flush);
-    return ret;
-}
-int deflateInit2_(z_streamp stream, int level, int method, int windowBits, int memLevel, int strategy)
-{
-    GRAAL_SGX_INFO();
-    int ret = 0;
-    ocall_deflateInit2(&ret, stream, level, method, windowBits, memLevel, strategy);
-    return ret;
-}
-int inflateReset(z_streamp stream)
-{
-    GRAAL_SGX_INFO();
-    int ret = 0;
-    ocall_inflateReset(&ret, stream);
-    return ret;
-}
+
 ssize_t sendfile64(int out_fd, int in_fd, off_t *offset, size_t count)
 {
     GRAAL_SGX_INFO();
@@ -636,7 +604,7 @@ int fstatvfs64(int fd, struct statvfs *buf)
 int __xstat64(int ver, const char *path, struct stat *stat_buf)
 {
     GRAAL_SGX_INFO();
-    int ret = 0;
+    int ret;
     ocall_xstat64(&ret, ver, path, stat_buf);
     return ret;
 }
@@ -648,25 +616,219 @@ int pthread_kill(pthread_t thread, int sig)
     // TODO
     return ret;
 }
-int inflateInit2_(z_streamp strm, int windowBits, char *version, int stream_size)
+
+/**
+ * @file
+ * @author Peterson Yuhala
+ * @brief
+ * The family of functions below represent the wrappers
+ * for some zlib-library functions. The generic idea is
+ * to have two associated stream pointers which are used
+ * by the in-enclave and untrusted sides. This way the untrusted
+ * side does not try writing to enclave memory (else SEGFAULT).
+ *
+ * @date 2022-07-04
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
+/*
+ * @brief
+ * Map storing correspondence between
+ * zstream pointers in and out of the enclave.
+ *
+ */
+#include <map>
+using namespace std;
+static map<Z_STREAMP, void *> zstreamp_map;
+
+void add_zstream_pair(Z_STREAMP trusted_streamp, void *untrusted_streamp)
+{
+    // printf(">>>>>>>>>> Adding zstream pair. In stream: %x Out stream: %x\n", trusted_streamp, untrusted_streamp);
+    zstreamp_map.insert(pair<Z_STREAMP, void *>(trusted_streamp, untrusted_streamp));
+}
+
+void *get_out_zstreamp(Z_STREAMP streamp_in)
+{
+    // printf(">>>>>>>>>> Getting untrusted zstreamp for in stream: %x\n", streamp_in);
+    return zstreamp_map[streamp_in];
+}
+
+/**
+ * @brief
+ * forward declarations
+ */
+void copy_zstream(void *dest_streamp, void *src_streamp);
+void copy_zstream_in(void *dest_streamp, void *src_streamp);
+void copy_zstream_out(void *dest_streamp, void *src_streamp, bool allocate);
+void print_zlib_error(int error_code, const char *func_name);
+void print_zstream(void *streamp);
+
+int inflateInit2_(Z_STREAMP streamp, int windowBits, char *version, int stream_size)
 {
     GRAAL_SGX_INFO();
-    int ret = 0;
-    // TODO
+    /**
+     * @brief
+     * Initialize/allocate untrusted zstream pointer
+     * outside enclave which will be used by the untrusted side
+     * for calls with this streamp as input.
+     */
+
+    // void *untrusted_zstreamp;
+    // ocall_alloc_zstream(&untrusted_zstreamp);
+
+    // printf("allocated untrusted zstreamp in: %x >>>>>>>>\n", untrusted_zstreamp);
+
+    /**
+     * @brief
+     * Associate the trusted and untrusted z_stream pointers
+     * in the map. The trusted ptr is key and the untrusted is
+     * the value.
+     */
+    // add_zstream_pair(streamp, untrusted_zstreamp);
+
+    /**
+     * @brief
+     * Copy necessary in-enclave zstream attributes into
+     * untrusted pointer.
+     */
+
+    // copy_zstream_out(untrusted_zstreamp, streamp, true);
+
+    int ret;
+    printf(">>>>>>> inflateInit2_ callinfo: version: %s win-bits: %d stream-size: %d \n", version, windowBits, stream_size);
+    // ocall_inflateInit2_(&ret, untrusted_zstreamp, windowBits, version, stream_size);
+    // print_zlib_error(ret, __FUNCTION__);
+
+    /**
+     * @brief
+     * Copy results back into enclave zstream.
+     */
+    // copy_zstream_in(streamp, untrusted_zstreamp);
+
+    ocall_inflateInit2_(&ret, streamp, windowBits, version, stream_size);
     return ret;
 }
-int inflate(z_streamp stream, int flush)
+
+int inflate(Z_STREAMP streamp, int flush)
 {
     GRAAL_SGX_INFO();
-    int ret = 0;
-    // TODO
+
+    void *untrusted_streamp = get_out_zstreamp(streamp);
+
+    // copy_zstream_out(untrusted_streamp, streamp, true);
+
+    int ret;
+    /* printf("Inflate: Outside stream b4 ocall_inflate: \n");
+    print_zstream(untrusted_streamp);
+    printf("Inflate: Inside stream b4 ocall_inflate: \n");
+    print_zstream(streamp);
+    ocall_inflate(&ret, untrusted_streamp, flush);
+    print_zlib_error(ret, __FUNCTION__); */
+    /**
+     * @brief
+     * Copy results back into enclave zstream.
+     */
+    // copy_zstream_in(streamp, untrusted_streamp);
+
+    ocall_inflate(&ret, streamp, flush);
     return ret;
 }
-int inflateEnd(z_streamp stream)
+int inflateEnd(Z_STREAMP streamp)
 {
     GRAAL_SGX_INFO();
-    int ret = 0;
-    // TODO
+    int ret;
+
+    // void *untrusted_streamp = get_out_zstreamp(streamp);
+    //  copy_zstream_out(untrusted_streamp, streamp);
+
+    // ocall_inflateEnd(&ret, untrusted_streamp);
+    // print_zlib_error(ret, __FUNCTION__);
+    // copy_zstream_in(streamp, untrusted_streamp);
+
+    ocall_inflateEnd(&ret, streamp);
+    return ret;
+}
+int deflateEnd(Z_STREAMP streamp)
+{
+    GRAAL_SGX_INFO();
+    void *untrusted_streamp = get_out_zstreamp(streamp);
+    copy_zstream(untrusted_streamp, streamp);
+    int ret;
+    ocall_deflateEnd(&ret, streamp);
+    print_zlib_error(ret, __FUNCTION__);
+    copy_zstream(streamp, untrusted_streamp);
+    return ret;
+}
+int deflateParams(Z_STREAMP streamp, int level, int strategy)
+{
+    GRAAL_SGX_INFO();
+    void *untrusted_streamp = get_out_zstreamp(streamp);
+    copy_zstream(untrusted_streamp, streamp);
+    int ret;
+    ocall_deflateParams(&ret, untrusted_streamp, level, strategy);
+    copy_zstream(streamp, untrusted_streamp);
+    return ret;
+}
+int deflate(Z_STREAMP streamp, int flush)
+{
+    GRAAL_SGX_INFO();
+    void *untrusted_streamp = get_out_zstreamp(streamp);
+    copy_zstream(untrusted_streamp, streamp);
+    int ret;
+    ocall_deflate(&ret, untrusted_streamp, flush);
+    copy_zstream(streamp, untrusted_streamp);
+    return ret;
+}
+int deflateInit2_(Z_STREAMP streamp, int level, int method, int windowBits, int memLevel, int strategy)
+{
+    GRAAL_SGX_INFO();
+    /**
+     * @brief
+     * Initialize/allocate untrusted zstream pointer
+     * outside enclave which will be used by the untrusted side
+     * for calls with this streamp as input.
+     */
+
+    void *untrusted_zstreamp;
+    ocall_alloc_zstream(&untrusted_zstreamp);
+
+    /**
+     * @brief
+     * Associate the trusted and untrusted z_stream pointers
+     * in the map. The trusted ptr is key and the untrusted is
+     * the value.
+     */
+    zstreamp_map.insert(pair<Z_STREAMP, void *>(streamp, untrusted_zstreamp));
+
+    /**
+     * @brief
+     * Copy necessary in-enclave zstream attributes into
+     * untrusted pointer.
+     */
+    copy_zstream(untrusted_zstreamp, streamp);
+    int ret;
+    ocall_deflateInit2(&ret, untrusted_zstreamp, level, method, windowBits, memLevel, strategy);
+    /**
+     * @brief
+     * Copy results back into enclave zstream.
+     */
+    copy_zstream(streamp, untrusted_zstreamp);
+    return ret;
+}
+int inflateReset(Z_STREAMP streamp)
+{
+    GRAAL_SGX_INFO();
+    void *untrusted_streamp = zstreamp_map[streamp];
+
+    int ret;
+    ocall_inflateReset(&ret, untrusted_streamp);
+    /**
+     * @brief
+     * Copy results back into enclave zstream.
+     */
+    copy_zstream_in(untrusted_streamp, streamp);
     return ret;
 }
 

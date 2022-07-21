@@ -105,14 +105,25 @@ enclave {
 
         int ocall_xmknod(int vers,[in,string]const char *path, mode_t mode, [user_check]dev_t *dev);
         int ocall_symlink([in,string]const char *target, [in,string]const char *linkpath); 
-        int ocall_deflateEnd(z_streamp stream);
-        int ocall_deflateParams(z_streamp stream, int level, int strategy);
-        int ocall_deflate(z_streamp stream, int flush);
-        int ocall_deflateInit2(z_streamp stream, int level, int method, int windowBits, int memLevel, int strategy);
-        int ocall_inflateReset(z_streamp stream);
 
-        ssize_t ocall_sendfile64(int out_fd, int in_fd,[user_check]off_t *offset, size_t count);
+
+        //zlib calls
+        int ocall_inflate([user_check]void* streamp, int flush);
+        int ocall_inflateInit2_([user_check]void* streamp, int windowBits, [in,string]char *version, int stream_size);
+        int ocall_inflateEnd([user_check]void* streamp);
+        int ocall_deflateEnd([user_check]void* streamp);
+        int ocall_deflateParams([user_check]void* streamp, int level, int strategy);
+        int ocall_deflate([user_check]void* streamp, int flush);
+        int ocall_deflateInit2([user_check]void* streamp, int level, int method, int windowBits, int memLevel, int strategy);
+        int ocall_inflateReset([user_check]void* streamp);
+        ulong ocall_crc32(ulong crc, [in,size=len]const Byte *buf, uint len);
         ulong ocall_adler32(ulong adler,[in,size=len] const Bytef *buf, size_t len);
+        void *ocall_alloc_zstream();
+
+        void* ocall_malloc(size_t size);
+        void ocall_free([user_check]void* ptr);
+
+        ssize_t ocall_sendfile64(int out_fd, int in_fd,[user_check]off_t *offset, size_t count);        
         char *ocall_getenv([in, string] const char *name);
         
         int ocall_fileno([in]SGX_FILE *stream); 

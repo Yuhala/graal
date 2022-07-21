@@ -44,44 +44,60 @@ import java.util.Iterator;
 import java.util.function.BiFunction;
 
 /**
- * Implementation of a map with a memory-efficient structure that always preserves insertion order
- * when iterating over keys. Particularly efficient when number of entries is 0 or smaller equal
+ * Implementation of a map with a memory-efficient structure that always
+ * preserves insertion order
+ * when iterating over keys. Particularly efficient when number of entries is 0
+ * or smaller equal
  * {@link #INITIAL_CAPACITY} or smaller 256.
  *
- * The key/value pairs are kept in an expanding flat object array with keys at even indices and
- * values at odd indices. If the map has smaller or equal to {@link #HASH_THRESHOLD} entries, there
- * is no additional hash data structure and comparisons are done via linear checking of the
- * key/value pairs. For the case where the equality check is particularly cheap (e.g., just an
- * object identity comparison), this limit below which the map is without an actual hash table is
+ * The key/value pairs are kept in an expanding flat object array with keys at
+ * even indices and
+ * values at odd indices. If the map has smaller or equal to
+ * {@link #HASH_THRESHOLD} entries, there
+ * is no additional hash data structure and comparisons are done via linear
+ * checking of the
+ * key/value pairs. For the case where the equality check is particularly cheap
+ * (e.g., just an
+ * object identity comparison), this limit below which the map is without an
+ * actual hash table is
  * higher and configured at {@link #HASH_THRESHOLD_IDENTITY_COMPARE}.
  *
- * When the hash table needs to be constructed, the field {@link #hashArray} becomes a new hash
- * array where an entry of 0 means no hit and otherwise denotes the entry number in the
- * {@link #entries} array. The hash array is interpreted as an actual byte array if the indices fit
- * within 8 bit, or as an array of short values if the indices fit within 16 bit, or as an array of
+ * When the hash table needs to be constructed, the field {@link #hashArray}
+ * becomes a new hash
+ * array where an entry of 0 means no hit and otherwise denotes the entry number
+ * in the
+ * {@link #entries} array. The hash array is interpreted as an actual byte array
+ * if the indices fit
+ * within 8 bit, or as an array of short values if the indices fit within 16
+ * bit, or as an array of
  * integer values in other cases.
  *
- * Hash collisions are handled by chaining a linked list of {@link CollisionLink} objects that take
+ * Hash collisions are handled by chaining a linked list of
+ * {@link CollisionLink} objects that take
  * the place of the values in the {@link #entries} array.
  *
- * Removing entries will put {@code null} into the {@link #entries} array. If the occupation of the
+ * Removing entries will put {@code null} into the {@link #entries} array. If
+ * the occupation of the
  * map falls below a specific threshold, the map will be compressed via the
  * {@link #maybeCompress(int)} method.
  */
 final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
 
     /**
-     * Initial number of key/value pair entries that is allocated in the first entries array.
+     * Initial number of key/value pair entries that is allocated in the first
+     * entries array.
      */
     private static final int INITIAL_CAPACITY = 4;
 
     /**
-     * Maximum number of entries that are moved linearly forward if a key is removed.
+     * Maximum number of entries that are moved linearly forward if a key is
+     * removed.
      */
     private static final int COMPRESS_IMMEDIATE_CAPACITY = 8;
 
     /**
-     * Minimum number of key/value pair entries added when the entries array is increased in size.
+     * Minimum number of key/value pair entries added when the entries array is
+     * increased in size.
      */
     private static final int MIN_CAPACITY_INCREASE = 8;
 
@@ -91,7 +107,8 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
     private static final int HASH_THRESHOLD = 4;
 
     /**
-     * Number of entries above which a hash table is created when equality can be checked with
+     * Number of entries above which a hash table is created when equality can be
+     * checked with
      * object identity.
      */
     private static final int HASH_THRESHOLD_IDENTITY_COMPARE = 8;
@@ -102,12 +119,14 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
     private static final int MAX_ELEMENT_COUNT = Integer.MAX_VALUE >> 1;
 
     /**
-     * Number of entries above which more than 1 byte is necessary for the hash index.
+     * Number of entries above which more than 1 byte is necessary for the hash
+     * index.
      */
     private static final int LARGE_HASH_THRESHOLD = ((1 << Byte.SIZE) << 1);
 
     /**
-     * Number of entries above which more than 2 bytes are are necessary for the hash index.
+     * Number of entries above which more than 2 bytes are are necessary for the
+     * hash index.
      */
     private static final int VERY_LARGE_HASH_THRESHOLD = (LARGE_HASH_THRESHOLD << Byte.SIZE);
 
@@ -127,13 +146,15 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
     private Object[] entries;
 
     /**
-     * Hash array that is interpreted either as byte or short or int array depending on number of
+     * Hash array that is interpreted either as byte or short or int array depending
+     * on number of
      * map entries.
      */
     private byte[] hashArray;
 
     /**
-     * The strategy used for comparing keys or {@code null} for denoting special strategy
+     * The strategy used for comparing keys or {@code null} for denoting special
+     * strategy
      * {@link Equivalence#IDENTITY}.
      */
     private final Equivalence strategy;
@@ -153,11 +174,13 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
         return intercept(new EconomicMapImpl<>(strategy, initialCapacity, isSet));
     }
 
-    public static <K, V> EconomicMapImpl<K, V> create(Equivalence strategy, UnmodifiableEconomicMap<K, V> other, boolean isSet) {
+    public static <K, V> EconomicMapImpl<K, V> create(Equivalence strategy, UnmodifiableEconomicMap<K, V> other,
+            boolean isSet) {
         return intercept(new EconomicMapImpl<>(strategy, other, isSet));
     }
 
-    public static <K, V> EconomicMapImpl<K, V> create(Equivalence strategy, UnmodifiableEconomicSet<K> other, boolean isSet) {
+    public static <K, V> EconomicMapImpl<K, V> create(Equivalence strategy, UnmodifiableEconomicSet<K> other,
+            boolean isSet) {
         return intercept(new EconomicMapImpl<>(strategy, other, isSet));
     }
 
@@ -195,7 +218,8 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
     private boolean initFrom(Object o) {
         if (o instanceof EconomicMapImpl) {
             EconomicMapImpl<K, V> otherMap = (EconomicMapImpl<K, V>) o;
-            // We are only allowed to directly copy if the strategies of the two maps are the same.
+            // We are only allowed to directly copy if the strategies of the two maps are
+            // the same.
             if (strategy == otherMap.strategy) {
                 totalEntries = otherMap.totalEntries;
                 deletedEntries = otherMap.deletedEntries;
@@ -218,7 +242,8 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
     }
 
     /**
-     * Links the collisions. Needs to be immutable class for allowing efficient shallow copy from
+     * Links the collisions. Needs to be immutable class for allowing efficient
+     * shallow copy from
      * other map on construction.
      */
     private static final class CollisionLink {
@@ -326,7 +351,8 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
             return (hashArray[adjustedIndex] & 0xFF) | ((hashArray[adjustedIndex + 1] & 0xFF) << 8);
         } else {
             int adjustedIndex = index << 2;
-            return (hashArray[adjustedIndex] & 0xFF) | ((hashArray[adjustedIndex + 1] & 0xFF) << 8) | ((hashArray[adjustedIndex + 2] & 0xFF) << 16) | ((hashArray[adjustedIndex + 3] & 0xFF) << 24);
+            return (hashArray[adjustedIndex] & 0xFF) | ((hashArray[adjustedIndex + 1] & 0xFF) << 8)
+                    | ((hashArray[adjustedIndex + 2] & 0xFF) << 16) | ((hashArray[adjustedIndex + 3] & 0xFF) << 24);
         }
     }
 
@@ -474,14 +500,15 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
         System.arraycopy(entries, 0, newEntries, 0, entriesLength);
         entries = newEntries;
         if ((entriesLength < LARGE_HASH_THRESHOLD && newEntries.length >= LARGE_HASH_THRESHOLD) ||
-                        (entriesLength < VERY_LARGE_HASH_THRESHOLD && newEntries.length > VERY_LARGE_HASH_THRESHOLD)) {
+                (entriesLength < VERY_LARGE_HASH_THRESHOLD && newEntries.length > VERY_LARGE_HASH_THRESHOLD)) {
             // Rehash in order to change number of bits reserved for hash indices.
             createHash();
         }
     }
 
     /**
-     * Compresses the graph if there is a large number of deleted entries and returns the translated
+     * Compresses the graph if there is a large number of deleted entries and
+     * returns the translated
      * new next index.
      */
     private int maybeCompress(int nextIndex) {
@@ -642,7 +669,8 @@ final class EconomicMapImpl<K, V> implements EconomicMap<K, V>, EconomicSet<K> {
     }
 
     /**
-     * Removes the element at the specific index and returns the index of the next element. This can
+     * Removes the element at the specific index and returns the index of the next
+     * element. This can
      * be a different value if graph compression was triggered.
      */
     private int remove(int indexToRemove) {

@@ -97,6 +97,9 @@ void gen_sighandler(int sig, siginfo_t *si, void *arg)
     printf("Caught signal: %d\n", sig);
 }
 
+// zlib test
+int gun_main(int argc, char **argv);
+
 /**
  * @brief
  * From IBM code examples.
@@ -195,8 +198,44 @@ int initialize_enclave(void)
     return 0;
 }
 
+void *get_stack_ptr()
+{
+    // intptr_t sp;
+    // asm("movq %%rsp, %0"
+    //     : "=r"(sp));
+
+    register void *sp asm("sp");
+    return (void *)sp;
+}
+
+void stack_addr_test()
+{
+    pthread_t thid;
+    void *sp = get_stack_ptr();
+    pthread_attr_t *global_attr;
+    global_attr = (pthread_attr_t *)malloc(sizeof(pthread_attr_t));
+    // increase stack size
+
+    /* Initialize attr */
+    int rc = pthread_attr_init(global_attr);
+    if (rc != 0)
+    {
+        printf("error attr_init");
+    }
+
+    void *stack_addr;
+    size_t stack_size;
+    /* Get the default stack_addr and stack_size value */
+    rc = pthread_attr_getstack(global_attr, &stack_addr, &stack_size);
+    if (rc != 0)
+    {
+        printf("error attr getstack");
+    }
+    printf("rsp = %p, stack_addr = %p, stack_size = %u\n", sp, stack_addr, stack_size);
+}
+
 /* Application entry */
-int SGX_CDECL main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     (void)(argc);
     (void)(argv);
@@ -211,6 +250,12 @@ int SGX_CDECL main(int argc, char *argv[])
 
     global_app_iso = isolate_generator();
     graal_isolatethread_t *temp = isolate_generator();
+
+    // printf("Stackpointer is: %p >>>>>>>>>>>>>\n", get_stack_ptr());
+    // stack_addr_test();
+
+    // stack_addr_test();
+    // return 0;
 
     // run_main(1, NULL);
     // return 0;
@@ -238,6 +283,9 @@ int SGX_CDECL main(int argc, char *argv[])
     unsigned int pwid = uid;
     ecall_test_pwuid(global_eid, pwid);
     return 0;*/
+
+    // ecall_stackoverflow_test(global_eid);
+    // return 0;
 
     if (argc > 1)
     {
