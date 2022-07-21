@@ -130,7 +130,26 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
     @Uninterruptible(reason = "Called while thread is being attached to the VM, i.e., when the thread state is not yet set up.")
     @Override
     public void initialize(IsolateThread thread) {
-       
+        /*
+         * Get the real physical end of the stack. Everything past this point is
+         * memory-protected.
+         */
+        OSSupport osSupport = ImageSingletons.lookup(StackOverflowCheck.OSSupport.class);
+        UnsignedWord stackBase = osSupport.lookupStackBase();
+        UnsignedWord stackEnd = osSupport.lookupStackEnd();
+
+        /* Initialize the stack base and the stack end thread locals. */
+        VMThreads.StackBase.set(thread, stackBase);
+        VMThreads.StackEnd.set(thread, stackEnd);
+
+        /*
+         * Set up our yellow and red zones. That memory is not memory protected, it is a
+         * soft limit
+         * that we can change.
+         */
+        stackBoundaryTL.set(thread,
+                stackEnd.add(Options.StackYellowZoneSize.getValue() + Options.StackRedZoneSize.getValue()));
+        yellowZoneStateTL.set(thread, STATE_YELLOW_ENABLED);
     }
 
     @Uninterruptible(reason = "Atomically manipulating state of multiple thread local variables.")
@@ -158,20 +177,7 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
     @Uninterruptible(reason = "Called by fatal error handling that is uninterruptible.")
     @Override
     public void disableStackOverflowChecksForFatalError() {
-        /*
-         * Setting the boundary to a low value effectively disables the check. We are
-         * not using 0 so
-         * that we can distinguish the value set here from an uninitialized value.
-         */
-        stackBoundaryTL.set(WordFactory.unsigned(1));
-        /*
-         * A random marker value. The actual value does not matter, but having a high
-         * value also
-         * ensures that any future calls to protectYellowZone() do not modify the stack
-         * boundary
-         * again.
-         */
-        yellowZoneStateTL.set(0x7EFEFEFE);
+        
     }
 
    
@@ -188,10 +194,7 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
     @Uninterruptible(reason = "Must not have a stack overflow check: we are here because the stack overflow check failed.")
     @SubstrateForeignCallTarget(stubCallingConvention = true)
     private static void throwCachedStackOverflowError() {
-        VMError.guarantee(StackOverflowCheckImpl.yellowZoneStateTL.get() != StackOverflowCheckImpl.STATE_UNINITIALIZED,
-                "Stack boundary for the current thread not yet initialized. Only uninterruptible code with no stack overflow checks can run at this point.");
-
-        throw CACHED_STACK_OVERFLOW_ERROR;
+        
     }
 
     /**
@@ -203,23 +206,7 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
     @Uninterruptible(reason = "Must not have a stack overflow check: we are here because the stack overflow check failed.")
     @SubstrateForeignCallTarget(stubCallingConvention = true)
     private static void throwNewStackOverflowError() {
-        int state = StackOverflowCheckImpl.yellowZoneStateTL.get();
-        VMError.guarantee(state != StackOverflowCheckImpl.STATE_UNINITIALIZED,
-                "Stack boundary for the current thread not yet initialized. Only uninterruptible code with no stack overflow checks can run at this point.");
-
-        StackOverflowError error;
-        if (state > StackOverflowCheckImpl.STATE_YELLOW_ENABLED || Heap.getHeap().isAllocationDisallowed()) {
-            error = CACHED_STACK_OVERFLOW_ERROR;
-        } else {
-            try {
-                StackOverflowCheck.singleton().makeYellowZoneAvailable();
-                error = newStackOverflowError();
-            } finally {
-                StackOverflowCheck.singleton().protectYellowZone();
-            }
-        }
-
-        throw error;
+        
     }
 
     @Uninterruptible(reason = "Allow allocation now that yellow zone is available for new stack frames", calleeMustBe = false)
@@ -255,51 +242,17 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
              */
             return false;
         }
-        // return true;
-        return false;
+        return true;
+       
 
     }
 
     public static long computeDeoptFrameSize(StructuredGraph graph) {
-        long deoptFrameSize = 0;
-        if (ImageInfo.inImageRuntimeCode()) {
-            /*
-             * Deoptimization must not lead to stack overflow errors, i.e., the
-             * deoptimization
-             * source must check for a stack frame size large enough to cover all possible
-             * deoptimization points (with all the methods inlined at that point). We do not
-             * know
-             * which frame states are used for deoptimization, so we simply look at all
-             * frame states
-             * and use the largest.
-             *
-             * Many frame states can share the same outer frame states. To avoid recomputing
-             * the
-             * same information multiple times, we cache all values that we already
-             * computed.
-             */
-            NodeMap<Long> deoptFrameSizeCache = new NodeMap<>(graph);
-            for (FrameState state : graph.getNodes(FrameState.TYPE)) {
-                deoptFrameSize = Math.max(deoptFrameSize, computeDeoptFrameSize(state, deoptFrameSizeCache));
-            }
-        }
-        return deoptFrameSize;
+        return 0;
     }
 
     private static long computeDeoptFrameSize(FrameState state, NodeMap<Long> deoptFrameSizeCache) {
-        Long existing = deoptFrameSizeCache.get(state);
-        if (existing != null) {
-            return existing;
-        }
-
-        long outerFrameSize = state.outerFrameState() == null ? 0
-                : computeDeoptFrameSize(state.outerFrameState(), deoptFrameSizeCache);
-        long myFrameSize = CodeInfoAccess.lookupTotalFrameSize(CodeInfoTable.getImageCodeInfo(),
-                ((SharedMethod) state.getMethod()).getDeoptOffsetInImage());
-
-        long result = outerFrameSize + myFrameSize;
-        deoptFrameSizeCache.put(state, result);
-        return result;
+        return 0;
     }
 }
 
