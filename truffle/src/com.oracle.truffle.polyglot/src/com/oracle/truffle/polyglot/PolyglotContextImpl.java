@@ -1366,23 +1366,23 @@ final class PolyglotContextImpl implements com.oracle.truffle.polyglot.PolyglotI
     public Value eval(String languageId, org.graalvm.polyglot.Source source) {
         PolyglotLanguageContext languageContext = lookupLanguageContext(languageId);
         assert languageContext != null;
-        System.out.println(">>>>> PolyglotContextImpl.eval ....");
+        //System.out.println(">>>>> PolyglotContextImpl.eval ....");
         Object prev = hostEnter(languageContext);
 
         try {
             Source truffleSource = (Source) getAPIAccess().getReceiver(source);
             languageContext.checkAccess(null);
             languageContext.ensureInitialized(null);
-            System.out.println(">>>>> PolyglotContextImpl.eval b4 parseCached....");
+            //System.out.println(">>>>> PolyglotContextImpl.eval b4 parseCached....");
             CallTarget target = languageContext.parseCached(null, truffleSource, null);
-            System.out.println(">>>>> PolyglotContextImpl.eval b4 target.call...");
+            //System.out.println(">>>>> PolyglotContextImpl.eval b4 target.call...");
             Object result = target.call(PolyglotImpl.EMPTY_ARGS);
 
             Value hostValue;
 
             try {
                 hostValue = languageContext.asValue(result);
-                System.out.println(">>>>> PolyglotContextImpl.eval try 2 complete ....");
+                //System.out.println(">>>>> PolyglotContextImpl.eval try 2 complete ....");
             } catch (NullPointerException | ClassCastException e) {
                 throw new AssertionError(
                         String.format("Language %s returned an invalid return value %s. Must be an interop value.",
