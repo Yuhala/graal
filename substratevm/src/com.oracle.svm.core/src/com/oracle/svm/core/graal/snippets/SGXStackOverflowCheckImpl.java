@@ -130,60 +130,59 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
     @Uninterruptible(reason = "Called while thread is being attached to the VM, i.e., when the thread state is not yet set up.")
     @Override
     public void initialize(IsolateThread thread) {
-        /*
-         * Get the real physical end of the stack. Everything past this point is
-         * memory-protected.
-         */
-        OSSupport osSupport = ImageSingletons.lookup(StackOverflowCheck.OSSupport.class);
-        UnsignedWord stackBase = osSupport.lookupStackBase();
-        UnsignedWord stackEnd = osSupport.lookupStackEnd();
+        // /*
+        //  * Get the real physical end of the stack. Everything past this point is
+        //  * memory-protected.
+        //  */
+        // OSSupport osSupport = ImageSingletons.lookup(StackOverflowCheck.OSSupport.class);
+        // UnsignedWord stackBase = osSupport.lookupStackBase();
+        // UnsignedWord stackEnd = osSupport.lookupStackEnd();
 
-        /* Initialize the stack base and the stack end thread locals. */
-        VMThreads.StackBase.set(thread, stackBase);
-        VMThreads.StackEnd.set(thread, stackEnd);
+        // /* Initialize the stack base and the stack end thread locals. */
+        // VMThreads.StackBase.set(thread, stackBase);
+        // VMThreads.StackEnd.set(thread, stackEnd);
 
-        /*
-         * Set up our yellow and red zones. That memory is not memory protected, it is a
-         * soft limit
-         * that we can change.
-         */
-        stackBoundaryTL.set(thread,
-                stackEnd.add(Options.StackYellowZoneSize.getValue() + Options.StackRedZoneSize.getValue()));
-        yellowZoneStateTL.set(thread, STATE_YELLOW_ENABLED);
+        // /*
+        //  * Set up our yellow and red zones. That memory is not memory protected, it is a
+        //  * soft limit
+        //  * that we can change.
+        //  */
+        // stackBoundaryTL.set(thread,
+        //         stackEnd.add(Options.StackYellowZoneSize.getValue() + Options.StackRedZoneSize.getValue()));
+        // yellowZoneStateTL.set(thread, STATE_YELLOW_ENABLED);
     }
 
     @Uninterruptible(reason = "Atomically manipulating state of multiple thread local variables.")
     @Override
     public void makeYellowZoneAvailable() {
-      
+
     }
 
     @Override
     public boolean isYellowZoneAvailable() {
-        return true;
+        return false;
     }
 
     @Uninterruptible(reason = "Atomically manipulating state of multiple thread local variables.")
     @Override
     public void protectYellowZone() {
-       
+
     }
 
     @Override
     public int yellowAndRedZoneSize() {
-        return Options.StackYellowZoneSize.getValue() + Options.StackRedZoneSize.getValue();
+        return 0;//Options.StackYellowZoneSize.getValue() + Options.StackRedZoneSize.getValue();
     }
 
     @Uninterruptible(reason = "Called by fatal error handling that is uninterruptible.")
     @Override
     public void disableStackOverflowChecksForFatalError() {
-        
+
     }
 
-   
     @Override
     public void updateStackOverflowBoundary() {
-        
+
     }
 
     /**
@@ -194,7 +193,7 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
     @Uninterruptible(reason = "Must not have a stack overflow check: we are here because the stack overflow check failed.")
     @SubstrateForeignCallTarget(stubCallingConvention = true)
     private static void throwCachedStackOverflowError() {
-        
+
     }
 
     /**
@@ -206,7 +205,7 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
     @Uninterruptible(reason = "Must not have a stack overflow check: we are here because the stack overflow check failed.")
     @SubstrateForeignCallTarget(stubCallingConvention = true)
     private static void throwNewStackOverflowError() {
-        
+
     }
 
     @Uninterruptible(reason = "Allow allocation now that yellow zone is available for new stack frames", calleeMustBe = false)
@@ -243,7 +242,6 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
             return false;
         }
         return true;
-       
 
     }
 
@@ -255,4 +253,3 @@ public final class SGXStackOverflowCheckImpl implements StackOverflowCheck {
         return 0;
     }
 }
-

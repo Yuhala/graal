@@ -159,6 +159,22 @@ int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacks
     return ret;
 }
 
+/**
+ * @brief 
+ * PYuhala:
+ * custom reimplementation of function
+ * @param attr 
+ * @param stackaddr 
+ * @param stacksize 
+ * @return int 
+ */
+
+int xxxxpthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
+{
+    GRAAL_SGX_INFO();
+}
+
+
 int xxxpthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
 {
     GRAAL_SGX_INFO();
