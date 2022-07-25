@@ -23,12 +23,12 @@ public class Main {
         // create context and run js snippet
         System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
 
-        Context ctx = Context.create();
+        //Context ctx = Context.create();
         // context with all access
         // Context ctx = Context.newBuilder().allowAllAccess(true).build();
 
         System.out.println("<<< ~~~~~~~~~~~~~~ Evaluationg js source code! ~~~~~~~~~~~~~~>>>");
-        ctx.eval("js", "console.log('****** Hello javascript ******!');");
+        //ctx.eval("js", "console.log('****** Hello javascript ******!');");
 
     }
 

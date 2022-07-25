@@ -342,8 +342,8 @@ public final class StackOverflowCheckImpl implements StackOverflowCheck {
              */
             return false;
         }
-        // return true;
-        return false;
+        return true;
+        // return false;
 
     }
 
@@ -517,64 +517,61 @@ final class StackOverflowCheckSnippets extends SubstrateTemplates implements Sni
     }
 }
 
-@AutomaticFeature
-final class StackOverflowCheckFeature implements GraalFeature {
-
-    @Override
-    public void afterRegistration(AfterRegistrationAccess access) {
-        ImageSingletons.add(StackOverflowCheck.class, new SGXStackOverflowCheckImpl());
-    }
-}
-
 // @AutomaticFeature
 // final class StackOverflowCheckFeature implements GraalFeature {
 
 // @Override
 // public void afterRegistration(AfterRegistrationAccess access) {
-// ImageSingletons.add(StackOverflowCheck.class, new StackOverflowCheckImpl());
+// ImageSingletons.add(StackOverflowCheck.class, new
+// SGXStackOverflowCheckImpl());
+// }
 // }
 
-// @Override
-// public void registerGraalPhases(Providers providers,
-// SnippetReflectionProvider snippetReflection, Suites suites,
-// boolean hosted) {
-// /*
-// * There is no need to have the stack overflow check in the graph throughout
-// * most of the
-// * compilation pipeline. Inserting it before the mid-tier lowering is done for
-// * pragmatic
-// * reasons: the foreign call to the slow path needs a frame state, and that is
-// * handled
-// * automatically when the stack overflow check is inserted and lowered before
-// * the
-// * FrameStateAssignmentPhase runs.
-// */
-// ListIterator<BasePhase<? super MidTierContext>> position =
-// suites.getMidTier().findPhase(LoweringPhase.class);
-// position.previous();
-// position.add(new InsertStackOverflowCheckPhase());
-// }
+@AutomaticFeature
+final class StackOverflowCheckFeature implements GraalFeature {
 
-// @Override
-// public void registerForeignCalls(SubstrateForeignCallsProvider foreignCalls)
-// {
-// foreignCalls.register(StackOverflowCheckImpl.FOREIGN_CALLS);
-// }
+    @Override
+    public void afterRegistration(AfterRegistrationAccess access) {
+        ImageSingletons.add(StackOverflowCheck.class, new StackOverflowCheckImpl());
+    }
 
-// @Override
-// @SuppressWarnings("unused")
-// public void registerLowerings(RuntimeConfiguration runtimeConfig,
-// OptionValues options, Providers providers,
-// Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings, boolean
-// hosted) {
-// Predicate<ResolvedJavaMethod> mustNotAllocatePredicate = null;
-// if (hosted) {
-// mustNotAllocatePredicate = method ->
-// ImageSingletons.lookup(RestrictHeapAccessCallees.class)
-// .mustNotAllocate(method);
-// }
+    @Override
+    public void registerGraalPhases(Providers providers,
+            SnippetReflectionProvider snippetReflection, Suites suites,
+            boolean hosted) {
+        /*
+         * There is no need to have the stack overflow check in the graph throughout
+         * most of the
+         * compilation pipeline. Inserting it before the mid-tier lowering is done for
+         * pragmatic
+         * reasons: the foreign call to the slow path needs a frame state, and that is
+         * handled
+         * automatically when the stack overflow check is inserted and lowered before
+         * the
+         * FrameStateAssignmentPhase runs.
+         */
+        ListIterator<BasePhase<? super MidTierContext>> position = suites.getMidTier().findPhase(LoweringPhase.class);
+        position.previous();
+        position.add(new InsertStackOverflowCheckPhase());
+    }
 
-// new StackOverflowCheckSnippets(options, providers, lowerings,
-// mustNotAllocatePredicate);
-// }
-// }
+    @Override
+    public void registerForeignCalls(SubstrateForeignCallsProvider foreignCalls) {
+        foreignCalls.register(StackOverflowCheckImpl.FOREIGN_CALLS);
+    }
+
+    @Override
+    @SuppressWarnings("unused")
+    public void registerLowerings(RuntimeConfiguration runtimeConfig,
+            OptionValues options, Providers providers,
+            Map<Class<? extends Node>, NodeLoweringProvider<?>> lowerings, boolean hosted) {
+        Predicate<ResolvedJavaMethod> mustNotAllocatePredicate = null;
+        if (hosted) {
+            mustNotAllocatePredicate = method -> ImageSingletons.lookup(RestrictHeapAccessCallees.class)
+                    .mustNotAllocate(method);
+        }
+
+        new StackOverflowCheckSnippets(options, providers, lowerings,
+                mustNotAllocatePredicate);
+    }
+}

@@ -166,8 +166,8 @@ int ocall_pthread_attr_getstack__bypass(void *attr, size_t attr_len, void **stk_
 
     int ret;
 
-    // ret = pthread_attr_getstack((pthread_attr_t *)attr, stk_addr, stack_size);
-    // return ret;
+    ret = pthread_attr_getstack((pthread_attr_t *)attr, stk_addr, stack_size);
+    return ret;
 
     if (attrib == NULL)
     {
@@ -181,7 +181,7 @@ int ocall_pthread_attr_getstack__bypass(void *attr, size_t attr_len, void **stk_
 
     if (*stack_size == 0)
     {
-        ret = manual_setstack((pthread_attr_t *)attrib, stk_addr, stack_size);
+        //ret = manual_setstack((pthread_attr_t *)attrib, stk_addr, stack_size);
     }
 
     return ret;

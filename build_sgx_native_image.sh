@@ -43,6 +43,7 @@ graalvm_dev=${graal_build[0]}
 graalvm_home=$graalvm_dev
 GRAAL_SDK=""
 native_image="$graalvm_home/bin/native-image"
+
 VM_DIR="$BASE/vm"
 
 ## ---------------------------------------------------------
@@ -163,7 +164,7 @@ NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-c
 HEAP_OPTS="-R:MinHeapSize=1g -R:MaxHeapSize=1g"
 LOCAL_OPT=-H:+LocalizationOptimizedMode 
 
-$native_image -cp $CP $NATIVE_IMG_OPTS $HEAP_OPTS $LOCAL_OPT $APP_PKG.$MAIN
+$native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $APP_PKG.$MAIN
 
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
 

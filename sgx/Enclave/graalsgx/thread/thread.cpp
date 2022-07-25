@@ -146,13 +146,15 @@ int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacks
 
     int ret = 0;
     pthread_t id;
-    //(void *)0x00007f7bd0
-    //*stackaddr = get_stack_address(0); // get_r15_register(); // get_stack_address(0);
-    //*stacksize = 0x200000;        // using 1mb even tho default stk size is 2mb
+    //*stackaddr = (void *)get_stack_base();
+    //*stacksize = 0x1000000;
+
+    //*stackaddr = allocate_stack(128);
+    //*stacksize = 512 * 1024 * 1024;
 
     ocall_pthread_self(&id);
     ocall_pthread_attr_getstack__bypass(&ret, attr, sizeof(pthread_attr_t), stackaddr, sizeof(intptr_t), stacksize, id);
-    //  ocall_pthread_attr_getstack(&ret, stackaddr, stacksize);
+    // ocall_pthread_attr_getstack(&ret, stackaddr, stacksize);
     printf(">>>>>>>>>> attr_get_stack details in enclave:: pid: %lu stackaddr: %p stack-size: %d\n", id, *stackaddr, *stacksize);
     return ret;
 }
@@ -178,8 +180,8 @@ int pthread_getattr_np(pthread_t tid, GRAAL_SGX_PTHREAD_ATTR attr)
     printf(">>>>>>>>>> SGX thread id: %lu\n", sgx_thread_self());
     printf(">>>>>>>>>> POSIX thread id: %lu\n", pthread_self());
     int ret = 0;
-    ocall_pthread_getattr_np__bypass(&ret, tid, attr, sizeof(pthread_attr_t));
-    // ocall_pthread_getattr_np(&ret, tid);
+     ocall_pthread_getattr_np__bypass(&ret, tid, attr, sizeof(pthread_attr_t));
+    //ocall_pthread_getattr_np(&ret, tid);
     return ret;
 }
 

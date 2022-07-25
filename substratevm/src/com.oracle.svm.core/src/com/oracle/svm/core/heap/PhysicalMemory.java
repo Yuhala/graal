@@ -64,26 +64,31 @@ public class PhysicalMemory {
     private static UnsignedWord cachedSize = UNSET_SENTINEL;
 
     /**
-     * Returns the size of physical memory in bytes, querying it from the OS if it has not been
+     * Returns the size of physical memory in bytes, querying it from the OS if it
+     * has not been
      * initialized yet.
      *
-     * This method might allocate and use synchronization, so it is not safe to call it from inside
+     * This method might allocate and use synchronization, so it is not safe to call
+     * it from inside
      * a VMOperation or during early stages of a thread or isolate.
      */
     public static UnsignedWord size() {
         if (isInitializationDisallowed()) {
             /*
              * Note that we want to have this safety check even when the cache is already
-             * initialized, so that we always detect wrong usages that could lead to problems.
+             * initialized, so that we always detect wrong usages that could lead to
+             * problems.
              */
-            throw VMError.shouldNotReachHere("Accessing the physical memory size requires allocation and synchronization");
+            throw VMError
+                    .shouldNotReachHere("Accessing the physical memory size requires allocation and synchronization");
         }
 
         if (!isInitialized()) {
             initializing.incrementAndGet();
             try {
                 /*
-                 * Multiple threads can race to initialize the cache. This is OK because all of them
+                 * Multiple threads can race to initialize the cache. This is OK because all of
+                 * them
                  * will compute the same value.
                  */
                 doInitialize();
@@ -96,7 +101,8 @@ public class PhysicalMemory {
     }
 
     /**
-     * Tries to initialize the cached memory size. If the initialization is not possible, e.g.,
+     * Tries to initialize the cached memory size. If the initialization is not
+     * possible, e.g.,
      * because the call is from within a VMOperation, the method does nothing.
      */
     public static void tryInitialize() {
@@ -105,9 +111,12 @@ public class PhysicalMemory {
         }
 
         /*
-         * We need to prevent recursive calls of the initialization. We also want only one thread to
-         * try the initialization. Since this is an optional initialization, we also do not need to
-         * wait until the other thread has finished the initialization. Initialization can be quite
+         * We need to prevent recursive calls of the initialization. We also want only
+         * one thread to
+         * try the initialization. Since this is an optional initialization, we also do
+         * not need to
+         * wait until the other thread has finished the initialization. Initialization
+         * can be quite
          * heavyweight and involve reading configuration files.
          */
         if (initializing.compareAndSet(0, 1)) {
@@ -128,7 +137,8 @@ public class PhysicalMemory {
     }
 
     /**
-     * Returns the size of physical memory in bytes that has been previously cached. This method
+     * Returns the size of physical memory in bytes that has been previously cached.
+     * This method
      * must not be called if {@link #isInitialized()} is still false.
      */
     public static UnsignedWord getCachedSize() {
@@ -137,15 +147,17 @@ public class PhysicalMemory {
     }
 
     private static boolean isInitializationDisallowed() {
-        return Heap.getHeap().isAllocationDisallowed() || VMOperation.isInProgress() || !JavaThreads.currentJavaThreadInitialized() ||
-                        !CEntryPointSnippets.isIsolateInitialized() || StackOverflowCheck.singleton().isYellowZoneAvailable();
+
+        return Heap.getHeap().isAllocationDisallowed() || VMOperation.isInProgress()
+                || !JavaThreads.currentJavaThreadInitialized() ||
+                !CEntryPointSnippets.isIsolateInitialized() || StackOverflowCheck.singleton().isYellowZoneAvailable();
     }
 
     @RestrictHeapAccess(access = RestrictHeapAccess.Access.UNRESTRICTED, reason = "Only called if allocation is allowed.")
     private static void doInitialize() {
         long memoryLimit = Containers.memoryLimitInBytes();
         cachedSize = memoryLimit == Containers.UNKNOWN
-                        ? ImageSingletons.lookup(PhysicalMemorySupport.class).size()
-                        : WordFactory.unsigned(memoryLimit);
+                ? ImageSingletons.lookup(PhysicalMemorySupport.class).size()
+                : WordFactory.unsigned(memoryLimit);
     }
 }

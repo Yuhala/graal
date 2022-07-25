@@ -48,39 +48,43 @@
 #include "graal_isolate.h"
 #include "main.h"
 
+#include "sys/graalsgx_malloc.h"
+
 /* Global variables */
 sgx_enclave_id_t global_eid;
 bool enclave_initiated;
 graal_isolatethread_t *global_enc_iso;
 
-__thread uintptr_t thread_stack_address;
+__thread uintptr_t thread_stack_base;
 
 char **environ;
 
 //------------------------------- stack fxns -----------------------------
 //#include "stack.h"
 
-#define CALL_STACK_MAXlEN 64
-
-#define STACK_HIGH 0XFFFFFFFF
-
 // forward declarations
 void *switch_builtin(unsigned int level);
 
 void set_stack_address()
 {
-    // thread_stack_address = __builtin_frame_address(0);
+    /**
+     * @brief
+     * PYuhala
+     * This method is one of the first called after the
+     * initial ecall. We allocate a variable and use it
+     * as our stackbase; not exact but is close to the real base.
+     *
+     */
+    unsigned int early_var = 0;
 
-    register uintptr_t sp asm("sp");
-    thread_stack_address = sp;
-    printf("Setting stack pointer SP: 0x%016 \n", sp);
+    thread_stack_base = (uintptr_t)get_stack_ptr();
 }
 
 void *get_stack_address(unsigned int level)
 {
     // not sure why level as input causes compilation errors
     // return __builtin_frame_address(0);
-    return (void *)thread_stack_address;
+    return (void *)thread_stack_base;
 }
 
 void *get_stack_ptr()
@@ -90,7 +94,7 @@ void *get_stack_ptr()
     //     : "=r"(sp));
 
     register void *sp asm("sp");
-    return (void *)sp;
+    return sp;
 }
 
 void *get_r15_register()
@@ -108,129 +112,70 @@ void *get_r15_register()
  *
  * @return void*
  */
-void *get_stack_bottom()
+void *get_stack_base()
 {
-    void *before = __builtin_frame_address(0); // just an initial value
-    void *curr = __builtin_return_address(0);
-    unsigned int level = 0;
-
-    // traverse the stack addresses until u reach top (i.e ret = 0)
-    int a = 0;
-    before = curr = (void *)&a;
-
-    /* while (level < CALL_STACK_MAXlEN && curr != 0 && false)
-    {
-        before = curr;
-        curr = switch_builtin(level);
-        printf("get_stack_top::curr: %p >>>>>>>\n", curr);
-        level++;
-    } */
-
-    while (curr < (void *)STACK_HIGH)
-    {
-        curr = curr + 0x10;
-        before = curr;
-    }
-    return before;
+    return (void *)thread_stack_base;
 }
 
 /**
  * @brief
- * C doesn't accept variable as input to __builtinxx
- * So we need a large switch case tree. We end with 20 tests for now.
- *
- * @param level
+ * Allocates a buffer to act as thread stack for an enclave
+ * thread. The buffer pages are given Read/Write protections.
+ * This routine is called by pthread_attr_getstack
+ * NB: the real memory allocated will be 4x size_mb
+ * @param size_mb
  * @return void*
  */
-void *switch_builtin(unsigned int level)
+void *allocate_stack(size_t size_mb)
 {
-    switch (level)
+    // give the stack memory read/write prot
+    int prot = MMAP_PROT_READ | MMAP_PROT_WRITE;
+
+    unsigned int length = size_mb * 1024 * 1024;
+
+    void *stack_addr;
+    size_t stack_size = size_mb * STACK_MIN * 1024;
+
+    uint64_t page_size, aligned_length;
+    void *aligned_hint, *reserved_memory_ptr;
+    int memory_protection_flags = 0;
+    sgx_status_t status;
+
+    // Align the hint and the length according to the size of the memory pages
+    page_size = getpagesize();
+
+    // aligned_length = (length + page_size - 1) & ~(page_size - 1);
+    // aligned_hint = (void *)((((size_t)hint) + page_size - 1) & ~(page_size - 1));
+
+    // Allocate the memory
+    stack_addr = sgx_alloc_rsrv_mem(stack_size);
+    if (reserved_memory_ptr == NULL)
     {
-    case 0:
-        return __builtin_return_address(0);
-        break;
-    case 1:
-        return __builtin_return_address(1);
-        break;
-    case 2:
-        return __builtin_return_address(2);
-        break;
-    case 3:
-        return __builtin_return_address(3);
-        break;
-    case 4:
-        return __builtin_return_address(4);
-        break;
-
-    case 5:
-        return __builtin_return_address(5);
-        break;
-
-    case 6:
-        return __builtin_return_address(6);
-        break;
-
-    case 7:
-        return __builtin_return_address(7);
-        break;
-
-    case 8:
-        return __builtin_return_address(8);
-        break;
-
-    case 9:
-        return __builtin_return_address(9);
-        break;
-
-    case 10:
-        return __builtin_return_address(10);
-        break;
-
-    case 11:
-        return __builtin_return_address(11);
-        break;
-
-    case 12:
-        return __builtin_return_address(12);
-        break;
-
-    case 13:
-        return __builtin_return_address(13);
-        break;
-
-    case 14:
-        return __builtin_return_address(14);
-        break;
-
-    case 15:
-        return __builtin_return_address(15);
-        break;
-
-    case 16:
-        return __builtin_return_address(16);
-        break;
-
-    case 17:
-        return __builtin_return_address(17);
-        break;
-
-    case 18:
-        return __builtin_return_address(8);
-        break;
-
-    case 19:
-        return __builtin_return_address(19);
-        break;
-
-    case 20:
-        return __builtin_return_address(20);
-        break;
-
-    default:
-        return __builtin_return_address(20);
-        break;
+        GRAAL_SGX_DEBUG_PRINT("error: the stack memory allocation failed.");
     }
+
+    // Align stack on 4K boundary
+    stack_addr = (void *)((((long)stack_addr + (STACK_MIN - 1)) / STACK_MIN) * STACK_MIN);
+
+    // Change the protection of the allocated memory
+    if (prot & MMAP_PROT_READ)
+        memory_protection_flags |= SGX_PROT_READ;
+    if (prot & MMAP_PROT_WRITE)
+        memory_protection_flags |= SGX_PROT_WRITE;
+    if (prot & MMAP_PROT_EXEC)
+        memory_protection_flags |= SGX_PROT_EXEC;
+
+    status = sgx_tprotect_rsrv_mem(reserved_memory_ptr, aligned_length, memory_protection_flags);
+
+    if (status != SGX_SUCCESS)
+    {
+        sgx_free_rsrv_mem(reserved_memory_ptr, aligned_length);
+        GRAAL_SGX_DEBUG_PRINT("error: the protection of the allocated stack memory could not be set.");
+    }
+
+    return reserved_memory_ptr;
 }
+
 //---------------------------------------------------------
 
 /**
@@ -354,11 +299,13 @@ void ecall_stackoverflow_test()
 // run main w/0 args: default
 void ecall_graal_main(int id)
 {
+    // set_stack_address();
+    // printf(">>>>>>>>>>>>>>>>>>>>>>>>>>> stack pointer in ecall-graal-main is: %p >>>>>>>>>>\n", (void *)thread_stack_base);
 
     global_eid = id;
     enclave_initiated = true;
     global_enc_iso = isolate_generator();
-    printf("============================= Ecall graal main: global_enc_iso = %p\n", (void *)global_enc_iso);
+    // printf("============================= Ecall graal main: global_enc_iso = %p\n", (void *)global_enc_iso);
 
     char str[16];
     snprintf(str, 16, "%d", 1000); // good
@@ -368,12 +315,13 @@ void ecall_graal_main(int id)
     printf("============================= Entering run_main =========================\n");
 
     // printf("polytaint_add result: %d >>>>>>>>>>>>>>>>>\n", polytaint_add(global_enc_iso, 44, 33));
-    enclave_create_context(global_enc_iso);
+    // enclave_create_context(global_enc_iso);
     // gc_test(global_enc_iso, 1000);
 
     // set stack address just before entering java code
-    set_stack_address();
     run_main(1, NULL);
+    return;
+
     // run_main(3, argv);
 }
 
