@@ -16,20 +16,12 @@ import org.graalvm.nativeimage.CurrentIsolate;
 
 public class Main {
 
-    // public static Context globalContext;
-    public static void main(String[] args) {
-        System.out.println("<<< ********** Hello Java! ******** >>>");
+    public static Context ctx = Context.newBuilder().allowAllAccess(true).build();
+    public static void main(String[] args) {            
 
-        // create context and run js snippet
-        System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
-
-        // Context ctx = Context.create();
-        // context with all access
-        Context ctx = Context.newBuilder().allowAllAccess(true).build();
-
-        System.out.println("<<< ~~~~~~~~~~~~~~ Evaluationg js source code! ~~~~~~~~~~~~~~>>>");
-        ctx.eval("js", "console.log('****** Hello javascript ******!');");
+       
         ctx.eval("js", "console.log('****** Polyglot native image running in SGX enclave ******!');");
+        callJavaMethodFromJS();
 
     }
 
@@ -41,13 +33,8 @@ public class Main {
     @CEntryPoint(name = "enclave_create_context")
     public static void enclave_create_context(IsolateThread thread) {
         Context ctx = Context.newBuilder().allowAllAccess(true).build();
-        System.out.println("<<< ~~~~~~~~~~~~~~~~ Hello Java! ~~~~~~~~~~~~~~~~~ >>>");
-
-        // create context and run js snippet
-        System.out.println("<<< ~~~~~~~~~~~~~~ Building context object! ~~~~~~~~~~~~~~~~ >>>");
-
-        // Context ctx = Context.create();
-        System.out.println("<<< !!!!!!!!!!!!!!!!! Created enclave context !!!!!!!!!!!!!!!!! >>>");
+        
+        
         ctx.eval("js", "console.log('******* Hello javascript ******!');");
     }
 
@@ -73,19 +60,23 @@ public class Main {
         System.gc();
     }
 
-    public static void helloJava(int param) {
-        System.out.println("----- Hello from Java -----::): param is: " + param);
+    
+    public static void helloJava() {
+        System.out.println("----- Hello Java: from Javascript context----");
     }
 
     public static void helloRuby(int param) {
         System.out.println("----- Hello from Ruby -----::): param is: " + param);
     }
 
-    static void callJavaMethodFromJS() {
-        System.out.println("Calling java method from JS context");
-        Context ctx = Context.newBuilder().allowAllAccess(true).build();
-        Value func1 = ctx.asValue(Main.class).getMember("static").getMember("helloJava");
-        Value func2 = ctx.asValue(Main.class).getMember("static").getMember("helloRuby");
+    public static void callJavaMethodFromJS() {
+        System.out.println("Calling java method from JS context");       
+        Value func1 = ctx.asValue(Main.class).getMember("static").getMember("helloJava");        
+
+        if(func1 == null){
+            System.out.println("..... Value func1 is null ........");
+        }
+        ctx.eval("js","function wrapper_func(func){f = func; f();}wrapper_func;").execute(func1);
 
         // ctx.eval("js",
         // "function parent_func(m,p){func1 = m.func1;func2 =

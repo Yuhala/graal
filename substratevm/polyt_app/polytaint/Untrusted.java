@@ -36,7 +36,11 @@ public class Untrusted {
 
     public static void main(String[] args) {
         System.out.println("Hello from partitioned main!!");
-        globalContext.eval("js","function main_wrapper(m){poly_2 = m.poly_2;funcD = m.funcD;funcA = m.funcA;funcN = m.funcN;sayHello = m.sayHello;    return sum;}var reta = funcA(6);sayHello();var retd = funcD(reta) + funcA(2);poly_2();}main_wrapper;").execute(multiFunc);
+        globalContext.eval("js", "console.log('******* Hello JS test ******!');");
+        //globalContext.eval("js","function main_wrapper(m){poly_2 = m.poly_2;funcD = m.funcD;funcA = m.funcA;funcN = m.funcN;sayHello = m.sayHello;var reta = funcA(6);sayHello();var retd = funcD(reta) + funcA(2);poly_2();}main_wrapper;").execute(multiFunc);
+    
+        poly_2();
+        funcA(5);
     }
     public static void poly_2(){
         poly_2_proxy();

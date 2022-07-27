@@ -320,6 +320,7 @@ void ecall_graal_main(int id)
 
     // set stack address just before entering java code
     run_main(1, NULL);
+    
     return;
 
     // run_main(3, argv);

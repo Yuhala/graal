@@ -96,8 +96,6 @@ echo "+++++++++++++++++++++ graalvm_home: $graalvm_home++++++++++++++++"
 ## --------------------------------------------------
 
 
-
-
 ## ---------------- other variables ------------------
 JAVA_HOME=$graalvm_dev
 JAVAC="$JAVA_HOME/bin/javac"
@@ -112,8 +110,6 @@ CP=$LIB_BASE:$graalvm_dev:$GRAAL_SDK:$SVM_DIR:$SECL_LIBS:$APP_DIR
 MAIN="Main"
 
 DB="$APP_DIR/data"
-
-
 
 
 #clean old objects and rebuild svm if changed
@@ -143,28 +139,41 @@ find $APP_DIR -name "*.class" -type f -delete
 #compile app classes
 BUILD_OPTS="-Xlint:unchecked -Xlint:deprecation"
 
-echo "------------ Compiling $APP_NAME application -----------"
-$JAVAC -cp $CP $BUILD_OPTS $APP_DIR/$PKG_PATH/$MAIN.java 
-
-echo "------------ Running $APP_NAME on normal JVM  ----------"
-$JAVA_HOME/bin/java  -cp $CP $APP_PKG.$MAIN
 
 
+function build_java_app {
+    echo "------------ Compiling $APP_NAME application -----------"
+    $JAVAC -cp $CP $BUILD_OPTS $APP_DIR/$PKG_PATH/$MAIN.java 
+}
+
+
+
+function run_java_app_with_tracer {
+    echo "------------ Running $APP_NAME on normal JVM with tracing agent ----------"
+    rm -rf META-INF/native-image
+    mkdir -p META-INF/native-image
+    $JAVA_HOME/bin/java -agentlib:native-image-agent=config-output-dir=META-INF/native-image -cp $CP $APP_PKG.$MAIN
+}
+
+build_java_app
+
+#run_java_app_with_tracer
 
 echo "--------------- Building $APP_NAME SGX native image -----------"
 NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath -O0"
 
-#NATIVE_IMG_OPTS="--no-fallback --allow-incomplete-classpath --language:js "
+#NATIVE_IMG_OPTS="--no-fallback --language:js --allow-incomplete-classpath -O0"
+
 
 #-H:+TraceClassInitialization
-#--allow-incomplete-classpath
-#--trace-class-initialization=org.springframework.util.ClassUtils
+
 
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
 HEAP_OPTS="-R:MinHeapSize=1g -R:MaxHeapSize=1g"
 LOCAL_OPT=-H:+LocalizationOptimizedMode 
 
 $native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $APP_PKG.$MAIN
+
 
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
 

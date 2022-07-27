@@ -244,28 +244,13 @@ int main(int argc, char *argv[])
     // I use only 1 arg for now
     int arg1 = 0;
 
-    // const char* arg1 = argv[1];
-    // pwd_test();
-    // return 0;
-
     global_app_iso = isolate_generator();
     graal_isolatethread_t *temp = isolate_generator();
-
-    // printf("Stackpointer is: %p >>>>>>>>>>>>>\n", get_stack_ptr());
-    // stack_addr_test();
-
-    // stack_addr_test();
-    // return 0;
-
-    // run_main(1, NULL);
-    // return 0;
-
-    // printf("<<<<<<< Created untrusted app isolate: enter a char to continue ... >>>>>> \n");
-    // getchar(); // pyuhala: halt to verify message b4 the clumsy debug messages
 
     setMainAttribs();
 
     attr_map.insert(pair<pthread_t, pthread_attr_t *>(0, NULL));
+    
 
     /* Initialize the enclave */
     if (initialize_enclave() < 0)
@@ -278,24 +263,17 @@ int main(int argc, char *argv[])
 
     int id = global_eid;
 
-    // pwuid test
-    /*uid_t uid = getuid();
-    unsigned int pwid = uid;
-    ecall_test_pwuid(global_eid, pwid);
-    return 0;*/
-
-    // ecall_stackoverflow_test(global_eid);
-    // return 0;
+    ecall_set_environ(global_eid, (void **)environ);
 
     if (argc > 1)
     {
         arg1 = atoi(argv[1]);
-        ecall_set_environ(global_eid, (void **)environ);
-        ecall_graal_main_args(global_eid, id, arg1);
+
+        // ecall_graal_main_args(global_eid, id, arg1);
     }
     else
     {
-        ecall_set_environ(global_eid, (void **)environ);
+
         ecall_graal_main(global_eid, id);
     }
 
