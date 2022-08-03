@@ -5,9 +5,5 @@
 },
 {
   "name":"org.graalvm.polyglot.management.Management"
-},
-{
-  "name":"iiun.smartc.Main",
-  "methods":[{"name":"helloJava","parameterTypes":[] }]
 }
 ]

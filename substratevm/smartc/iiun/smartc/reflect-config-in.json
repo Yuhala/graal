@@ -1,0 +1,6 @@
+[
+{
+  "name":"iiun.smartc.Main",
+  "methods":[{"name":"helloRuby","parameterTypes":["int"] }]
+}
+]

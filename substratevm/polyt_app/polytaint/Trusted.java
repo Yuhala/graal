@@ -28,9 +28,20 @@ import org.graalvm.polyglot.*;
 import org.graalvm.polyglot.proxy.*;
 import org.graalvm.polyglot.*;
 
+
+
 public class Trusted {
 
-    public static Context globalContext = Context.newBuilder().allowAllAccess(true).build();
+    public static Context globalContext;
+
+    static {
+        try{
+            globalContext = Context.newBuilder().allowAllAccess(true).build();
+        }
+        catch(Exception e){
+
+        }
+    }
 
     public static MultiFunctionIn multiFunc = new MultiFunctionIn(globalContext);
 
@@ -38,7 +49,8 @@ public class Trusted {
         System.out.println("Hello from trusted dummy main!!");
     }
     public static void poly_2(){
-        globalContext.eval("js","function poly_2_wrapper(m){funcD = m.funcD;funcA = m.funcA;funcN = m.funcN;sayHello = m.sayHello;function poly_2() {    var poly2_secInt = Polyglot.eval(\"secL\", \"sInt(222)\");    console.log('poly1_secInt: ' + poly2_secInt);}poly_2();}poly_2_wrapper;").execute(multiFunc);
+        System.out.println("Hello from poly_2..");
+        //globalContext.eval("js","function poly_2_wrapper(m){funcD = m.funcD;funcA = m.funcA;funcN = m.funcN;sayHello = m.sayHello;function poly_2() {    var poly2_secInt = Polyglot.eval(\"secL\", \"sInt(222)\");    console.log('poly1_secInt: ' + poly2_secInt);}poly_2();}poly_2_wrapper;").execute(multiFunc);
     }
 
     public static int funcA(int param1){
@@ -60,6 +72,7 @@ public class Trusted {
 
     @CEntryPoint(name = "poly_2_entry")
     public static void poly_2_entry(IsolateThread thread){
+        System.out.println("Hello from poly_2 entry..");
         poly_2();
     }
 

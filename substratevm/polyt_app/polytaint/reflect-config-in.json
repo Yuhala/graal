@@ -1,0 +1,22 @@
+[
+{
+"name":"polytaint.Trusted",
+"methods":[
+    {"name":"poly_2","parameterTypes":[]},
+    {"name":"funcD","parameterTypes":["int"]},
+    {"name":"funcA","parameterTypes":["int"]},
+    {"name":"funcN","parameterTypes":["int","int"]},
+    {"name":"sayHello","parameterTypes":[]}
+]
+},
+{
+"name":"polytaint.MultiFunctionOut",
+"fields": [
+    {"name":"poly_2"},
+    {"name":"funcD"},
+    {"name":"funcA"},
+    {"name":"funcN"},
+    {"name":"sayHello"}
+]
+}
+]

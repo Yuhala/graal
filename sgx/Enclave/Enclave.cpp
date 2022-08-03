@@ -214,20 +214,16 @@ void destroy_isolate(graal_isolatethread_t *iso)
  */
 void ecall_create_enclave_isolate()
 {
-    printf("Example of function ptr in the enclave: %p\n", &ecall_create_enclave_isolate);
+    // printf("Example of function ptr in the enclave: %p\n", &ecall_create_enclave_isolate);
 
     int ret;
     printf(">>>>>>>>>>>>>>>>>>> Creating global enclave isolate ...\n");
-    global_enc_iso = isolate_generator();
-    // destroy_isolate(enc_iso);
-    // enc_iso2 = isolate_generator();
-    // destroy_isolate(enc_iso2);
-    // graal_isolatethread_t *temp = isolate_generator();
-    // destroy_isolate(temp);
+    if ((ret = graal_create_isolate(NULL, NULL, &global_enc_iso)) != 0)
+    {
+        printf("Error on app isolate creation or attach. Error code: %d\n", ret);
+    }
+
     printf(">>>>>>>>>>>>>>>>>>> Global enclave isolate creation successfull!\n");
-    // printf(">>>>>>>>>>>>>>>>>>> isolate destruction...\n");
-    // destroy_isolate(enc_iso);
-    // printf(">>>>>>>>>>>>>>>>>>> OK!\n");
 }
 
 /**
@@ -320,7 +316,7 @@ void ecall_graal_main(int id)
 
     // set stack address just before entering java code
     run_main(1, NULL);
-    
+
     return;
 
     // run_main(3, argv);

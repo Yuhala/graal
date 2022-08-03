@@ -15,6 +15,9 @@
     }, 
     {
       "pattern":"\\Qcom/oracle/truffle/nfi/backend/libffi/LibFFILanguage.class\\E"
+    }, 
+    {
+      "pattern":"\\QsecureL/SecureLLanguage.class\\E"
     }
   ]},
   "bundles":[]

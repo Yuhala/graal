@@ -70,6 +70,7 @@
 
 /* Benchmarking */
 //#include "benchtools.h"
+
 #include <time.h>
 struct timespec start, stop;
 double diff;
@@ -239,18 +240,19 @@ int main(int argc, char *argv[])
 {
     (void)(argc);
     (void)(argv);
-    // run_main(1, NULL);
-    // return 0;
+
     // I use only 1 arg for now
     int arg1 = 0;
 
     global_app_iso = isolate_generator();
-    graal_isolatethread_t *temp = isolate_generator();
+    // graal_isolatethread_t *temp = isolate_generator();
 
     setMainAttribs();
 
     attr_map.insert(pair<pthread_t, pthread_attr_t *>(0, NULL));
-    
+
+    // run_main(1, NULL);
+    // return 0;
 
     /* Initialize the enclave */
     if (initialize_enclave() < 0)
@@ -263,28 +265,28 @@ int main(int argc, char *argv[])
 
     int id = global_eid;
 
+    ecall_create_enclave_isolate(global_eid);
     ecall_set_environ(global_eid, (void **)environ);
+    
 
-    if (argc > 1)
-    {
-        arg1 = atoi(argv[1]);
+    // if (argc > 1)
+    // {
+    //     arg1 = atoi(argv[1]);
 
-        // ecall_graal_main_args(global_eid, id, arg1);
-    }
-    else
-    {
+    //     ecall_graal_main_args(global_eid, id, arg1);
+    // }
+    // else
+    // {
 
-        ecall_graal_main(global_eid, id);
-    }
+    //     ecall_graal_main(global_eid, id);
+    // }
 
-    // ecall_create_enclave_isolate(global_eid);
-    // ecall_graal_main_args(global_eid, id, arg1);
     /**
      * Invoke main routine of java application: for partitioned apps.
      * This is the initial entrypoint method, all further ecalls are performed there.
      */
 
-    // run_main(argc, argv);
+    run_main(argc, argv);
 
     printf("Number of ocalls: %d\n", ocall_count);
     showOcallLog(10);

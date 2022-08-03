@@ -193,16 +193,23 @@ function run_untrusted_component_with_tracer {
 
 
 ## ----------- Native image build options --------
-NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath"
+NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath -O0"
 LOCAL_OPT=-H:+LocalizationOptimizedMode 
 #-H:+TraceClassInitialization
 #--allow-incomplete-classpath
 #--trace-class-initialization=org.springframework.util.ClassUtils
 
+# Trusted and untrusted reflection configuration files
+REFLECT_CONFIG_IN=$APP_DIR/$PKG_PATH/reflect-config-in.json
+REFLECT_CONFIG_OUT=$APP_DIR/$PKG_PATH/reflect-config-out.json
+
+REFLECT_OPT_IN="-H:ReflectionConfigurationFiles=$REFLECT_CONFIG_IN"
+REFLECT_OPT_OUT="-H:ReflectionConfigurationFiles=$REFLECT_CONFIG_OUT"
+
 
 function build_trusted_image {
     echo "--------------- Building Trusted SGX native image -----------"
-    $native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $APP_PKG.$polyt_trusted
+    $native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $REFLECT_OPT_IN $APP_PKG.$polyt_trusted
     
     echo "--------------- Copying generated files to trusted module -----------"
     mv /tmp/main.o $SGX_DIR/Enclave/graalsgx/
@@ -210,11 +217,9 @@ function build_trusted_image {
 }
 
 
-
-
 function build_untrusted_image {
     echo "--------------- Building Untrusted SGX native image -----------"
-    $native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $APP_PKG.$polyt_untrusted
+    $native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $REFLECT_OPT_OUT $APP_PKG.$polyt_untrusted
     
     echo "--------------- Copying generated files to untrusted module -----------"
     mv /tmp/main.o $SGX_DIR/App/graalsgx/

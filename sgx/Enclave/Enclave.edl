@@ -20,7 +20,7 @@ enclave {
     //from "graalsgx/edl/graalsgx_ecalls.edl" import *;
     //from "graalsgx/edl/graalsgx_ocalls.edl" import *;
 
-    //from "graalsgx/polytaint/Polytaint.edl" import *;
+    from "graalsgx/polytaint/Polytaint.edl" import *;
 
    trusted {
        public void ecall_graal_main_args(int id, int arg1);

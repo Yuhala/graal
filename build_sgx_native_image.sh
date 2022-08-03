@@ -46,6 +46,8 @@ native_image="$graalvm_home/bin/native-image"
 
 VM_DIR="$BASE/vm"
 
+
+
 ## ---------------------------------------------------------
 
 
@@ -140,13 +142,10 @@ find $APP_DIR -name "*.class" -type f -delete
 BUILD_OPTS="-Xlint:unchecked -Xlint:deprecation"
 
 
-
 function build_java_app {
     echo "------------ Compiling $APP_NAME application -----------"
     $JAVAC -cp $CP $BUILD_OPTS $APP_DIR/$PKG_PATH/$MAIN.java 
 }
-
-
 
 function run_java_app_with_tracer {
     echo "------------ Running $APP_NAME on normal JVM with tracing agent ----------"
@@ -160,7 +159,7 @@ build_java_app
 #run_java_app_with_tracer
 
 echo "--------------- Building $APP_NAME SGX native image -----------"
-NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath -O0"
+NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath"
 
 #NATIVE_IMG_OPTS="--no-fallback --language:js --allow-incomplete-classpath -O0"
 
@@ -171,8 +170,10 @@ NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-c
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN
 HEAP_OPTS="-R:MinHeapSize=1g -R:MaxHeapSize=1g"
 LOCAL_OPT=-H:+LocalizationOptimizedMode 
+REFLECT_CONFIG="$APP_DIR/$PKG_PATH/reflect-config-in.json"
+REFLECT_OPT="-H:ReflectionConfigurationFiles=$REFLECT_CONFIG"
 
-$native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $APP_PKG.$MAIN
+$native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $REFLECT_OPT $APP_PKG.$MAIN
 
 
 #mx native-image -cp $CP $NATIVE_IMG_OPTS $APP_PKG.$MAIN

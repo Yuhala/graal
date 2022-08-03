@@ -17,10 +17,11 @@ import org.graalvm.nativeimage.CurrentIsolate;
 public class Main {
 
     public static Context ctx = Context.newBuilder().allowAllAccess(true).build();
-    public static void main(String[] args) {            
 
-       
-        ctx.eval("js", "console.log('****** Polyglot native image running in SGX enclave ******!');");
+    public static void main(String[] args) {
+
+        //Context ctx = Context.newBuilder().allowAllAccess(true).build();
+        //ctx.eval("js", "console.log('****** Polyglot native image running in SGX enclave ******!');");
         callJavaMethodFromJS();
 
     }
@@ -33,8 +34,7 @@ public class Main {
     @CEntryPoint(name = "enclave_create_context")
     public static void enclave_create_context(IsolateThread thread) {
         Context ctx = Context.newBuilder().allowAllAccess(true).build();
-        
-        
+
         ctx.eval("js", "console.log('******* Hello javascript ******!');");
     }
 
@@ -60,7 +60,6 @@ public class Main {
         System.gc();
     }
 
-    
     public static void helloJava() {
         System.out.println("----- Hello Java: from Javascript context----");
     }
@@ -70,13 +69,18 @@ public class Main {
     }
 
     public static void callJavaMethodFromJS() {
-        System.out.println("Calling java method from JS context");       
-        Value func1 = ctx.asValue(Main.class).getMember("static").getMember("helloJava");        
 
-        if(func1 == null){
+        // Context ctx = Context.newBuilder().allowAllAccess(true).build();
+        System.out.println("Calling java method from JS context");
+        Value func1 = ctx.asValue(Main.class).getMember("static").getMember("helloJava");
+
+        Value func2 = ctx.asValue(Main.class).getMember("static").getMember("helloRuby");
+
+        if (func1 == null) {
             System.out.println("..... Value func1 is null ........");
         }
-        ctx.eval("js","function wrapper_func(func){f = func; f();}wrapper_func;").execute(func1);
+        ctx.eval("js", "function wrapper_func(func){f = func; f();}wrapper_func;").execute(func1);
+        ctx.eval("js", "function wrapper_func(func,p){f = func; f(p);}wrapper_func;").execute(func2, 2);
 
         // ctx.eval("js",
         // "function parent_func(m,p){func1 = m.func1;func2 =
