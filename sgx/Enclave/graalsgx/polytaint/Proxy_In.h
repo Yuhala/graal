@@ -5,9 +5,9 @@
 extern "C" { 
 #endif
 
-int funcD_proxy(int param1);
-int funcN_proxy(int param1, int param2);
 void sayHello_proxy();
+int arraySum_proxy(void* param1, int len1);
+void* readXData_proxy(int param1);
 
 #if defined(__cplusplus)
 }

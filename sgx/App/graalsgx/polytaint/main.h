@@ -10,15 +10,13 @@ extern "C" {
 
 int run_main(int argc, char** argv);
 
-void poly_2_entry(graal_isolatethread_t*);
-
-int funcA_entry(graal_isolatethread_t*, int);
-
-int funcD_entry(graal_isolatethread_t*, int);
-
-int funcN_entry(graal_isolatethread_t*, int, int);
+double funcA_entry(graal_isolatethread_t*);
 
 void sayHello_entry(graal_isolatethread_t*);
+
+int arraySum_entry(graal_isolatethread_t*, char*, int);
+
+char* readXData_entry(graal_isolatethread_t*, int);
 
 void vmLocatorSymbol(graal_isolatethread_t* thread);
 

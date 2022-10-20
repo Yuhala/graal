@@ -47,6 +47,23 @@ enclave {
        ssize_t ocall_pread64(int fd, [out,size=count]void *buf, size_t count, off64_t offset);
        ssize_t ocall_pwrite(int fd, [in,size=count]const void *buf, size_t count, off_t offset);
 
+       int ocall_mkostemp([in,string]char *tmplate, int flags);
+       SGX_FILE ocall_setmntent([in,string]const char *filename, [in,string]const char *type);
+       void *ocall_getmntent(SGX_FILE fp);
+       void *ocall_getmntent_r(SGX_FILE streamp, [user_check]void* mntbuf, [out,size=buflen]char *buf, int buflen);
+       int ocall_addmntent(SGX_FILE fp, [user_check]void*mnt);
+       int ocall_endmntent(SGX_FILE fp);
+       char *ocall_hasmntopt([user_check]void *mnt, [in,string]const char *opt);
+       int ocall_statfs([in,string]const char *path, [user_check]void*buf);
+       int ocall_fstatfs(int fd, [user_check]void*buf);
+       int ocall_getgroups(int size, [user_check]void* list);
+
+       // LOCALE routines
+       void** ocall_ctype_toupper_loc();
+       void** ocall_ctype_b_loc ();
+
+
+       // FILE SYSTEM 
 
        SGX_FILE ocall_fopen([in,string]const char* filename, [in,string]const char* mode);
        SGX_FILE ocall_fdopen(int fd, [in, string]const char *mode);
@@ -61,6 +78,9 @@ enclave {
        void ocall_fgets([out,size=n]char *str, int n, SGX_FILE stream);
        SGX_FILE ocall_stderr();
        int ocall_puts([in, string]const char *str);
+
+       int ocall_access([in, string]const char *pathname, int mode);
+       int ocall_dup(int oldfd);
 
         int ocall_mkdir([in,string]const char *pathname, mode_t mode); 
         int ocall_truncate([in,string]const char *path, off_t length); 

@@ -90,7 +90,7 @@ Graal_Objects_In := $(wildcard Enclave/graalsgx/*.o)
 
 # Static graal libs
 Graal_Libs_Path := ./Common
-Graal_Libs := -lfdlibm -lffi -ljava -ljvm  -lnet -lextnet -lnio -lzip
+Graal_Libs := -lfdlibm -lffi -ljava -ljvm  -lnet -lextnet -lnio -lzip -ljaas -lsunec -llibchelper
 
 ZLib := -lzlib
 
@@ -101,6 +101,10 @@ Graal_Objects_Out := $(wildcard App/graalsgx/*.o)
 # Graal cpp files
 GraalSGX_Cpp_Files_In := $(wildcard Enclave/graalsgx/*/*.cpp)
 GraalSGX_Cpp_FIles_Out := $(wildcard App/graalsgx/*/*.cpp)
+
+# Polytaint objects
+Polytaint_Objects_In := $(wildcard Enclave/graalsgx/polytaint/*.o)
+Polytaint_Objects_Out := $(wildcard App/graalsgx/polytaint/*.o)
 
 # In-enclave graalsgx include paths
 Graal_Include_Path := -IEnclave/graalsgx -IEnclave/graalsgx/include
@@ -310,4 +314,4 @@ $(Re-Signed_Enclave_Name): $(Enclave_Name)
 .PHONY: clean 
 
 clean:
-	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave/Enclave_t.*
+	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave/Enclave_t.* $(Polytaint_Objects_In) $(Polytaint_Objects_Out)

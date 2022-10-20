@@ -19,15 +19,15 @@
  *	POSIX Standard: 2.6 Primitive System Data Types	<sys/types.h>
  */
 
-#ifndef	_SYS_TYPES_H
-#define	_SYS_TYPES_H	1
+#ifndef _SYS_TYPES_H
+#define _SYS_TYPES_H 1
 
 #include <sgx/features.h>
 
 #include <sgx/bits/types.h>
 
-#ifdef	__USE_BSD
-# ifndef __u_char_defined
+#ifdef __USE_BSD
+#ifndef __u_char_defined
 typedef __u_char u_char;
 typedef __u_short u_short;
 typedef __u_int u_int;
@@ -35,112 +35,114 @@ typedef __u_long u_long;
 typedef __quad_t quad_t;
 typedef __u_quad_t u_quad_t;
 typedef __fsid_t fsid_t;
-#  define __u_char_defined
-# endif
+#define __u_char_defined
+#endif
 #endif
 
 typedef __loff_t loff_t;
 
+/* Type for namespace indeces.  */
+typedef long int Lmid_t;
+
 #ifndef __ino_t_defined
-# ifndef __USE_FILE_OFFSET64
+#ifndef __USE_FILE_OFFSET64
 typedef __ino_t ino_t;
-# else
+#else
 typedef __ino64_t ino_t;
-# endif
-# define __ino_t_defined
+#endif
+#define __ino_t_defined
 #endif
 #if defined __USE_LARGEFILE64 && !defined __ino64_t_defined
 typedef __ino64_t ino64_t;
-# define __ino64_t_defined
+#define __ino64_t_defined
 #endif
 
 #ifndef __dev_t_defined
 typedef __dev_t dev_t;
-# define __dev_t_defined
+#define __dev_t_defined
 #endif
 
 #ifndef __gid_t_defined
 typedef __gid_t gid_t;
-# define __gid_t_defined
+#define __gid_t_defined
 #endif
 
 #ifndef __mode_t_defined
 typedef __mode_t mode_t;
-# define __mode_t_defined
+#define __mode_t_defined
 #endif
 
 #ifndef __nlink_t_defined
 typedef __nlink_t nlink_t;
-# define __nlink_t_defined
+#define __nlink_t_defined
 #endif
 
 #ifndef __uid_t_defined
 typedef __uid_t uid_t;
-# define __uid_t_defined
+#define __uid_t_defined
 #endif
 
 #ifndef __off_t_defined
-# ifndef __USE_FILE_OFFSET64
+#ifndef __USE_FILE_OFFSET64
 typedef __off_t off_t;
-# else
+#else
 typedef __off64_t off_t;
-# endif
-# define __off_t_defined
+#endif
+#define __off_t_defined
 #endif
 #if defined __USE_LARGEFILE64 && !defined __off64_t_defined
 typedef __off64_t off64_t;
-# define __off64_t_defined
+#define __off64_t_defined
 #endif
 
 #ifndef __pid_t_defined
 typedef __pid_t pid_t;
-# define __pid_t_defined
+#define __pid_t_defined
 #endif
 
-#if (defined __USE_SVID || defined __USE_XOPEN || defined __USE_XOPEN2K8) \
-    && !defined __id_t_defined
+#if (defined __USE_SVID || defined __USE_XOPEN || defined __USE_XOPEN2K8) && !defined __id_t_defined
 typedef __id_t id_t;
-# define __id_t_defined
+#define __id_t_defined
 #endif
 
 #ifndef __ssize_t_defined
 typedef __ssize_t ssize_t;
-# define __ssize_t_defined
+#define __ssize_t_defined
 #endif
 
-#ifdef	__USE_BSD
-# ifndef __daddr_t_defined
+#ifdef __USE_BSD
+#ifndef __daddr_t_defined
 typedef __daddr_t daddr_t;
 typedef __caddr_t caddr_t;
-#  define __daddr_t_defined
-# endif
+#define __daddr_t_defined
+#endif
 #endif
 
 #if (defined __USE_SVID || defined __USE_XOPEN) && !defined __key_t_defined
 typedef __key_t key_t;
-# define __key_t_defined
+#define __key_t_defined
 #endif
 
 #if defined __USE_XOPEN || defined __USE_XOPEN2K8
-# define __need_clock_t
+#define __need_clock_t
 #endif
-#define	__need_time_t
+#define __need_time_t
 #define __need_timer_t
 #define __need_clockid_t
 #include <time.h>
 
 #ifdef __USE_XOPEN
-# ifndef __useconds_t_defined
+#ifndef __useconds_t_defined
 typedef __useconds_t useconds_t;
-#  define __useconds_t_defined
-# endif
-# ifndef __suseconds_t_defined
+#define __useconds_t_defined
+#endif
+#ifndef __suseconds_t_defined
 typedef __suseconds_t suseconds_t;
-#  define __suseconds_t_defined
-# endif
+#define __suseconds_t_defined
+#endif
 #endif
 
-#define	__need_size_t
+#define __need_size_t
 #include <stddef.h>
 
 #ifdef __USE_MISC
@@ -152,30 +154,30 @@ typedef unsigned int uint;
 
 /* These size-specific names are used by some of the inet code.  */
 
-#if !__GNUC_PREREQ (2, 7)
+#if !__GNUC_PREREQ(2, 7)
 
 /* These types are defined by the ISO C99 header <inttypes.h>. */
-# ifndef __int8_t_defined
-#  define __int8_t_defined
-typedef	char int8_t;
-typedef	short int int16_t;
-typedef	int int32_t;
-#  if __WORDSIZE == 64
+#ifndef __int8_t_defined
+#define __int8_t_defined
+typedef char int8_t;
+typedef short int int16_t;
+typedef int int32_t;
+#if __WORDSIZE == 64
 typedef long int int64_t;
-#  else
+#else
 __extension__ typedef long long int int64_t;
-#  endif
-# endif
+#endif
+#endif
 
 /* But these were defined by ISO C without the first `_'.  */
-typedef	unsigned char u_int8_t;
-typedef	unsigned short int u_int16_t;
-typedef	unsigned int u_int32_t;
-# if __WORDSIZE == 64
+typedef unsigned char u_int8_t;
+typedef unsigned short int u_int16_t;
+typedef unsigned int u_int32_t;
+#if __WORDSIZE == 64
 typedef unsigned long int u_int64_t;
-# else
+#else
 __extension__ typedef unsigned long long int u_int64_t;
-# endif
+#endif
 
 typedef int register_t;
 
@@ -200,18 +202,16 @@ typedef int register_t;
 // __u_intN_t (32, __SI__);
 // __u_intN_t (64, __DI__);
 
-typedef int register_t __attribute__ ((__mode__ (__word__)));
-
+typedef int register_t __attribute__((__mode__(__word__)));
 
 /* Some code from BIND tests this macro to see if the types above are
    defined.  */
 #endif
-#define __BIT_TYPES_DEFINED__	1
+#define __BIT_TYPES_DEFINED__ 1
 
-
-#ifdef	__USE_BSD
+#ifdef __USE_BSD
 /* In BSD <sys/types.h> is expected to define BYTE_ORDER.  */
-# include <endian.h>
+#include <endian.h>
 
 /* It also defines `fd_set' and the FD_* macros for `select'.  */
 // # include <sys/select.h>
@@ -220,40 +220,38 @@ typedef int register_t __attribute__ ((__mode__ (__word__)));
 // # include <sys/sysmacros.h>
 #endif /* Use BSD.  */
 
-
-#if (defined __USE_UNIX98 || defined __USE_XOPEN2K8) \
-    && !defined __blksize_t_defined
+#if (defined __USE_UNIX98 || defined __USE_XOPEN2K8) && !defined __blksize_t_defined
 typedef __blksize_t blksize_t;
-# define __blksize_t_defined
+#define __blksize_t_defined
 #endif
 
 /* Types from the Large File Support interface.  */
 #ifndef __USE_FILE_OFFSET64
-# ifndef __blkcnt_t_defined
-typedef __blkcnt_t blkcnt_t;	 /* Type to count number of disk blocks.  */
-#  define __blkcnt_t_defined
-# endif
-# ifndef __fsblkcnt_t_defined
+#ifndef __blkcnt_t_defined
+typedef __blkcnt_t blkcnt_t; /* Type to count number of disk blocks.  */
+#define __blkcnt_t_defined
+#endif
+#ifndef __fsblkcnt_t_defined
 typedef __fsblkcnt_t fsblkcnt_t; /* Type to count file system blocks.  */
-#  define __fsblkcnt_t_defined
-# endif
-# ifndef __fsfilcnt_t_defined
+#define __fsblkcnt_t_defined
+#endif
+#ifndef __fsfilcnt_t_defined
 typedef __fsfilcnt_t fsfilcnt_t; /* Type to count file system inodes.  */
-#  define __fsfilcnt_t_defined
-# endif
+#define __fsfilcnt_t_defined
+#endif
 #else
-# ifndef __blkcnt_t_defined
-typedef __blkcnt64_t blkcnt_t;	   /* Type to count number of disk blocks.  */
-#  define __blkcnt_t_defined
-# endif
-# ifndef __fsblkcnt_t_defined
+#ifndef __blkcnt_t_defined
+typedef __blkcnt64_t blkcnt_t;     /* Type to count number of disk blocks.  */
+#define __blkcnt_t_defined
+#endif
+#ifndef __fsblkcnt_t_defined
 typedef __fsblkcnt64_t fsblkcnt_t; /* Type to count file system blocks.  */
-#  define __fsblkcnt_t_defined
-# endif
-# ifndef __fsfilcnt_t_defined
+#define __fsblkcnt_t_defined
+#endif
+#ifndef __fsfilcnt_t_defined
 typedef __fsfilcnt64_t fsfilcnt_t; /* Type to count file system inodes.  */
-#  define __fsfilcnt_t_defined
-# endif
+#define __fsfilcnt_t_defined
+#endif
 #endif
 
 #ifdef __USE_LARGEFILE64
@@ -262,12 +260,11 @@ typedef __fsblkcnt64_t fsblkcnt64_t; /* Type to count file system blocks.  */
 typedef __fsfilcnt64_t fsfilcnt64_t; /* Type to count file system inodes.  */
 #endif
 
-
 /* Now add the thread types.  */
 #if defined __USE_POSIX199506 || defined __USE_UNIX98
-# include <sgx/bits/pthreadtypes.h>
+#include <sgx/bits/pthreadtypes.h>
 #endif
 
 
-#endif /* sys/types.h */
 
+#endif /* sys/types.h */

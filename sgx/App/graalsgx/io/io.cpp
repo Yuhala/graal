@@ -16,6 +16,10 @@
 #include <dirent.h>
 #include "struct/sgx_stdio_struct.h"
 #include <map>
+#include <mntent.h>
+#include <sys/vfs.h>
+#include <ctype.h>
+
 #include "ocall_logger.h"
 #include "Enclave_u.h"
 #include "zlib.h"
@@ -566,4 +570,105 @@ mode_t ocall_umask(mode_t mask)
 {
     log_ocall(__func__);
     return umask(mask);
+}
+
+int ocall_mkostemp(char *tmplate, int flags)
+{
+    log_ocall(__func__);
+    return mkostemp(tmplate, flags);
+}
+
+SGX_FILE ocall_setmntent(const char *filename, const char *type)
+{
+    log_ocall(__func__);
+    SGX_FILE fd = num_fd++;
+    FILE *f = NULL;
+    f = setmntent(filename, type);
+    // printf("fopen filename: %s\n",filename);
+    fd_array[fd] = f;
+
+    return (f == NULL ? 0 : fd);
+}
+void *ocall_getmntent(SGX_FILE fp)
+{
+    log_ocall(__func__);
+    int fd = fp;
+    FILE *f = getFile(fd);
+    return (void *)getmntent(f);
+}
+
+void *ocall_getmntent_r(SGX_FILE streamp, void *mntbuf, char *buf, int buflen)
+{
+    log_ocall(__func__);
+    int fd = streamp;
+    FILE *f = getFile(fd);
+    return (void *)getmntent_r(f, (struct mntent *)mntbuf, buf, buflen);
+}
+
+int ocall_addmntent(SGX_FILE fp, void *mnt)
+{
+    log_ocall(__func__);
+    int fd = fp;
+    FILE *f = getFile(fd);
+    return addmntent(f, (struct mntent *)mnt);
+}
+
+int ocall_endmntent(SGX_FILE fp)
+{
+    log_ocall(__func__);
+    int fd = fp;
+    FILE *f = getFile(fd);
+    return endmntent(f);
+}
+
+char *ocall_hasmntopt(void *mnt, const char *opt)
+{
+    log_ocall(__func__);
+    return hasmntopt((struct mntent *)mnt, opt);
+}
+
+int ocall_statfs(const char *path, void *buf)
+{
+    log_ocall(__func__);
+    return statfs(path, (struct statfs *)buf);
+}
+int ocall_fstatfs(int fd, void *buf)
+{
+    log_ocall(__func__);
+    return fstatfs(fd, (struct statfs *)buf);
+}
+
+int ocall_getgroups(int size, void *list)
+{
+    gid_t *temp = (gid_t *)list;
+    log_ocall(__func__);
+    gid_t list_in[size];
+    for (int i = 0; i < size; i++)
+    {
+        list_in[i] = (gid_t) * (temp + i);
+    }
+    return getgroups(size, list_in);
+}
+
+void **ocall_ctype_toupper_loc()
+{
+    log_ocall(__func__);
+    return (void **)__ctype_toupper_loc();
+}
+void **ocall_ctype_b_loc()
+{
+    log_ocall(__func__);
+    return (void **)__ctype_b_loc();
+}
+
+int ocall_access(const char *pathname, int mode)
+{
+    log_ocall(__func__);
+    return access(pathname, mode);
+}
+
+int ocall_dup(int oldfd)
+{
+    log_ocall(__func__);
+    return dup(oldfd);
 }

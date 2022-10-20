@@ -10,15 +10,13 @@ extern "C" {
 
 typedef int (*run_main_fn_t)(int argc, char** argv);
 
-typedef void (*poly_2_entry_fn_t)(graal_isolatethread_t*);
-
-typedef int (*funcA_entry_fn_t)(graal_isolatethread_t*, int);
-
-typedef int (*funcD_entry_fn_t)(graal_isolatethread_t*, int);
-
-typedef int (*funcN_entry_fn_t)(graal_isolatethread_t*, int, int);
+typedef double (*funcA_entry_fn_t)(graal_isolatethread_t*);
 
 typedef void (*sayHello_entry_fn_t)(graal_isolatethread_t*);
+
+typedef int (*arraySum_entry_fn_t)(graal_isolatethread_t*, char*, int);
+
+typedef char* (*readXData_entry_fn_t)(graal_isolatethread_t*, int);
 
 typedef void (*vmLocatorSymbol_fn_t)(graal_isolatethread_t* thread);
 

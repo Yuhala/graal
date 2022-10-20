@@ -15,6 +15,7 @@ enclave {
     from "graalsgx/io/io.edl" import *;
     from "graalsgx/net/net.edl" import *;
     from "graalsgx/sys/sys.edl" import *;
+    from "graalsgx/signal/signal.edl" import *;
     from "graalsgx/thread/thread.edl" import *;
     
     //from "graalsgx/edl/graalsgx_ecalls.edl" import *;
@@ -28,7 +29,7 @@ enclave {
        public void ecall_test_pwuid(unsigned int id);
 
        public void ecall_stackoverflow_test();
-       public void ecall_set_environ([user_check]void **env_ptr);
+       public void ecall_set_environ(int id,[user_check]void **env_ptr);
        public void ecall_create_enclave_isolate(); 
        public void ecall_destroy_enclave_isolate();
 

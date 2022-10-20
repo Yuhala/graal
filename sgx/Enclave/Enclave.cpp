@@ -51,8 +51,9 @@
 #include "sys/graalsgx_malloc.h"
 
 /* Global variables */
-sgx_enclave_id_t global_eid;
-bool enclave_initiated;
+sgx_enclave_id_t enclave_eid = -1;
+bool enclave_initiated = false;
+
 graal_isolatethread_t *global_enc_iso;
 
 __thread uintptr_t thread_stack_base;
@@ -221,9 +222,12 @@ void ecall_create_enclave_isolate()
     if ((ret = graal_create_isolate(NULL, NULL, &global_enc_iso)) != 0)
     {
         printf("Error on app isolate creation or attach. Error code: %d\n", ret);
+        exit(1);
     }
-
-    printf(">>>>>>>>>>>>>>>>>>> Global enclave isolate creation successfull!\n");
+    else
+    {
+        printf(">>>>>>>>>>>>>>>>>>> Global enclave isolate creation successfull!\n");
+    }
 }
 
 /**
@@ -235,13 +239,17 @@ void ecall_destroy_enclave_isolate()
 }
 
 /**
- * Set environment pointer
+ * Set environment variables and some global variables.
  */
 
-void ecall_set_environ(void **env_ptr)
+void ecall_set_environ(int id, void **env_ptr)
 {
     // set_stack_address();
     set_environ(env_ptr);
+
+    enclave_eid = id;
+    printf(">>>>>>>>>>>> ecall:seteviron set enclave eid to: %d\n >>>>>>>>>>", enclave_eid);
+    enclave_initiated = true;
 }
 /*
  * printf:
@@ -256,20 +264,6 @@ int printf(const char *fmt, ...)
     va_end(ap);
     ocall_print_string(buf);
     return (int)strnlen(buf, BUFSIZ - 1) + 1;
-}
-
-void fill_array()
-{
-    printf("Filling inside array\n");
-    unsigned int size = 1024 * 1024 * 4; // 16mb
-    int *array = (int *)malloc(sizeof(int) * size);
-    int idx = 0;
-    for (int i = 0; i < size; i++)
-    {
-        array[i] = i;
-        idx = i;
-    }
-    printf("Largest index in: %d\n", idx);
 }
 
 /**
@@ -298,10 +292,8 @@ void ecall_graal_main(int id)
     // set_stack_address();
     // printf(">>>>>>>>>>>>>>>>>>>>>>>>>>> stack pointer in ecall-graal-main is: %p >>>>>>>>>>\n", (void *)thread_stack_base);
 
-    global_eid = id;
-    enclave_initiated = true;
-    global_enc_iso = isolate_generator();
-    // printf("============================= Ecall graal main: global_enc_iso = %p\n", (void *)global_enc_iso);
+    // global_enc_iso = isolate_generator();
+    //  printf("============================= Ecall graal main: global_enc_iso = %p\n", (void *)global_enc_iso);
 
     char str[16];
     snprintf(str, 16, "%d", 1000); // good
@@ -309,10 +301,6 @@ void ecall_graal_main(int id)
     char *argv[16] = {str, "-XX:+PrintGC", "-XX:+VerboseGC"};
 
     printf("============================= Entering run_main =========================\n");
-
-    // printf("polytaint_add result: %d >>>>>>>>>>>>>>>>>\n", polytaint_add(global_enc_iso, 44, 33));
-    // enclave_create_context(global_enc_iso);
-    // gc_test(global_enc_iso, 1000);
 
     // set stack address just before entering java code
     run_main(1, NULL);
@@ -332,7 +320,7 @@ void ecall_test_pwuid(unsigned int id)
 void ecall_graal_main_args(int id, int arg1)
 {
     // set_stack_address();
-    global_eid = id;
+    enclave_eid = id;
     enclave_initiated = true;
     // global_enc_iso = isolate_generator();
     printf("In ecall graal main w/ args: %d\n", arg1);

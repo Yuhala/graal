@@ -1032,7 +1032,7 @@ final class PolyglotEngineImpl implements com.oracle.truffle.polyglot.PolyglotIm
     }
 
     void addContext(PolyglotContextImpl context) {
-        // assert Thread.holdsLock(this.lock);
+        assert Thread.holdsLock(this.lock);
 
         ensureRuntimeInitialized(context);
 
@@ -1059,19 +1059,19 @@ final class PolyglotEngineImpl implements com.oracle.truffle.polyglot.PolyglotIm
     }
 
     void removeContext(PolyglotContextImpl context) {
-        //assert Thread.holdsLock(this.lock) : "Must hold PolyglotEngineImpl.lock";
+        assert Thread.holdsLock(this.lock) : "Must hold PolyglotEngineImpl.lock";
         contexts.remove(context.weakReference);
         workContextReferenceQueue();
     }
 
     void disposeContext(PolyglotContextImpl context) {
-        //synchronized (this.lock) {
+        synchronized (this.lock) {
             // should never be remove twice
             assert !context.weakReference.removed;
             context.weakReference.removed = true;
             context.weakReference.freeSharing(context);
             removeContext(context);
-        //}
+        }
     }
 
     private void workContextReferenceQueue() {

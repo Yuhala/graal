@@ -14,10 +14,13 @@
       "pattern":"\\QMETA-INF/services/java.nio.file.spi.FileSystemProvider\\E"
     }, 
     {
+      "pattern":"\\Qcom/oracle/truffle/llvm/nfi/SulongNFI.class\\E"
+    }, 
+    {
       "pattern":"\\Qcom/oracle/truffle/nfi/backend/libffi/LibFFILanguage.class\\E"
     }, 
     {
-      "pattern":"\\QsecureL/SecureLLanguage.class\\E"
+      "pattern":"\\Qcom/oracle/truffle/secureL/SecureLLanguage.class\\E"
     }
   ]},
   "bundles":[]

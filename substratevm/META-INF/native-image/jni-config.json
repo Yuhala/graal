@@ -12,9 +12,5 @@
 },
 {
   "name":"jdk.internal.loader.ClassLoaders$PlatformClassLoader"
-},
-{
-  "name":"polytaint.Untrusted",
-  "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
 }
 ]

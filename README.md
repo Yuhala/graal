@@ -77,6 +77,8 @@ source config-env
 
 ```
 
+
+
 ### Build and run a native image in an Intel SGX enclave
 - Here we will build a simple native image java program with SVM and run it in an Intel SGX enclave. 
 - The program simulates a smart contract for transferring assets between peers.

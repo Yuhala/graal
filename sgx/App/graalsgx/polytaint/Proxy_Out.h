@@ -5,8 +5,7 @@
 extern "C" { 
 #endif
 
-void poly_2_proxy();
-int funcA_proxy(int param1);
+double funcA_proxy();
 
 #if defined(__cplusplus)
 }

@@ -24,6 +24,7 @@ extern sgx_enclave_id_t global_eid;
 using namespace std;
 
 std::map<pthread_t, pthread_attr_t *> attr_map;
+std::map<pthread_t *, pthread_t *> thread_in_out_map;
 
 /* #define MAX_PTHREAD_ATTR 50000
 pthread_attr_t *attr_array[MAX_PTHREAD_ATTR];
@@ -71,19 +72,20 @@ int ocall_pthread_condattr_setclock(void *_attr, clockid_t clock_id, size_t attr
     return pthread_condattr_setclock(attr, clock_id);
 }
 
-int ocall_pthread_create(pthread_t *new_thread, unsigned long int job_id, sgx_enclave_id_t eid)
+int ocall_pthread_create(pthread_t *new_thread_in, unsigned long int job_id, sgx_enclave_id_t eid)
 {
     log_ocall(__func__);
     GRAAL_SGX_INFO();
     internal_ecall_arg *arguments = (internal_ecall_arg *)malloc(sizeof(internal_ecall_arg));
     arguments->job_id = job_id;
-    arguments->eid = eid;
+    arguments->eid = global_eid; // eid; //pyuhala: our tests for now use one enclave so this should be the right value.
 
     /* Create attrib */
     pthread_attr_t *attr = (pthread_attr_t *)malloc(sizeof(pthread_attr_t));
     // increase stack size
 
-    int ret = pthread_create(new_thread, NULL, generic_ecall_routine, (void *)arguments);
+    pthread_t new_thread_out;
+    int ret = pthread_create(&new_thread_out, NULL, generic_ecall_routine, (void *)arguments);
     // int ret = pthread_create(new_thread, NULL, generic_ecall_routine, (void *)arguments);
     pthread_attr_t *new_thread_attr;
     // int attr_ret = pthread_getattr_np(*new_thread, new_thread_attr);
@@ -92,15 +94,18 @@ int ocall_pthread_create(pthread_t *new_thread, unsigned long int job_id, sgx_en
     // pthread_attr_setstacksize(attr, GRAAL_SGX_STACK);
     /* Add tid and attr pair to map */
     // attr_map.insert(pair<pthread_t, pthread_attr_t *>(*new_thread, new_thread_attr));
-    attr_map.insert(pair<pthread_t, pthread_attr_t *>(*new_thread, attr));
+
+    thread_in_out_map.insert(pair<pthread_t *, pthread_t *>(new_thread_in, &new_thread_out));
+    attr_map.insert(pair<pthread_t, pthread_attr_t *>(*new_thread_in, attr));
 
     void *val;
     printf("Calling thread id: %d\n", pthread_self());
-    printf("Created thread id: %d\n", *new_thread);
-    pthread_join(*new_thread, &val);
+    printf("Created thread id: %d\n", new_thread_out);
+    //pthread_join(new_thread_out, &val);
 
     return ret;
 }
+
 pthread_attr_t *getAttrib(pthread_t tid)
 {
     log_ocall(__func__);
@@ -120,12 +125,14 @@ pthread_t ocall_pthread_self(void)
     GRAAL_SGX_INFO();
     return pthread_self();
 }
+
 int ocall_pthread_join(pthread_t pt, void **res)
 {
     log_ocall(__func__);
     GRAAL_SGX_INFO();
     return pthread_join(pt, NULL);
 }
+
 int ocall_pthread_attr_getguardsize(size_t *guardsize)
 {
     log_ocall(__func__);
@@ -181,7 +188,7 @@ int ocall_pthread_attr_getstack__bypass(void *attr, size_t attr_len, void **stk_
 
     if (*stack_size == 0)
     {
-        //ret = manual_setstack((pthread_attr_t *)attrib, stk_addr, stack_size);
+        // ret = manual_setstack((pthread_attr_t *)attrib, stk_addr, stack_size);
     }
 
     return ret;
@@ -204,7 +211,7 @@ int ocall_pthread_attr_getstack(void **stk_addr, size_t *stack_size)
         //*stk_addr = *addr;
         printf("pthread_attr_getstack ret vals: stk_addr: %p, stk_size: %d", *stk_addr, *stack_size);
     }
-   
+
     if (*stack_size == 0)
     {
         ret = manual_setstack(attr, stk_addr, stack_size);

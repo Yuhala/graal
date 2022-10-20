@@ -13,7 +13,7 @@
 
 extern __thread uintptr_t thread_stack_address;
 
-extern sgx_enclave_id_t global_eid;
+extern sgx_enclave_id_t enclave_eid;
 extern bool enclave_initiated;
 
 sgx_thread_mutex_t job_map_mutex = SGX_THREAD_MUTEX_INITIALIZER;
@@ -30,11 +30,12 @@ int pthread_create(pthread_t *thread, GRAAL_SGX_PTHREAD_ATTR attr,
         fprintf(SGX_STDERR, "The enclave has not been initiated.");
         abort();
     }
+    
 
     pthread_job_t new_job = {start_routine, arg};
     unsigned long int job_id = put_job(new_job);
     int ret;
-    ocall_pthread_create(&ret, thread, job_id, global_eid);
+    ocall_pthread_create(&ret, thread, job_id, enclave_eid);
     return ret;
 }
 
@@ -160,20 +161,19 @@ int pthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacks
 }
 
 /**
- * @brief 
+ * @brief
  * PYuhala:
  * custom reimplementation of function
- * @param attr 
- * @param stackaddr 
- * @param stacksize 
- * @return int 
+ * @param attr
+ * @param stackaddr
+ * @param stacksize
+ * @return int
  */
 
 int xxxxpthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
 {
     GRAAL_SGX_INFO();
 }
-
 
 int xxxpthread_attr_getstack(pthread_attr_t *attr, void **stackaddr, size_t *stacksize)
 {
@@ -196,8 +196,8 @@ int pthread_getattr_np(pthread_t tid, GRAAL_SGX_PTHREAD_ATTR attr)
     printf(">>>>>>>>>> SGX thread id: %lu\n", sgx_thread_self());
     printf(">>>>>>>>>> POSIX thread id: %lu\n", pthread_self());
     int ret = 0;
-     ocall_pthread_getattr_np__bypass(&ret, tid, attr, sizeof(pthread_attr_t));
-    //ocall_pthread_getattr_np(&ret, tid);
+    ocall_pthread_getattr_np__bypass(&ret, tid, attr, sizeof(pthread_attr_t));
+    // ocall_pthread_getattr_np(&ret, tid);
     return ret;
 }
 
@@ -223,6 +223,7 @@ int pthread_condattr_init(pthread_condattr_t *attr)
 {
     GRAAL_SGX_INFO();
     int ret = 0;
+    
     memset(attr, '\0', sizeof(*attr)); // TODO: allocate attr in map outside with pthread id
     // ocall_pthread_condattr_init(&ret, attr);
     return ret;
@@ -357,4 +358,49 @@ void ecall_execute_job(pthread_t pthread_id, unsigned long int job_id)
             printf("Executing start_routine %p by the pthread_id: %d \n", execute_job.start_routine, (unsigned long)pthread_id);
             execute_job.start_routine(execute_job.arg);
         }
+}
+
+// Semaphore routines
+void sem_init(struct sgx_bsem_t *bsem_p, int value)
+{
+    if (value < 0 || value > 1)
+    {
+        printf("Error: sem_init value can take only values 0 and 1");
+        exit(1);
+    }
+    sgx_thread_mutex_init(&(bsem_p->mutex), NULL);
+    sgx_thread_cond_init(&(bsem_p->cond), NULL);
+    bsem_p->v = value;
+}
+void sem_reset(struct sgx_bsem_t *bsem_p)
+{
+    sem_init(bsem_p, 0);
+}
+void sem_post(struct sgx_bsem_t *bsem_p)
+{
+    sgx_thread_mutex_lock(&bsem_p->mutex);
+    bsem_p->v = 1;
+    sgx_thread_cond_signal(&bsem_p->cond);
+    sgx_thread_mutex_lock(&bsem_p->mutex);
+}
+void sem_post_all(struct sgx_bsem_t *bsem_p)
+{
+    sgx_thread_mutex_lock(&bsem_p->mutex);
+    bsem_p->v = 1;
+    sgx_thread_cond_broadcast(&bsem_p->cond);
+    sgx_thread_mutex_unlock(&bsem_p->mutex);
+}
+void sem_wait(struct sgx_bsem_t *bsem_p)
+{
+    sgx_thread_mutex_lock(&bsem_p->mutex);
+    while (bsem_p->v != 1)
+    {
+        sgx_thread_cond_wait(&bsem_p->cond, &bsem_p->mutex);
+    }
+    bsem_p->v = 0;
+    sgx_thread_mutex_unlock(&bsem_p->mutex);
+}
+int sem_destroy(struct sgx_bsem_t* bsem_p){
+    //TODO
+    return 0;
 }

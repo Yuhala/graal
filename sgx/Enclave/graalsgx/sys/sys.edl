@@ -26,7 +26,11 @@ enclave {
 
         //dynamic loading
         void ocall_dlsym([user_check]void *handle, [in,string]const char *symbol,[user_check]void *res);
-        void *ocall_dlopen([in,string]const char *symbol,int flag);       
+        void *ocall_dlopen([in,string]const char *symbol,int flag);   
+        void *ocall_dlmopen(long lmid, [in,string]const char *filename, int flags);    
+        int ocall_dlclose([user_check]void *handle);
+        char *ocall_dlerror();
+        int ocall_dlinfo([user_check]void *handle, int request, [user_check]void *info);
 
         long ocall_sysconf(int name);
         unsigned int ocall_getuid();                   
@@ -45,11 +49,11 @@ enclave {
         void ocall_xpg_strerror_r(int errnum, [out,size=buflen,count=1]char *buf, size_t buflen);
 
         //signals
-        //int ocall_sigemptyset([user_check]sigset_t *set);
-        //int ocall_sigaddset([user_check]sigset_t *set,int signum);
-        //int ocall_sigaction(int signum, [user_check]const struct sigaction *act, [user_check]struct sigaction *oldact);
-        //int ocall_sigprocmask(int how, [user_check]const sigset_t *set, [user_check]sigset_t *oldset);
-        __sighandler_t ocall_signal(int signum,__sighandler_t handler);
+        //int ocall_sigemptyset_graal([user_check]sigset_t *set);
+        //int ocall_sigaddset_graal([user_check]sigset_t *set,int signum);
+        //int ocall_sigaction_graal(int signum, [user_check]const void *act, [user_check]void* oldact);
+        //int ocall_sigprocmask_graal(int how, [user_check]const sigset_t *set, [user_check]sigset_t *oldset);
+        //__sighandler_t ocall_signal_graal(int signum,__sighandler_t handler);
 
        
        

@@ -69,7 +69,7 @@
 #include <pwd.h>
 
 /* Benchmarking */
-//#include "benchtools.h"
+#include "bench/benchtools.h"
 
 #include <time.h>
 struct timespec start, stop;
@@ -140,6 +140,26 @@ graal_isolatethread_t *isolate_generator()
         return NULL;
     }
     return temp_iso;
+}
+
+/**
+ * Create global enclave isolate to service ecalls.
+ */
+void create_app_isolate()
+{
+    // printf("Example of function ptr in the enclave: %p\n", &ecall_create_enclave_isolate);
+
+    int ret;
+    printf(">>>>>>>>>>>> Creating global app isolate >>>>>>>>>>>>...\n");
+    if ((ret = graal_create_isolate(NULL, NULL, &global_app_iso)) != 0)
+    {
+        printf("Error on app isolate creation or attach. Error code: %d\n", ret);
+        exit(1);
+    }
+    else
+    {
+        printf(">>>>>>>>> Global app isolate creation successfull! >>>>>>>>>>>>>\n");
+    }
 }
 
 /**
@@ -243,16 +263,27 @@ int main(int argc, char *argv[])
 
     // I use only 1 arg for now
     int arg1 = 0;
+    bool no_sgx = false;
+    bool partitioned_app = true;
 
-    global_app_iso = isolate_generator();
+    // global_app_iso = isolate_generator();
+    create_app_isolate();
+
+    if (no_sgx)
+    {
+        start_clock(&start);
+        run_main(1, NULL);
+        stop_clock(&stop);
+
+        printf(">>>>>>>>>>>>>>> Total run time: %f s >>", time_diff(&start, &stop, SEC));
+        return 0;
+    }
+
     // graal_isolatethread_t *temp = isolate_generator();
 
     setMainAttribs();
 
     attr_map.insert(pair<pthread_t, pthread_attr_t *>(0, NULL));
-
-    // run_main(1, NULL);
-    // return 0;
 
     /* Initialize the enclave */
     if (initialize_enclave() < 0)
@@ -261,13 +292,14 @@ int main(int argc, char *argv[])
         getchar();
         return -1;
     }
-    printf("Enclave initialized\n");
 
-    int id = global_eid;
+    int geid = global_eid;
+    printf("Enclave initialized. EID: %d >>>>>>> \n", global_eid);
 
+    ecall_set_environ(global_eid, geid, (void **)environ);
     ecall_create_enclave_isolate(global_eid);
-    ecall_set_environ(global_eid, (void **)environ);
-    
+
+    // run_main(1, NULL);
 
     // if (argc > 1)
     // {
@@ -286,9 +318,27 @@ int main(int argc, char *argv[])
      * This is the initial entrypoint method, all further ecalls are performed there.
      */
 
-    run_main(argc, argv);
+    /**
+     * @brief
+     * Partitioned programs have the main entry point in the untrusted runtime.
+     * Call run_main to launch such programs.
+     */
 
-    printf("Number of ocalls: %d\n", ocall_count);
+    start_clock(&start);
+    run_main(argc, argv);
+    stop_clock(&stop);
+
+    /**
+     * @brief
+     * Call ecall_graal_main for programs run fully inside the enclave.
+     *
+     */
+    // start_clock(&start);
+    // ecall_graal_main(global_eid, geid);
+    // stop_clock(&stop);
+
+    printf("<<<<<<<<<<<<<<<<<<<  >>>>>>>>>>>>>>>>>>>>>>>>> Total run time: %f s >>", time_diff(&start, &stop, SEC));
+
     showOcallLog(10);
     // writeVal("./results/temp.csv", ocall_count);
 

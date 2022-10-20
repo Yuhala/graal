@@ -69,6 +69,7 @@ int open64(const char *path, int oflag, ...)
     va_end(ap);
 
     int ret;
+    //printf("open64 pathname: %s\n >>>>>>>>>", path);
     int sgx_ret = ocall_open64(&ret, path, oflag, arg);
 
     if (sgx_ret != SGX_SUCCESS)
@@ -77,6 +78,7 @@ int open64(const char *path, int oflag, ...)
         sgx_exit();
     }
 
+    //printf("open64 retval: %d >>>\n", ret);
     return ret;
 }
 int close(int fd)
@@ -342,6 +344,13 @@ int ftruncate64(int fd, off_t length)
     ocall_ftruncate64(&ret, fd, length);
     return ret;
 }
+int ftruncate(int fd, off_t length)
+{
+    GRAAL_SGX_INFO();
+    // TODO: is calling ftruncate64 correct ?
+    return ftruncate64(fd, length);
+}
+
 void *mmap64(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
     /**
@@ -771,6 +780,18 @@ int deflateParams(Z_STREAMP streamp, int level, int strategy)
     copy_zstream(streamp, untrusted_streamp);
     return ret;
 }
+
+int deflateSetDictionary(Z_STREAMP stream, const Bytef *dictionary, uInt dictlen)
+{
+    return 0;
+    // TODO
+}
+
+int inflateSetDictionary(Z_STREAMP stream, const Bytef *dictionary, uInt dictlen)
+{
+    return 0;
+    // TODO
+}
 int deflate(Z_STREAMP streamp, int flush)
 {
     GRAAL_SGX_INFO();
@@ -835,17 +856,20 @@ int inflateReset(Z_STREAMP streamp)
 int dup(int oldfd)
 {
     GRAAL_SGX_INFO();
-    int ret = 0;
-    // TODO
-    return ret;
+    int retval;
+    sgx_status_t status = ocall_dup(&retval, oldfd);
+    CHECK_STATUS(status);
+    return retval;
 }
 
 int access(const char *pathname, int mode)
 {
     GRAAL_SGX_INFO();
-    int ret = 0;
-    // TODO
-    return ret;
+    printf("access pathname: %s\n >>>>>>>>>", pathname);
+    int retval;
+    sgx_status_t status = ocall_access(&retval, pathname, mode);
+    CHECK_STATUS(status);
+    return retval;
 }
 int chdir(const char *path)
 {
@@ -866,6 +890,7 @@ int fileno(SGX_FILE *stream)
     ocall_fileno(&ret, stream);
     return ret;
 }
+
 int isatty(int fd)
 {
     GRAAL_SGX_INFO();
@@ -873,10 +898,130 @@ int isatty(int fd)
     ocall_isatty(&ret, fd);
     return ret;
 }
+
 mode_t umask(mode_t mask)
 {
     GRAAL_SGX_INFO();
     mode_t ret;
     ocall_umask(&ret, mask);
     return ret;
+}
+
+int mkostemp(char *tmplate, int flags)
+{
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_mkostemp(&retval, tmplate, flags);
+    CHECK_STATUS(status);
+    return retval;
+}
+
+SGX_FILE setmntent(const char *filename, const char *type)
+{
+    GRAAL_SGX_INFO();
+    SGX_FILE retval;
+    sgx_status_t status = ocall_setmntent(&retval, filename, type);
+    CHECK_STATUS(status);
+    return retval;
+}
+struct mntent *getmntent(SGX_FILE fp)
+{
+    GRAAL_SGX_INFO();
+    void *retval;
+    sgx_status_t status = ocall_getmntent(&retval, fp);
+    CHECK_STATUS(status);
+    return (struct mntent *)retval;
+}
+
+struct mntent *getmntent_r(SGX_FILE streamp, struct mntent *mntbuf, char *buf, int buflen)
+{
+    GRAAL_SGX_INFO();
+    void *retval;
+    sgx_status_t status = ocall_getmntent_r(&retval, streamp, (void *)mntbuf, buf, buflen);
+    CHECK_STATUS(status);
+    return (struct mntent *)retval;
+}
+int addmntent(SGX_FILE fp, const struct mntent *mnt)
+{
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_addmntent(&retval, fp, (void *)mnt);
+    CHECK_STATUS(status);
+    return retval;
+}
+int endmntent(SGX_FILE fp)
+{
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_endmntent(&retval, fp);
+    CHECK_STATUS(status);
+    return retval;
+}
+char *hasmntopt(const struct mntent *mnt, const char *opt)
+{
+    GRAAL_SGX_INFO();
+    char *retval;
+    sgx_status_t status = ocall_hasmntopt(&retval, (void *)mnt, opt);
+    CHECK_STATUS(status);
+    return retval;
+}
+
+int statfs(const char *path, struct statfs *buf)
+{
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_statfs(&retval, path, (void *)buf);
+    CHECK_STATUS(status);
+    return retval;
+}
+int fstatfs(int fd, struct statfs *buf)
+{
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_fstatfs(&retval, fd, (void *)buf);
+    CHECK_STATUS(status);
+    return retval;
+}
+
+char *strtok_r(char *str, const char *delim, char **saveptr)
+{
+    return NULL;
+    // TODO
+}
+char *__strtok_r(char *str, const char *delim, char **saveptr)
+{
+    return strtok_r(str, delim, saveptr);
+}
+
+int getgroups(int size, gid_t *list)
+{
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_getgroups(&retval, size, (void *)list);
+    CHECK_STATUS(status);
+    return retval;
+}
+
+char *stpcpy(char *dest, const char *src)
+{
+    GRAAL_SGX_INFO();
+    const size_t len = strlen(src);
+    return (char *)memcpy(dest, src, len + 1) + len;
+}
+
+int32_t **__ctype_toupper_loc()
+{
+    GRAAL_SGX_INFO();
+    void **retval;
+    sgx_status_t status = ocall_ctype_toupper_loc(&retval);
+    CHECK_STATUS(status);
+    return (int32_t **)retval;
+}
+const unsigned short **__ctype_b_loc()
+{
+    GRAAL_SGX_INFO();
+    void **retval;
+    sgx_status_t status = ocall_ctype_b_loc(&retval);
+    CHECK_STATUS(status);
+    return (const unsigned short **)retval;
 }

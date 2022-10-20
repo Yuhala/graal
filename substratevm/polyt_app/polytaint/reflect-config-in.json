@@ -1,22 +1,17 @@
 [
 {
-"name":"polytaint.Trusted",
-"methods":[
-    {"name":"poly_2","parameterTypes":[]},
-    {"name":"funcD","parameterTypes":["int"]},
-    {"name":"funcA","parameterTypes":["int"]},
-    {"name":"funcN","parameterTypes":["int","int"]},
-    {"name":"sayHello","parameterTypes":[]}
-]
+"name":"java.lang.Object"
 },
 {
-"name":"polytaint.MultiFunctionOut",
-"fields": [
-    {"name":"poly_2"},
-    {"name":"funcD"},
-    {"name":"funcA"},
-    {"name":"funcN"},
-    {"name":"sayHello"}
+"name":"polytaint.Trusted",
+"methods":[
+    {"name":"funcD","parameterTypes":["double"]},
+    {"name":"funcA","parameterTypes":[]},
+    {"name":"funcN","parameterTypes":["double","int"]},
+    {"name":"sayHello","parameterTypes":[]},
+    {"name":"addSecIntToArray","parameterTypes":["int","java.lang.Object"]},
+    {"name":"arraySum","parameterTypes":["java.lang.Object"]},
+    {"name":"readXData","parameterTypes":["int"]}
 ]
 }
 ]

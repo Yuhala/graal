@@ -63,8 +63,8 @@ function build_graalvm {
     #TODO: set jvmci as java home
     echo "+++++++++++++++++++++ Building the VM suite ++++++++++++++++"
     cd $VM_DIR
-    mx --disable-polyglot --disable-libpolyglot --env sgx  --extra-image-builder-argument=--allow-incomplete-classpath build
-    
+    #mx --disable-polyglot --disable-libpolyglot --env sgx  --extra-image-builder-argument=--allow-incomplete-classpath graalvm-show
+    mx --env sgx  --extra-image-builder-argument=--allow-incomplete-classpath build
     
 }
 
@@ -131,7 +131,6 @@ function build_svm {
 }
 
 #build_svm
-
 
 #exit 1
 #clean app classes

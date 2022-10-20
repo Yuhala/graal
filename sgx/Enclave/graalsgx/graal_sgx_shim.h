@@ -65,12 +65,45 @@
 
 #include "thread/stack.h"
 
-// TODO
+// TYPES
 typedef unsigned char Byte;
 typedef unsigned char Bytef;
 typedef long off64_t;
 typedef size_t z_size_t;
 typedef void DIR;
+
+struct mntent
+{
+    char *mnt_fsname; /* name of mounted filesystem */
+    char *mnt_dir;    /* filesystem path prefix */
+    char *mnt_type;   /* mount type (see mntent.h) */
+    char *mnt_opts;   /* mount options (see mntent.h) */
+    int mnt_freq;     /* dump frequency in days */
+    int mnt_passno;   /* pass number on parallel fsck */
+};
+
+// Dynamic loading
+
+typedef struct
+{
+    const char *dli_fname; /* Pathname of shared object that
+                              contains address */
+    void *dli_fbase;       /* Base address at which shared
+                              object is loaded */
+    const char *dli_sname; /* Name of symbol whose definition
+                              overlaps addr */
+    void *dli_saddr;       /* Exact address of symbol named
+                              in dli_sname */
+} Dl_info;
+
+/* Binary semaphore */
+typedef struct sgx_bsem_t
+{
+    sgx_thread_mutex_t mutex;
+    sgx_thread_cond_t cond;
+    int v;
+} sgx_bsem_t;
+
 // typedef int Z_STREAMP;
 struct statvfs
 {
@@ -84,8 +117,6 @@ extern "C"
 {
 #endif
 
-  
-
     // custom routines
     void sgx_exit();
     // sys
@@ -93,16 +124,13 @@ extern "C"
     void *dlopen(const char *filename, int flag);
     int dladdr(const void *addr, void *info);
     int kill(int pid, int sig);
+    void *dlmopen(long lmid, const char *filename, int flags);
+    int dlclose(void *handle);
+    int dlinfo(void *handle, int request, void *info);
+    char *dlerror();
+
     int getgrgid_r(unsigned int gid, void *grp, char *buf, size_t buflen, void **result);
     int getpwuid_r(unsigned int uid, void *pwd, char *buf, size_t buflen, void **result);
-    int deflateReset(Z_STREAMP stream);
-
-    // int sched_setaffinity(pid_t pid, size_t cpusetsize,const cpu_set_t *mask);
-    // int sched_getaffinity(pid_t pid, size_t cpusetsize,cpu_set_t *mask);
-
-    int sched_setaffinity(pid_t pid, size_t cpusetsize, const void *mask);
-    int sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask);
-    int __sched_cpucount(size_t setsize, const void *setp);
 
     long sysconf(int name);
     int fstat64(int fd, struct stat *buf);
@@ -141,16 +169,24 @@ extern "C"
     char *realpath(const char *path, char *resolved_path);
     char *__xpg_strerror_r(int errnum, char *buf, size_t buflen);
 
-    // signals
-    int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact); // TODO
-    int sigemptyset(sigset_t *set);
+    // SIGNAL ROUTINES
+    int sigaction(int signum, struct sigaction *act, struct sigaction *oldact);
+    int sigfillset(sigset_t *set);
     int sigaddset(sigset_t *set, int signum);
+    int sigdelset(sigset_t *set, int signo);
+    int sigemptyset(sigset_t *set);
+    int sigismember(const sigset_t *set, int signo);
+    int sigsuspend(const sigset_t *set);
+    int sigpending(sigset_t *set);
+    int sigwait(const sigset_t *set, int *sig);
+    int raise(int signal);
+
     int sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
     sighandler_t signal(int signum, sighandler_t handler);
     void sig_handler(int param);
     int nanosleep(const struct timespec *__requested_time, struct timespec *__remaining);
 
-    // io
+    // IO routines
     int fsync(int fd);
     int dup2(int oldfd, int newfd);
     int open(const char *path, int oflag, ...);
@@ -158,6 +194,8 @@ extern "C"
     int close(int fd);
     SGX_FILE fopen(const char *pathname, const char *mode);
     SGX_FILE fdopen(int fd, const char *mode);
+    int mkostemp(char *tmplate, int flags);
+
     // SGX_FILE stderr();
     int fclose(SGX_FILE stream);
     int fscanf(SGX_FILE stream, const char *format, ...);
@@ -166,10 +204,11 @@ extern "C"
     char *fgets(char *str, int n, SGX_FILE stream);
     int puts(const char *str);
 
-    // io: added for graphchi
+    // IO
     int mkdir(const char *pathname, mode_t mode);
     int truncate(const char *path, off_t length);
     int ftruncate64(int fd, off_t length);
+    int ftruncate(int fd, off_t length);
     void *mmap64(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
     ssize_t pwrite64(int fildes, const void *buf, size_t nbyte, off_t offset);
     int fdatasync(int fd);
@@ -187,11 +226,34 @@ extern "C"
     int __lxstat64(int ver, const char *path, struct stat *stat_buf);
     int __xmknod(int vers, const char *path, mode_t mode, dev_t *dev);
     int symlink(const char *target, const char *linkpath);
+
+    // ZLIB ROUTINES
+
+    int inflateSetDictionary(Z_STREAMP stream, const Bytef *dictionary, uInt dictlen);
+    int inflateInit2_(Z_STREAMP strm, int windowBits, char *version, int stream_size);
+    int inflate(Z_STREAMP stream, int flush);
+    int inflateEnd(Z_STREAMP stream);
+    int deflateReset(Z_STREAMP stream);
+
     int deflateEnd(Z_STREAMP stream);
     int deflateParams(Z_STREAMP stream, int level, int strategy);
     int deflate(Z_STREAMP stream, int flush);
     int deflateInit2_(Z_STREAMP stream, int level, int method, int windowBits, int memLevel, int strategy);
+    int deflateSetDictionary(Z_STREAMP stream, const Bytef *dictionary, uInt dictlen);
     int inflateReset(Z_STREAMP stream);
+
+    SGX_FILE setmntent(const char *filename, const char *type);
+    struct mntent *getmntent(SGX_FILE fp);
+    struct mntent *getmntent_r(SGX_FILE streamp, struct mntent *mntbuf, char *buf, int buflen);
+    int addmntent(SGX_FILE fp, const struct mntent *mnt);
+    int endmntent(SGX_FILE fp);
+    char *hasmntopt(const struct mntent *mnt, const char *opt);
+
+    int statfs(const char *path, struct statfs *buf);
+    int fstatfs(int fd, struct statfs *buf);
+    char *strtok_r(char *str, const char *delim, char **saveptr);
+    char *__strtok_r(char *str, const char *delim, char **saveptr);
+    int getgroups(int size, gid_t *list);
 
     //----------------------------------------------------------
 
@@ -211,15 +273,31 @@ extern "C"
     ssize_t write(int fd, const void *buf, size_t count);
     int sprintf(char *str, const char *format, ...);
 
+    // STRING routines
+
     char *strcpy(char *dest, const char *src);
     char *strcat(char *dest, const char *src);
+    char *stpcpy(char *dest, const char *src);
 
-    // net
+    // LOCALE routines
+    int32_t **__ctype_toupper_loc(void);
+    const unsigned short **__ctype_b_loc(void);
+
+    // NETWORKING routines
+
     int socket(int domain, int type, int protocol);
     int getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
     int inet_pton(int af, const char *src, void *dst);
 
-    // thread
+    ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
+    ssize_t sendmsg(int sockfd, struct msghdr *msg, int flags);
+
+    ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+    ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+    ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
+    ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+
+    // THREADS
     int pthread_create(pthread_t *thread, GRAAL_SGX_PTHREAD_ATTR attr, void *(*start_routine)(void *), void *arg);
     pthread_t pthread_self(void);
     int pthread_join(pthread_t thread, void **retval); // better join outside after pthread_create :-)
@@ -248,10 +326,22 @@ extern "C"
 
     int sched_yield(void);
 
+    int sched_setaffinity(pid_t pid, size_t cpusetsize, const void *mask);
+    int sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask);
+    int __sched_cpucount(size_t setsize, const void *setp);
+
     // job
     bool get_pthreadid_from_sgxtheadid(sgx_thread_t sgx_id, pthread_t *pt);
     void ecall_execute_job(pthread_t pthread_id, unsigned long int job_id);
     void *graal_job(void *arg); // graal_sgx_thread function
+
+    // SEMAPHORE routines
+    void sem_init(struct sgx_bsem_t *bsem_p, int value);
+    void sem_reset(struct sgx_bsem_t *bsem_p);
+    void sem_post(struct sgx_bsem_t *bsem_p);
+    void sem_post_all(struct sgx_bsem_t *bsem_p);
+    void sem_wait(struct sgx_bsem_t *bsem_p);
+    int sem_destroy(struct sgx_bsem_t *bsem_p);
 
     // Added for graal 21.0
     int __libc_current_sigrtmax(void);
@@ -275,9 +365,6 @@ extern "C"
     int fcntl(int fd, int cmd, ... /* arg */);
     int fstatvfs64(int fd, struct statvfs *buf);
     int pthread_kill(pthread_t thread, int sig);
-    int inflateInit2_(Z_STREAMP strm, int windowBits, char *version, int stream_size);
-    int inflate(Z_STREAMP stream, int flush);
-    int inflateEnd(Z_STREAMP stream);
     int dup(int oldfd);
     int access(const char *pathname, int mode);
     int getnameinfo(const struct sockaddr *addr, socklen_t addrlen,
@@ -328,10 +415,6 @@ extern "C"
     int execvp(const char *file, char *const argv[]);
     int chdir(const char *path);
     void _exit(int status);
-
-    // Added for jedis
-    ssize_t recv(int sockfd, void *buf, size_t len, int flags);
-    ssize_t send(int sockfd, const void *buf, size_t len, int flags);
 
     // Added for quickcached
     int fileno(SGX_FILE *stream); // in

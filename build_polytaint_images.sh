@@ -60,10 +60,12 @@ function build_graalvm {
     #TODO: set jvmci as java home
     echo "+++++++++++++++++++++ Building the VM suite ++++++++++++++++"
     cd $VM_DIR
-    mx --disable-polyglot --disable-libpolyglot --env sgx  --extra-image-builder-argument=--allow-incomplete-classpath build
-    
+    #mx --disable-polyglot --disable-libpolyglot --env sgx  --extra-image-builder-argument=--allow-incomplete-classpath graalvm-show
+    export MX_PYTHON="python3"
+    mx --env sgx  --extra-image-builder-argument=--allow-incomplete-classpath build
     
 }
+
 
 ## ---------------- Install language components into Graal dev build ---------
 function install_language_components() {
@@ -89,7 +91,7 @@ echo "+++++++++++++++++++++ graalvm_home: $graalvm_home++++++++++++++++"
 
 
 ## ---------------- Install components --------------
-install_language_components
+#install_language_components
 
 ## --------------------------------------------------
 
@@ -158,27 +160,37 @@ function build_untrusted_app {
 
 
 build_trusted_app
-
 build_untrusted_app
+
 
 #echo "------------ Running $APP_NAME on normal JVM  ----------"
 #$JAVA_HOME/bin/java  -cp $CP $APP_PKG.$MAIN
 
 
+function clean_polytaint_files {
+    rm $APP_DIR/$PKG_PATH/*.java
+    rm $APP_DIR/$PKG_PATH/*.class
+}
 
 function run_trusted_component_with_tracer {
     echo "------------ Running trusted component with on normal JVM with tracing agent ----------"
-    rm -rf "./META-INF/native-image"
-    mkdir -p META-INF/native-image
+    #rm -rf "./META-INF/native-image"
+    #mkdir -p META-INF/native-image
     $JAVA_HOME/bin/java -agentlib:native-image-agent=config-output-dir=META-INF/native-image -cp $CP $APP_PKG.$polyt_trusted
+    #add reflection configuration
+    cat $APP_DIR/$PKG_PATH/reflect-config-in.json > $APP_DIR/$PKG_PATH/config-in/reflect-config.json
+    cp $APP_DIR/$PKG_PATH/config-in/reflect-config.json META-INF/native-image
 }
 
 
 function run_untrusted_component_with_tracer {
     echo "------------ Running trusted component with on normal JVM with tracing agent ----------"
-    rm -rf "./META-INF/native-image"
-    mkdir -p META-INF/native-image
+    #rm -rf "./META-INF/native-image"
+    #mkdir -p META-INF/native-image
     $JAVA_HOME/bin/java -agentlib:native-image-agent=config-output-dir=META-INF/native-image -cp $CP $APP_PKG.$polyt_untrusted
+    #add reflection configuration
+    cat $APP_DIR/$PKG_PATH/reflect-config-out.json > $APP_DIR/$PKG_PATH/config-out/reflect-config.json
+    cp $APP_DIR/$PKG_PATH/config-out/reflect-config.json META-INF/native-image
 }
 
 
@@ -193,8 +205,16 @@ function run_untrusted_component_with_tracer {
 
 
 ## ----------- Native image build options --------
-NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath -O0"
+#NATIVE_IMG_OPTS="--shared --sgx --no-fallback --language:js --allow-incomplete-classpath -O0"
 LOCAL_OPT=-H:+LocalizationOptimizedMode 
+
+#-R:MinHeapSize=3g -R:MaxHeapSize=3g
+
+INIT_AT_RUN_TIME="--initialize-at-run-time=com.oracle.truffle.secureL.parser.SecureLLexer,com.oracle.truffle.secureL.parser.SecureLParser"
+
+NATIVE_IMG_OPTS="--shared --sgx --no-fallback -R:MaxHeapSize=8g --gc=epsilon  --language:js --language:secl --allow-incomplete-classpath -O0 -H:+ReportExceptionStackTraces
+  --trace-class-initialization=org.antlr.v4.runtime.atn.Transition"
+
 #-H:+TraceClassInitialization
 #--allow-incomplete-classpath
 #--trace-class-initialization=org.springframework.util.ClassUtils
@@ -209,7 +229,7 @@ REFLECT_OPT_OUT="-H:ReflectionConfigurationFiles=$REFLECT_CONFIG_OUT"
 
 function build_trusted_image {
     echo "--------------- Building Trusted SGX native image -----------"
-    $native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $REFLECT_OPT_IN $APP_PKG.$polyt_trusted
+    $native_image --verbose -cp $CP $NATIVE_IMG_OPTS $INIT_AT_RUN_TIME $LOCAL_OPT $REFLECT_OPT_IN $APP_PKG.$polyt_trusted
     
     echo "--------------- Copying generated files to trusted module -----------"
     mv /tmp/main.o $SGX_DIR/Enclave/graalsgx/
@@ -219,12 +239,14 @@ function build_trusted_image {
 
 function build_untrusted_image {
     echo "--------------- Building Untrusted SGX native image -----------"
-    $native_image -cp $CP $NATIVE_IMG_OPTS $LOCAL_OPT $REFLECT_OPT_OUT $APP_PKG.$polyt_untrusted
+    $native_image --verbose -cp $CP $NATIVE_IMG_OPTS $INIT_AT_RUN_TIME $LOCAL_OPT $REFLECT_OPT_OUT $APP_PKG.$polyt_untrusted
     
     echo "--------------- Copying generated files to untrusted module -----------"
     mv /tmp/main.o $SGX_DIR/App/graalsgx/
     mv $SVM_DIR/*.h $SGX_DIR/App/graalsgx/polytaint
 }
+
+#clean_polytaint_files
 
 run_trusted_component_with_tracer
 build_trusted_image

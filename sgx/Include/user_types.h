@@ -36,3 +36,13 @@ typedef void (*__sighandler_t)(int);
 #define GRAAL_SGX_DEBUG_PRINT(message)
 #define GRAAL_SGX_DEBUG_PRINTF(format, args...)
 #endif
+
+#define CHECK_STATUS(status)        \
+    do                              \
+    {                               \
+        if (status != SGX_SUCCESS)  \
+        {                           \
+            printf("SGX called failed with status: %d\n",status); \
+            abort();                \
+        }                           \
+    } while (0)

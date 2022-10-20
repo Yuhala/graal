@@ -29,16 +29,16 @@ void log_ocall(const char *func)
 
     if (ocall_map.find(name) != ocall_map.end())
     {
-        //kv pair exists in map
+        // kv pair exists in map
         ocall_map[name] += 1;
     }
     else
     {
-        //kv pair does not exist yet
+        // kv pair does not exist yet
         ocall_map.insert(std::make_pair(name, 1));
     }
 
-    //printf("Calling ocall is: %s\n", name);
+    // printf("Calling ocall is: %s\n", name);
 }
 
 /**
@@ -46,19 +46,21 @@ void log_ocall(const char *func)
  */
 void showOcallLog(int num)
 {
-    //create vector with map kv pairs
+    printf("------- OCALL STATS --------\n");
+    printf("------- Total ocalls: %d\n", ocall_count);
+    // create vector with map kv pairs
     vector<pair<string, int>> vect;
-   
+
     for (auto &it : ocall_map)
     {
         vect.push_back(it);
     }
-    //printf("size of vect is: %d\n",vect.size());
-    //sort vector
+    // printf("size of vect is: %d\n",vect.size());
+    // sort vector
     sort(vect.begin(), vect.end(), cmp);
     int count = 0;
-    //print first num elements in the vector
-    printf("----------------------- OCALL STATS: Top %d ---------------------------\n",num);
+    // print first num elements in the vector
+    printf("--------- Top %d ---------------------------\n", num);
     for (auto &it : vect)
     {
         printf("Ocall: %s Count: %d\n", it.first.c_str(), it.second);

@@ -1,0 +1,17 @@
+[
+{
+"name":"java.lang.Object"
+},
+{
+"name":"polytaint.Trusted",
+"methods":[
+    {"name":"funcD","parameterTypes":["double"]},
+    {"name":"funcA","parameterTypes":[]},
+    {"name":"funcN","parameterTypes":["double","int"]},
+    {"name":"sayHello","parameterTypes":[]},
+    {"name":"addSecIntToArray","parameterTypes":["int","java.lang.Object"]},
+    {"name":"arraySum","parameterTypes":["java.lang.Object"]},
+    {"name":"readXData","parameterTypes":["int"]}
+]
+}
+]

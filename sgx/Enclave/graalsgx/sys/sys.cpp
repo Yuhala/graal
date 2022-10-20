@@ -4,14 +4,28 @@
  * Copyright (c) 2020 Peterson Yuhala and Jämes Ménétrey, IIUN
  */
 
+/**
+ * Recommended coding style for ocalls
+ *  GRAAL_SGX_INFO();
+    xxx retval;
+    sgx_status_t status =  ocall_xxx(&retval, xxx);
+    CHECK_STATUS(status);
+    return retval;
+ *
+ */
+
 #include <sgx/mem/sgx_mman.h>
 #include <errno.h>
 #include "checks.h" //for pointer checks
 #include "../../Enclave.h"
 #include "graalsgx_malloc.h"
+#include <sgx/sys/types.h>
 //#include "sgx_rsrv_mem_mngr.h"
 
 static int map_array[NUM_MAPS];
+
+// forward declarations
+int printDlinfo(void *info, int ret);
 
 //--------------------------------------------------------
 /**
@@ -83,7 +97,7 @@ void *dlsym(void *handle, const char *symbol)
 
     GRAAL_SGX_INFO();
     void *res = getSymbolHandle(symbol);
-    printf("Symbol: %s\n", symbol);
+    printf("Symbol is >>>> ----->>>>>: %s\n", symbol);
     // ocall_dlsym(handle, symbol, res);
     return res;
 }
@@ -94,6 +108,40 @@ void *dlopen(const char *filename, int flag)
     void *res = nullptr;
     ocall_dlopen(&res, filename, flag);
     return res;
+}
+
+int dlclose(void *handle)
+{
+
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_dlclose(&retval, handle);
+    CHECK_STATUS(status);
+    return retval;
+}
+int dlinfo(void *handle, int request, void *info)
+{
+    GRAAL_SGX_INFO();
+    int retval;
+    sgx_status_t status = ocall_dlinfo(&retval, handle, request, info);
+    CHECK_STATUS(status);
+    return retval;
+}
+
+void *dlmopen(long lmid, const char *filename, int flags)
+{
+    GRAAL_SGX_INFO();
+    void *res = nullptr;
+    ocall_dlmopen(&res, lmid, filename, flags);
+    return res;
+}
+
+char *dlerror()
+{
+    GRAAL_SGX_INFO();
+    char *retval;
+    sgx_status_t status = ocall_dlerror(&retval);
+    CHECK_STATUS(status);
 }
 
 long sysconf(int name)
@@ -199,6 +247,7 @@ unsigned int sleep(unsigned int secs)
 char *realpath(const char *path, char *res_path)
 {
     GRAAL_SGX_INFO();
+    printf("realpath pathname: %s\n >>>>>>>>>", path);
     ocall_realpath(path, res_path);
     return res_path;
 }
@@ -210,54 +259,6 @@ char *__xpg_strerror_r(int errnum, char *buf, size_t buflen)
     return buf;
 }
 
-int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
-{
-    GRAAL_SGX_INFO();
-    int ret;
-    // TODO
-    // ocall_sigaction(&ret, signum, act, oldact);
-    return ret;
-}
-
-int sigemptyset(sigset_t *set)
-{
-    GRAAL_SGX_INFO();
-    int ret;
-    // TODO
-    // ocall_sigemptyset(&ret, set);
-    return ret;
-}
-int sigaddset(sigset_t *set, int signum)
-{
-    GRAAL_SGX_INFO();
-    int ret;
-    // TODO
-    // ocall_sigaddset(&ret, set, signum);
-    return ret;
-}
-int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
-{
-    GRAAL_SGX_INFO();
-    int ret;
-    // TODO
-    // ocall_sigprocmask(&ret, how, set, oldset);
-    return ret;
-}
-__sighandler_t signal(int signum, __sighandler_t handler)
-{
-    GRAAL_SGX_INFO();
-    // TODO
-    // printf("Signal num: %d\n", signum);
-    // handler = &sig_handler;
-    __sighandler_t ret = &sig_handler; // nullptr;
-    // ocall_signal(&ret, signum, handler);
-    return nullptr;
-}
-
-void sig_handler(int param)
-{
-    GRAAL_SGX_INFO();
-}
 /* Mem management */
 
 /**
@@ -445,7 +446,25 @@ int dladdr(const void *addr, void *info)
     GRAAL_SGX_INFO();
     int ret = 0;
     ocall_dladdr(&ret, addr, info);
+    //printDlinfo(info, ret);
+
     return ret;
+}
+
+int printDlinfo(void *info, int ret)
+{
+    Dl_info *dlinfo = (Dl_info *)info;
+    printf("------ DL information. Ret value: %d --------\n", ret);
+    if (dlinfo->dli_fname != nullptr)
+    {
+        printf("pathname of so --> dli_fname: %s\n", dlinfo->dli_fname);
+    }
+    if (dlinfo->dli_sname)
+    {
+        printf("symbol name at addr --> dli_sname: %s\n", dlinfo->dli_sname);
+    }
+
+    printf("------ End DL info -------\n");
 }
 int kill(int pid, int sig)
 {

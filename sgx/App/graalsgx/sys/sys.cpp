@@ -49,6 +49,32 @@ void *ocall_dlopen(const char *filename, int flag)
     return dlopen(filename, flag);
 }
 
+int ocall_dlclose(void *handle)
+{
+    log_ocall(__func__);
+    return dlclose(handle);
+}
+
+void *ocall_dlmopen(long lmid, const char *filename, int flags)
+{
+    log_ocall(__func__);
+    return dlmopen((Lmid_t)lmid, filename, flags);
+}
+
+int ocall_dlinfo(void *handle, int request, void *info)
+{
+    log_ocall(__func__);
+    return dlinfo(handle, request, info);
+}
+
+char *ocall_dlerror()
+{
+    log_ocall(__func__);
+    return dlerror();
+}
+
+
+
 long ocall_sysconf(int name)
 {
     log_ocall(__func__);
@@ -118,33 +144,36 @@ void ocall_xpg_strerror_r(int errnum, char *buf, size_t buflen)
     char err[8] = "error";
     buf = err;
 }
+
 /* Signals */
 
-int ocall_sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
+extern "C"
 {
-    log_ocall(__func__);
-    return sigaction(signum, act, oldact);
+    void break_out();
+}
+void break_out()
+{
+}
+int ocall_sigaction_graal(int signum, const void *act, void *oldact)
+{
+    // log_ocall(__func__);
+    break_out();
+    return sigaction(signum, (struct sigaction *)act, (struct sigaction *)oldact);
 }
 
-int ocall_sigemptyset(sigset_t *set)
+int ocall_sigemptyset_graal(sigset_t *set)
 {
     log_ocall(__func__);
     return sigemptyset(set);
 }
 
-int ocall_sigaddset(sigset_t *set, int signum)
+int ocall_sigaddset_graal(sigset_t *set, int signum)
 {
     log_ocall(__func__);
     return sigaddset(set, signum);
 }
 
-int ocall_sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
-{
-    log_ocall(__func__);
-    return sigprocmask(how, set, oldset);
-}
-
-__sighandler_t ocall_signal(int signum, __sighandler_t handler)
+__sighandler_t ocall_signal_graal(int signum, __sighandler_t handler)
 {
     log_ocall(__func__);
     return nullptr; // signal(signum, handler);

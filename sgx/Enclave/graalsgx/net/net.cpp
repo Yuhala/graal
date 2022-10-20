@@ -7,7 +7,7 @@
 #include "../../Enclave.h"
 #include "inet_pton.h"
 
-long timezone = 0; //TODO
+long timezone = 0; // TODO
 
 int socket(int domain, int type, int protocol)
 {
@@ -42,7 +42,7 @@ int gettimeofday(struct timeval *tv, void *tz)
         printf("OCALL FAILED!, Error code = %d\n", sgx_ret);
         ocall_exit(EXIT_FAILURE);
     }
-    //ocall_gettimeofday(&ret, tv, tz);
+    // ocall_gettimeofday(&ret, tv, tz);
     return ret;
 }
 
@@ -231,5 +231,38 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags)
     GRAAL_SGX_INFO();
     ssize_t ret;
     ocall_send(&ret, sockfd, buf, len, flags);
+    return ret;
+}
+
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
+{
+    GRAAL_SGX_INFO();
+    ssize_t ret;
+    ocall_sendto(&ret, sockfd, buf, len, flags, dest_addr, addrlen);
+    return ret;
+}
+
+ssize_t sendmsg(int sockfd, struct msghdr *msg, int flags)
+{
+    GRAAL_SGX_INFO();
+    ssize_t ret;
+
+    ocall_sendmsg(&ret, sockfd, msg, flags);
+
+    return ret;
+}
+
+ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
+{
+    GRAAL_SGX_INFO();
+    ssize_t ret;
+    ocall_recvfrom(&ret, sockfd, buf, len, flags, src_addr, addrlen);
+    return ret;
+}
+ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags)
+{
+    GRAAL_SGX_INFO();
+    ssize_t ret;
+    ocall_recvmsg(&ret, sockfd, msg, flags);
     return ret;
 }

@@ -61,7 +61,17 @@ enclave {
       int ocall_poll([in, out, count=nfds] struct pollfd *fds, nfds_t nfds, int timeout) propagate_errno;
       int ocall_epoll_create(int size);
 
-      ssize_t ocall_recv(int sockfd, [out,size=len]void *buf, size_t len, int flags);
+     
+
+       ssize_t ocall_recv(int sockfd, [out,size=len]void *buf, size_t len, int flags);
       ssize_t ocall_send(int sockfd, [in,size=len]const void *buf, size_t len, int flags);
+
+      ssize_t ocall_sendto(int sockfd,[in,size=len] const void *buf, size_t len, int flags,[user_check]const struct sockaddr *dest_addr, socklen_t addrlen);
+      ssize_t ocall_sendmsg(int sockfd, [user_check]struct msghdr *msg, int flags) transition_using_threads;
+
+     
+      ssize_t ocall_recvfrom(int sockfd, [out,size=len]void *buf, size_t len, int flags,[user_check]struct sockaddr *src_addr, [in,out]socklen_t *addrlen);
+      ssize_t ocall_recvmsg(int sockfd, [user_check]struct msghdr *msg, int flags);
+
     };
 };
